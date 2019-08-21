@@ -1,3 +1,9 @@
+/***************************************
+*      Framework Handler Task
+*  https://github.com/goganoga/FHT
+*  Created: 06.08.19
+*  Copyright (C) goganoga 2019
+***************************************/
 #ifndef HENDLER_H
 #define HENDLER_H
 #include "iHendler.h"

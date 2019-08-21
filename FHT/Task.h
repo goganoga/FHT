@@ -1,3 +1,9 @@
+/***************************************
+*      Framework Handler Task
+*  https://github.com/goganoga/FHT
+*  Created: 06.08.19
+*  Copyright (C) goganoga 2019
+***************************************/
 #ifndef TASK_H
 #define TASK_H
 #include "iTask.h"
