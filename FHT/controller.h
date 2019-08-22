@@ -9,10 +9,10 @@
 #include "iTask.h"
 #include "iHendler.h"
 #include <memory>
-namespace Frame{
+namespace FHT{
     struct Conrtoller {
-		static std::shared_ptr<iHendler> getHendler();
-		static std::shared_ptr<iTask> getTask();
+        static std::shared_ptr<FHT::iHendler> getHendler();
+        static std::shared_ptr<FHT::iTask> getTask();
 	};
 }
 #endif // CONTROLLER_H

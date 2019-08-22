@@ -15,37 +15,39 @@
 #include <queue>
 #include <tuple>
 #include <memory>
-Task::Task(){}
-Task::~Task(){}
 
-void Task::addTask(iTask::listTask thread, std::function<void(void)> func) {
-    getTaskThread(thread)->pull(func);
-}
-void Task::addTask(iTask::listTask thread, std::function<void(void)> func, int ms) {
-    getTaskThread(thread)->pull(func, ms);
-}
-void Task::addTaskOneRun(iTask::listTask thread, std::function<void(void)> func, int ms) {
-    getTaskThread(thread)->pullTime(func, ms);
-}
+namespace FHT{
+    Task::Task(){}
+    Task::~Task(){}
 
-std::shared_ptr<iThread> Task::getTaskThread(iTask::listTask thread) {
-    if(auto a = factory_.find(static_cast<std::size_t>(thread)); end(factory_) != a)
-        return a->second;
-    return nullptr;
-}
-bool Task::startManager() {
-    factory_ = Task::make_factory(std::make_index_sequence<iTask::listTask::size>{});
-    if(!factory_.empty())
-        return true;
-	return false;
-}
-bool Task::stopManager() {
-    factory_.clear();
-    if(factory_.empty())
-        return true;
-	return false;
-}
+    void Task::addTask(iTask::listTask thread, std::function<void(void)> func) {
+        getTaskThread(thread)->pull(func);
+    }
+    void Task::addTask(iTask::listTask thread, std::function<void(void)> func, int ms) {
+        getTaskThread(thread)->pull(func, ms);
+    }
+    void Task::addTaskOneRun(iTask::listTask thread, std::function<void(void)> func, int ms) {
+        getTaskThread(thread)->pullTime(func, ms);
+    }
 
+    std::shared_ptr<iThread> Task::getTaskThread(iTask::listTask thread) {
+        if(auto a = factory_.find(static_cast<std::size_t>(thread)); end(factory_) != a)
+            return a->second;
+        return nullptr;
+    }
+    bool Task::startManager() {
+        factory_ = Task::make_factory(std::make_index_sequence<iTask::listTask::size>{});
+        if(!factory_.empty())
+            return true;
+        return false;
+    }
+    bool Task::stopManager() {
+        factory_.clear();
+        if(factory_.empty())
+            return true;
+        return false;
+    }
+}
 class Thread : public iThread {
 	std::mutex mutex;
 	using Threader = std::unique_ptr<std::thread, std::function<void(std::thread *)>>;
@@ -130,15 +132,15 @@ std::shared_ptr<iThread> makeThread/*<iTask::listTask::MAIN>*/() {
     return std::make_shared<Thread>();
 }
 template <std::size_t ... I>
-std::map<std::size_t, std::shared_ptr<iThread>> Task::make_factory(std::index_sequence<I ... > const &)
+std::map<std::size_t, std::shared_ptr<iThread>> FHT::Task::make_factory(std::index_sequence<I ... > const &)
 {
     return {
         std::pair<std::size_t, std::shared_ptr<iThread>>{ I, makeThread/*<I>*/() } ...
     };
 }
-namespace Frame{
-	std::shared_ptr<iTask> Conrtoller::getTask() {
-		auto static a = std::make_shared<Task>();
+namespace FHT{
+    std::shared_ptr<iTask> Conrtoller::getTask() {
+        auto static a = std::make_shared<Task>();
 		return a;
 	}
 }

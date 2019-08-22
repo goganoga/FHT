@@ -23,19 +23,21 @@ struct iThread {
 
 std::shared_ptr<iThread> makeThread();
 
-class Task: public iTask {
-public:
-    Task();
-    virtual ~Task() override;
-	void addTask(iTask::listTask thread, std::function<void(void)> func) override final;
-	void addTask(iTask::listTask thread, std::function<void(void)> func, int ms) override final;
-    void addTaskOneRun(iTask::listTask thread, std::function<void(void)> func, int ms) override final;
-	bool startManager() override final;
-	bool stopManager() override final;
-private:
-    std::shared_ptr<iThread> getTaskThread(iTask::listTask thread);
-	std::map<std::size_t, std::shared_ptr<iThread>> factory_;
-	template <std::size_t ... I>
-    static std::map<std::size_t, std::shared_ptr<iThread>> make_factory(std::index_sequence<I ... > const &);
-};
+namespace FHT{
+    class Task: public iTask {
+    public:
+        Task();
+        virtual ~Task() override;
+        void addTask(iTask::listTask thread, std::function<void(void)> func) override final;
+        void addTask(iTask::listTask thread, std::function<void(void)> func, int ms) override final;
+        void addTaskOneRun(iTask::listTask thread, std::function<void(void)> func, int ms) override final;
+        bool startManager() override final;
+        bool stopManager() override final;
+    private:
+        std::shared_ptr<iThread> getTaskThread(iTask::listTask thread);
+        std::map<std::size_t, std::shared_ptr<iThread>> factory_;
+        template <std::size_t ... I>
+        static std::map<std::size_t, std::shared_ptr<iThread>> make_factory(std::index_sequence<I ... > const &);
+    };
+}
 #endif //TASK_H
