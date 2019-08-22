@@ -12,6 +12,13 @@ set(SOURCE_EXE FHT/TestFHT.cpp)
 set(SOURCE_LIB 
   FHT/Hendler.cpp
   FHT/Task.cpp)
+set(HEADER 
+  FHT/Controller.h
+  FHT/iController.h
+  FHT/Hendler.h
+  FHT/iHendler.h
+  FHT/Task.h 
+  FHT/iTask.h)
 add_library(FHT_LIB STATIC ${SOURCE_LIB})
 add_executable(TestFHT ${SOURCE_EXE})
 target_link_libraries(TestFHT FHT_LIB)
