@@ -48,8 +48,6 @@ def main(namespace):
   start_time = time.time()
   if os.path.isdir(r"build") != True:
     os.mkdir(r"build")
-    os.chdir('./build')
-    os.chdir('../')
   os.chdir('./build')
   if namespace.build == 'ninja':
     if os.name == 'nt':
