@@ -26,6 +26,7 @@ namespace FHT {
 
 		std::string body;
 		try {
+			FHT::iHendler::FHT_MAP postParam(postBody);
 			std::string param_test("null");
 			auto test = headers.find("qq");
 			if (test != nullptr) param_test = test;
