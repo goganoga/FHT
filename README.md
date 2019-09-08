@@ -21,6 +21,10 @@ You need include to your cmake file, if you want to use it:
 ```bash
   if(MSVC)
     set(LIB_FOR_WIN ws2_32)
+    set(BUILD_TYPE ${CMAKE_BUILD_TYPE})
+  endif()
+  if(NOT MSVC)
+    set(pthread event_pthreads)
   endif()
   ExternalProject_Add(
       fhtlib
@@ -33,13 +37,13 @@ You need include to your cmake file, if you want to use it:
       LOG_DOWNLOAD ON
   )
   ExternalProject_Get_property(fhtlib BINARY_DIR SOURCE_DIR)
-  set(FHT_LIBRARIES 
+  set(FHT_LIBRARIES
+    fht
     event
-    fht)
-  set(LINKER 
-    ${libevent_BINARY_DIR}/lib
-    ${BINARY_DIR}/${CMAKE_BUILD_TYPE}
-    ${BINARY_DIR}/libevent/lib/${CMAKE_BUILD_TYPE})
+    ${pthread})
+  set(LINKER
+    ${BINARY_DIR}/${BUILD_TYPE}
+    ${BINARY_DIR}/libevent/lib/${BUILD_TYPE})
   include_directories(${SOURCE_DIR}/src/FHT/Interfice)
   link_directories(${LINKER})
   add_dependencies(${YourTarget} fhtlib)

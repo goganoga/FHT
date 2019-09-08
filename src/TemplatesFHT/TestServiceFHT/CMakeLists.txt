@@ -4,10 +4,12 @@ include(ExternalProject)
 
 if(NOT MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -pthread")
+  set(pthread event_pthreads)
   set (EXECUTABLE_OUTPUT_PATH bin)
 endif()
 if(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
+  set(BUILD_TYPE ${CMAKE_BUILD_TYPE})
   set(LIB_FOR_WIN ws2_32)
 endif()
 add_definitions(-DBOOST_UUID_FORCE_AUTO_LINK)
@@ -44,7 +46,7 @@ ExternalProject_Add(
 
 ExternalProject_Get_property(Boost BINARY_DIR)
 set(BOOST_INCLUDE_DIR ${BINARY_DIR}/_deps/boost-src)
-link_directories(${BINARY_DIR}/${CMAKE_BUILD_TYPE})
+link_directories(${BINARY_DIR}/${BUILD_TYPE})
 set (BOOST_LIBS_LIST "")
 foreach (boost_lib ${BOOST_LIBRARIES})
     list (APPEND BOOST_LIBS_LIST boost_${boost_lib})
@@ -66,12 +68,12 @@ ExternalProject_Add(
 )
 ExternalProject_Get_property(fhtlib BINARY_DIR SOURCE_DIR)
 set(FHT_LIBRARIES 
-  event
-  fht)
-set(LINKER 
-  ${libevent_BINARY_DIR}/lib
-  ${BINARY_DIR}/${CMAKE_BUILD_TYPE}
-  ${BINARY_DIR}/libevent/lib/${CMAKE_BUILD_TYPE})
+    fht
+    event
+    ${pthread})
+set(LINKER
+  ${BINARY_DIR}/${BUILD_TYPE}
+  ${BINARY_DIR}/libevent/lib/${BUILD_TYPE})
 set(HEADER 
   ${SOURCE_DIR}/src/FHT/Interfice
   ${BOOST_INCLUDE_DIR}

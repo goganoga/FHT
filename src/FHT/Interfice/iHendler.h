@@ -8,6 +8,7 @@
 #define FHTIHENDLER_H
 #include <functional>
 #include <string>
+#include <cstring>
 #include <any>
 namespace FHT{
     struct iHendler {

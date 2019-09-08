@@ -6,7 +6,7 @@
 ***************************************/
 #ifndef FHTICONTROLLER_H
 #define FHTICONTROLLER_H
-#include "../Common/Controller/controller.h"
+#include "../Common/Controller/Controller.h"
 namespace FHT{
     namespace iConrtoller {
         static auto hendlerManager = FHT::Conrtoller::getHendler();

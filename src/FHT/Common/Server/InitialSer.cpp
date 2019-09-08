@@ -16,18 +16,19 @@ InitSer::InitSer(void(*onRequestHandler_)(evhttp_request *, void *), std::string
 	int a = WSAStartup(wVersionRequested, &wsaData);
 	SYSTEM_INFO sysinfo;
 	GetSystemInfo(&sysinfo);
-#elif __linux__
-	//int a = signal(SIGPIPE, SIG_IGN);
 #endif
 	SrvAddress = srvAddress;
 	SrvPort = srvPort;
 	OnRequest = onRequestHandler_;
-	
 	cfg = event_config_new();
 #ifdef _WIN32
 	evthread_use_windows_threads();
-	event_config_set_num_cpus_hint(cfg, 16);
+#elif __linux__
+	//signal(SIGPIPE, SIG_IGN);
+        evthread_use_pthreads();
 #endif
+    
+	event_config_set_num_cpus_hint(cfg, 16);
 	for (int i = 0; i < std::thread::hardware_concurrency(); ++i) {
 		threadPtr thread(new std::thread(&InitSer::Start, this), [&](std::thread *t) { IsRun = false; t->join(); delete t; });
 		threads.push_back(std::move(thread));
