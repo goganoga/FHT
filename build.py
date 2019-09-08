@@ -7,7 +7,7 @@ import argparse
 from functools import reduce
 class build:
   gen_win32 = 'cmake .. -G "Visual Studio 15 2017"'
-  gen_win64 = 'cmake .. -G "Visual Studio 15 Win64"'
+  gen_win64 = 'cmake .. -G "Visual Studio 16 2019"'
   gen_Ninja = 'cmake .. -GNinja -DCMAKE_BUILD_TYPE=Release'
   build_Ninja = 'cmake --build . --parallel 16'
   build_Win = 'cmake --build . --config Release --parallel 16'
