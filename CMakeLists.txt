@@ -42,8 +42,9 @@ set(LibEvent_LIBRARIES
 set(SOURCE_LIB 
   src/FHT/Common/Controller/Hendler/Hendler.cpp
   src/FHT/Common/Controller/Task/Task.cpp
-  src/FHT/Common/Server/InitialSer.cpp
-  src/FHT/Common/Server/Server.cpp)
+  src/FHT/Common/Controller/Server/InitialSer.cpp
+  src/FHT/Common/Controller/Server/Server.cpp
+  src/FHT/Common/Controller/Client/Client.cpp)
   
 set(HEADERS 
   src/FHT/Interface)

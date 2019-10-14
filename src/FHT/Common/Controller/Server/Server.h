@@ -7,8 +7,7 @@
 #ifndef FHTSERVER_H
 #define FHTSERVER_H
 #include "InitialSer.h"
-#include "../../Interfice/iServer.h"
-#include "../../Interfice/iController.h"
+#include "../../../Interfice/iServer.h"
 #include <iostream>
 namespace FHT {
 	class Server : public iServer {

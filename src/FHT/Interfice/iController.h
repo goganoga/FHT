@@ -11,6 +11,8 @@ namespace FHT{
     namespace iConrtoller {
         static auto hendlerManager = FHT::Conrtoller::getHendler();
         static auto taskManager = FHT::Conrtoller::getTask();
+        static auto webServer = FHT::Conrtoller::getServer();
+        static auto webClient = FHT::Conrtoller::getClient();
     }
 }
 #endif // FHTICONTROLLER_H

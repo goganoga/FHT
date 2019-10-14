@@ -15,12 +15,12 @@
 #endif
 
 #include <iostream>
-#include "iServer.h"
+#include "iController.h"
 #include "iTest.h"
 void skeleton_daemon(char* args);
 struct inizialaizer {
 	FHT::iTest *test = FHT::iTest::Run.get();
-	FHT::iServer *Serv = FHT::iServer::Ininstanse.get(); //end
+	FHT::iServer *Serv = FHT::iConrtoller::webServer.get(); //end
 };
 int main(int argc, char* argv[])
 {

@@ -10,7 +10,6 @@
 #include <cstdint>
 namespace FHT {
 	struct iServer {
-		static std::shared_ptr<iServer> Ininstanse;
 		virtual void run() = 0;
 		virtual void setPort(std::uint16_t port_) = 0;
 		virtual void setHost(std::string host_) = 0;

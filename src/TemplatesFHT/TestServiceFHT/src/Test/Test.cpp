@@ -26,27 +26,32 @@ namespace FHT {
 
 		std::string body;
 		try {
+			std::map< std::string, std::string> resp_map;
 			FHT::iHendler::FHT_MAP postParam(postBody);
 			std::string param_test("null");
 			auto test = headers.find("qq");
-			if (test != nullptr) param_test = test;
-			std::string h_sha256 = ",\"hash_sha256\":\"" + hash(buf.c_str()) + "\"";
-			std::string h_md5 = ",\"hash_md5\":\"" + md5_hash(buf.c_str()) + "\"";
-			std::string h_guid = ",\"guid\":\"" + guid() + "\"";
-			std::string h_guid_nil = ",\"guid_location\":\"" + guid(buf) + "\"";
-			std::string h_sha512 = ",\"hash_sha512\":\"" + hash512(buf.c_str()) + "\"";
-			std::string h_sha512_gen = ",\"h_sha512_gen\":\"" + gen() + "\"";
-			std::string h_ = buf;
-			h_.append(md5_hash(buf.c_str()));
-			h_.append(std::to_string(time(nullptr)));
-			std::string h = hash(h_.c_str());
-			std::string h_h = ",\"hash_h\":\"" + h + "\"";
+			if (test != nullptr) 
+				param_test = test;
+			std::string hash_buf = buf;
+			hash_buf.append(md5Hash(buf.c_str()));
+			hash_buf.append(std::to_string(time(nullptr)));
+			hash_buf = hash(hash_buf.c_str());
 
-			body = "{\"status\":1,\"uri\":\"" + buf + "\"" + ", \"location\":\"" + location + "\"" + ", \"postBody\":\"" + postBody + "\"" +
-				",\"param[qq]\":\"" + param_test + "\"" +
-				(h_sha256 + h_md5 + h_guid) +
-				(h_guid_nil + h_sha512) +
-				(h_sha512_gen + h_h) + "}";
+			resp_map.emplace("status", "1");
+			resp_map.emplace("uri", buf);
+			resp_map.emplace("location", location);
+			resp_map.emplace("postBody", postBody);
+			resp_map.emplace("param[qq]", param_test);
+			resp_map.emplace("hash_sha256", hash(buf.c_str()));
+			resp_map.emplace("hash_sha256", hash(buf.c_str()));
+			resp_map.emplace("hash_md5", md5Hash(buf.c_str()));
+			resp_map.emplace("guid", guid());
+			resp_map.emplace("guid_location", guid(buf));
+			resp_map.emplace("hash_sha512", hash512(buf.c_str()));
+			resp_map.emplace("h_sha512_gen", gen());
+			resp_map.emplace("hash_h", hash_buf);
+
+			body = jsonParse(resp_map);
 		}
 		catch (const std::exception& e) {
 			std::cerr << "Error: " << e.what() << std::endl;
@@ -54,7 +59,7 @@ namespace FHT {
 		return body;
 	}
 
-	std::string Test::md5_hash(const char* string) {
+	std::string Test::md5Hash(const char* string) {
 		unsigned char digest[MD5_DIGEST_LENGTH];
 		MD5_CTX ctx;
 		MD5_Init(&ctx);
@@ -116,5 +121,25 @@ namespace FHT {
 		std::string str(length, 0);
 		std::generate_n(str.begin(), length, randchar);
 		return hash512(str.data());
+	}
+	std::string Test::jsonParse(std::map<std::string, std::string> map)
+	{
+		std::string slash = "\"";
+		std::string twoPoint = ":";
+		std::string comma = ",";
+		std::string figureBrackedLeft = "{";
+		std::string figureBrackedRight = "}";
+		std::string strJson;
+		strJson.append(figureBrackedLeft);
+		for(auto a: map){
+			strJson.append(slash + a.first + slash);
+			strJson.append(twoPoint);
+			strJson.append(slash + a.second + slash);
+			strJson.append(comma);
+		}
+		if(strJson.size()>1)
+			strJson.pop_back();
+		strJson.append(figureBrackedRight);
+		return strJson;
 	}
 }

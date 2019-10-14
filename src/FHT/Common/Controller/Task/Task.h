@@ -17,8 +17,6 @@ struct iThread {
 	virtual void pull(std::function<void(void)> func, int ms) = 0;
     virtual void pullTime(std::function<void(void)> func, int ms) = 0;
     virtual bool isRun() { return false; }
-
-
 };
 
 std::shared_ptr<iThread> makeThread();
