@@ -57,6 +57,9 @@ void InitSer::Start() {
 				if (evhttp_accept_socket(EvHttp.get(), Socket) == -1)
 					throw std::runtime_error("Failed to bind server socket for new instance.");
 			}
+			evhttp_set_allowed_methods(EvHttp.get(),
+				EVHTTP_REQ_GET |
+				EVHTTP_REQ_POST);
 		}
 		for (; IsRun; ) {
 			event_base_loop(EventBase.get(), EVLOOP_NONBLOCK);
@@ -74,4 +77,5 @@ InitSer::~InitSer() {
 #ifdef _WIN32
 	WSACleanup();
 #endif
+	delete cfg;
 };

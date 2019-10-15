@@ -76,54 +76,45 @@ public:
             if(size < 10) sleep = std::chrono::microseconds(100); else
             if(size < 100) sleep = std::chrono::microseconds(10); else
             if(size < 1000) sleep = std::chrono::microseconds(1);
-            std::this_thread::sleep_for(sleep);
             std::lock_guard<std::mutex> lock(mutex);
-            {
-                tuple_ a;
-                try{
-                    if(!queue_.empty())
-                        a = queue_.front();
-                    else
-                        continue;
-                }
-                catch(std::exception e) {
+            std::this_thread::sleep_for(sleep);
+            tuple_ a;
+            try{
+                if(!queue_.empty())
+                    a = queue_.front();
+                else
                     continue;
-                }
-                queue_.pop();
-                auto realtime = std::chrono::high_resolution_clock::now();
-                auto timestamp = std::get<tuple::ts>(a);
-                auto timerun = std::get<tuple::ms>(a);
-                auto difftime(std::chrono::duration_cast<std::chrono::milliseconds>(realtime - timestamp));
-                if(difftime.count() < timerun){
+            }
+            catch(std::exception e) {
+                continue;
+            }
+            queue_.pop();
+            auto realtime = std::chrono::high_resolution_clock::now();
+            auto timestamp = std::get<tuple::ts>(a);
+            auto timerun = std::get<tuple::ms>(a);
+            auto difftime(std::chrono::duration_cast<std::chrono::milliseconds>(realtime - timestamp));
+            if(difftime.count() < timerun){
+                queue_.push(a);
+            } else {
+                if(std::get<tuple::isLoop>(a)){
+                    std::get<tuple::ts>(a) = std::chrono::high_resolution_clock::now();
                     queue_.push(a);
-                } else {
-                    if(std::get<tuple::isLoop>(a)){
-                        std::get<tuple::ts>(a) = std::chrono::high_resolution_clock::now();
-                        queue_.push(a);
-                    }
-                    std::get<tuple::function>(a)();
                 }
-
+                std::get<tuple::function>(a)();
             }
         }
 	}
 	void pull(std::function<void(void)> func) {
         std::lock_guard<std::mutex> lock(mutex);
-        {
-            queue_.push(std::make_tuple(func, 0, true, std::chrono::high_resolution_clock::now()));
-        }
+        queue_.push(std::make_tuple(func, 0, true, std::chrono::high_resolution_clock::now()));
     }
 	void pull(std::function<void(void)> func, int ms) {
         std::lock_guard<std::mutex> lock(mutex);
-        {
-            queue_.push(std::make_tuple(func, ms, true, std::chrono::high_resolution_clock::now()));
-        }
+        queue_.push(std::make_tuple(func, ms, true, std::chrono::high_resolution_clock::now()));
     }
     void pullTime(std::function<void(void)> func, int ms) {
         std::lock_guard<std::mutex> lock(mutex);
-        {
-            queue_.push(std::make_tuple(func, ms, false, std::chrono::high_resolution_clock::now()));
-        }
+        queue_.push(std::make_tuple(func, ms, false, std::chrono::high_resolution_clock::now()));
     }
     bool isRun() { return isRun_; }
 };

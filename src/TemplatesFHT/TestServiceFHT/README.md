@@ -19,8 +19,17 @@ Default start service -> localhost:10800
   ```bash
   http://localhost:10800/test?qq=qqq&xcdvdf=dsd
   ```
+  
+  - Test URL for test webClient component in browser: 
+  ```bash
+  http://localhost:10800/testGet?url=https://github.com/goganoga
+  ```
 2.Testing the service from the curl.
   - You go to the test URL in curl: 
   ```bash
-  curl -i -X POST -d "username=admin&password=admin&submit=Login" http://localhost:10800/test?qq=qqq&xcdvdf=dsd
+  curl -i -X POST -d "username=admin&password=admin&submit=Login" "http://localhost:10800/test?qq=qqq&xcdvdf=dsd"
+  ```
+  - Test URL for test webClient component from the curl: 
+  ```bash
+  curl -is "http://localhost:10800/testGet?url=https://github.com/goganoga"
   ```

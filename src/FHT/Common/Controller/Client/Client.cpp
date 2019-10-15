@@ -46,11 +46,10 @@
 #include <future>
 namespace {
 	struct webClient {
-		bool status = false;
-		static void http_request_done(struct evhttp_request* req, void* ctx);
 		webClient(std::string url, std::string body, std::function<void(FHT::iClient::respClient)>* func);
 		~webClient();
 	private:
+		static void http_request_done(struct evhttp_request* req, void* ctx);
 		static std::function<void(FHT::iClient::respClient)> func_;
 		struct event_base* base = nullptr;
 		struct evhttp_uri* http_uri = nullptr;
@@ -59,8 +58,8 @@ namespace {
 		const char* scheme = nullptr, * host = nullptr, * path = nullptr, * query = nullptr;
 		char uri[256] = {};
 		int port = 0;
-		int retries = 0;
-		int timeout = -1;
+		int retries = 3;
+		int timeout = 10;
 		SSL_CTX* ssl_ctx = nullptr;
 		SSL* ssl = nullptr;
 		struct bufferevent* bev = nullptr;
@@ -86,6 +85,7 @@ namespace {
 	};
 	std::function<void(FHT::iClient::respClient)> webClient::func_;
 	void webClient::http_request_done(struct evhttp_request* req, void* ctx) {
+			FHT::iClient::respClient resp;
 			char buffer[256];
 			int nread;
 			if (!req || !evhttp_request_get_response_code(req)) {
@@ -97,29 +97,42 @@ namespace {
 					ERR_error_string_n(oslerr, buffer, sizeof(buffer));
 					printed_err = 1;
 				}
-				return;
+				resp.body = "Error: Some request failed";
+				resp.status = 404;
 			}
-			auto* InBuf = evhttp_request_get_input_buffer(req);
-			auto LenBuf = evbuffer_get_length(InBuf);
-			std::unique_ptr<char> postBody(new char[LenBuf + 1]);
-			postBody.get()[LenBuf] = 0;
-			evbuffer_copyout(InBuf, postBody.get(), LenBuf);
-			FHT::iClient::respClient resp;
-			resp.body = postBody.get();
-			resp.status = evhttp_request_get_response_code(req);
+			else {
+				auto* InBuf = evhttp_request_get_input_buffer(req);
+				auto LenBuf = evbuffer_get_length(InBuf);
+				std::unique_ptr<char> postBody(new char[LenBuf + 1]);
+				postBody.get()[LenBuf] = 0;
+				evbuffer_copyout(InBuf, postBody.get(), LenBuf);
+				resp.body = postBody.get();
+				resp.status = evhttp_request_get_response_code(req);
+			}
 			func_(resp);
 		}
 	webClient::webClient(std::string url, std::string body, std::function<void(FHT::iClient::respClient)>* func) {
 			func_ = *func;
+			FHT::iClient::respClient resp;
+			resp.status = 404;
 			http_uri = evhttp_uri_parse(url.c_str());
-			if (http_uri == nullptr)
+			if (http_uri == nullptr) {
+				resp.body = "Error: Malformed url";
+				func_(resp);
 				return;
+			}
 			scheme = evhttp_uri_get_scheme(http_uri);
-			if (scheme == nullptr || (strcasecmp(scheme, "https") != 0 && strcasecmp(scheme, "http") != 0))
+			if (scheme == nullptr || (strcasecmp(scheme, "https") != 0 && strcasecmp(scheme, "http") != 0)) {
+				resp.body = "Error: Url must be http or https";
+				func_(resp);
 				return;
+			}
 			host = evhttp_uri_get_host(http_uri);
-			if (host == nullptr)
+			if (host == nullptr) {
+				resp.body = "Error: Url must have a host";
+				func_(resp);
 				return;
+			}
 
 			port = evhttp_uri_get_port(http_uri);
 			if (port == -1)
@@ -141,12 +154,18 @@ namespace {
 			SSL_load_error_strings();
 			OpenSSL_add_all_algorithms();
 #endif
-			if (!RAND_poll())
+			if (!RAND_poll()) {
+				resp.body = "Error: Openssl RAND_poll failed";
+				func_(resp);
 				return;
+			}
 
 			ssl_ctx = SSL_CTX_new(SSLv23_method());
-			if (!ssl_ctx)
+			if (!ssl_ctx) {
+				resp.body = "Error: Openssl SSL_CTX_new failed";
+				func_(resp);
 				return;
+			}
 			if (crt == nullptr) {
 				X509_STORE* store;
 				store = SSL_CTX_get_cert_store(ssl_ctx);
@@ -154,26 +173,39 @@ namespace {
 				if (add_cert_for_store(store, "CA") < 0 ||
 					add_cert_for_store(store, "AuthRoot") < 0 ||
 					add_cert_for_store(store, "ROOT") < 0) {
+					resp.body = "Error: Openssl X509_STORE_set_default_paths failed";
+					func_(resp);
 					return;
 				}
 #else // _WIN32
-				if (X509_STORE_set_default_paths(store) != 1)
+				if (X509_STORE_set_default_paths(store) != 1) {
+					resp.body = "Error: Openssl X509_STORE_set_default_paths failed";
+					func_(resp);
 					return;
+				}
 #endif // _WIN32
 			} else {
-				if (SSL_CTX_load_verify_locations(ssl_ctx, crt, nullptr) != 1)
+				if (SSL_CTX_load_verify_locations(ssl_ctx, crt, nullptr) != 1) {
+					resp.body = "Error: Openssl SSL_CTX_load_verify_locations failed";
+					func_(resp);
 					return;
+				}
 			}
 			SSL_CTX_set_verify(ssl_ctx, SSL_VERIFY_PEER, nullptr);
 			SSL_CTX_set_cert_verify_callback(ssl_ctx, cert_verify_callback, (void*)host);
 			base = event_base_new();
-			if (!base)
+			if (!base) {
+				resp.body = "Error: New connection failed";
+				func_(resp);
 				return;
+			}
 			ssl = SSL_new(ssl_ctx);
-			if (ssl == nullptr)
+			if (ssl == nullptr) {
+				resp.body = "Error: Create OpenSSL session failed";
+				func_(resp);
 				return;
+			}
 #ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
-			// Set hostname for SNI extension
 			SSL_set_tlsext_host_name(ssl, host);
 #endif
 			if (strcasecmp(scheme, "http") == 0)
@@ -182,19 +214,28 @@ namespace {
 				type = HTTPS;
 				bev = bufferevent_openssl_socket_new(base, -1, ssl, BUFFEREVENT_SSL_CONNECTING, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS);
 			}
-			if (bev == nullptr)
+			if (bev == nullptr) {
+				resp.body = "Error: Can't read buffer with openssl";
+				func_(resp);
 				return;
+			}
 			bufferevent_openssl_set_allow_dirty_shutdown(bev, 1);
 			evcon = evhttp_connection_base_bufferevent_new(base, nullptr, bev, host, port);
-			if (evcon == nullptr)
+			if (evcon == nullptr) {
+				resp.body = "Error: Can't read buffer with";
+				func_(resp);
 				return;
+			}
 			if (retries > 0)
 				evhttp_connection_set_retries(evcon, retries);
 			if (timeout >= 0)
 				evhttp_connection_set_timeout(evcon, timeout);
 			req = evhttp_request_new(&http_request_done, bev);
-			if (req == nullptr)
+			if (req == nullptr) {
+				resp.body = "Error: Not create request";
+				func_(resp);
 				return;
+			}
 			output_headers = evhttp_request_get_output_headers(req);
 			evhttp_add_header(output_headers, "Host", host);
 			evhttp_add_header(output_headers, "Connection", "close");
@@ -205,10 +246,12 @@ namespace {
 				evutil_snprintf(body.data(), sizeof(body.data()) - 1, "%lu", (unsigned long)body.length());
 				evhttp_add_header(output_headers, "Content-Length", buf);
 			}
-			if (evhttp_make_request(evcon, req, !body.empty() ? EVHTTP_REQ_POST : EVHTTP_REQ_GET, uri))
+			if (evhttp_make_request(evcon, req, !body.empty() ? EVHTTP_REQ_POST : EVHTTP_REQ_GET, uri)) {
+				resp.body = "Error: Can't make request";
+				func_(resp);
 				return;
+			}
 			event_base_dispatch(base);
-			status = true;
 		}
 	webClient::~webClient() {
 		if (evcon)
@@ -237,6 +280,14 @@ namespace {
 
 		sk_SSL_COMP_free(SSL_COMP_get_compression_methods());
 #endif
+
+		delete data_file;
+		delete crt;
+		delete scheme, host, path, query;
+		delete bev;
+		delete req;
+		delete output_headers;
+		delete output_buffer;
 	}
 	webClient::HostnameValidationResult webClient::matches_subject_alternative_name(const char* hostname, const X509* server_cert) {
 			HostnameValidationResult result = MatchNotFound;
@@ -376,6 +427,8 @@ namespace FHT {
 		return barrier_future.get();
 	}
 	std::string Client::get(std::string url){
+		if (url.empty() || url.length() < 6 || (url.substr(0, 6) != "ftp://" && url.substr(0, 7) != "http://" && url.substr(0, 8) != "https://"))
+			return "No correct url";
 		std::promise<std::string> pr;
 		std::future<std::string> barrier_future = pr.get_future();
 		std::function<void(FHT::iClient::respClient)> func([&pr](FHT::iClient::respClient a) {

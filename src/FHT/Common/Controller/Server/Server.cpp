@@ -37,15 +37,20 @@ namespace FHT {
 			postBody.get()[LenBuf] = 0;
 			evbuffer_copyout(InBuf, postBody.get(), LenBuf);
 			evhttp_parse_query(evhttp_request_get_uri(req), &headers);
-			auto location = evhttp_uri_get_path(evhttp_request_get_evhttp_uri(req));
-	
+			auto evhttp_request = evhttp_request_get_evhttp_uri(req);
+			auto location = evhttp_uri_get_path(evhttp_request);
+			std::map<std::string, std::string> map;
+			for (struct evkeyval *tqh_first = headers.tqh_first; &tqh_first->next != nullptr; ) {
+				map.emplace(tqh_first->key, tqh_first->value);
+				tqh_first = tqh_first->next.tqe_next;
+			}
 			FHT::iHendler::data data_;
 			data_.str0 = evhttp_request_get_uri(req); //uri
 			data_.str1 = location ? location : ""; // location
-			data_.obj2 = (void*)&headers; //headers
+			data_.map0 = map; //headers
 			data_.str2 = postBody.get(); //postBody
 			data_.str3 = evhttp_request_get_host(req); //host
-			data_.id = evhttp_uri_get_port(evhttp_request_get_evhttp_uri(req)); //port
+			data_.id = evhttp_uri_get_port(evhttp_request); //port
 	
 			if (!location) goto err;
 	
@@ -54,7 +59,7 @@ namespace FHT {
 			evhttp_add_header(evhttp_request_get_output_headers(req), "Content-Type", "text/plain; charset=utf-8");
 			evbuffer_add_printf(OutBuf, func(data_).c_str());
 			evhttp_clear_headers(&headers);
-			evhttp_send_reply(req, HTTP_OK, "", OutBuf);
+			evhttp_send_reply(req, HTTP_OK, "", OutBuf); // nead realization webSocket
 		}
 		else {
 		err:

@@ -5,7 +5,8 @@ Framework Handler and Task manager as a skeleton for web service. Written in C++
 # This frame contains:
   - HandlerManager (Need for call a 'callback' from anywhere in the program)
   - TaskManager (Sheduler and loop sheduler as a kernel in the program. Realization multithread)
-  - ServerManager (Realization a network worker to easily develop Internet services. Using libevent - https://github.com/libevent/libevent.git)
+  - WebService (Realization a network worker to easily develop Internet services. Using libevent - https://github.com/libevent/libevent.git)
+  - WebClient (Realization a network worker to get or post request http(s). Using libevent - https://github.com/libevent/libevent.git)
 # Build
 - Linux (in directory) variant
    - python build.py -b ninja
@@ -20,12 +21,15 @@ Framework Handler and Task manager as a skeleton for web service. Written in C++
 You need include to your cmake file, if you want to use it:
 ```bash
   if(MSVC)
-    set(LIB_FOR_WIN ws2_32)
+    set(LIB_FOR_WIN 
+    ws2_32
+    Crypt32)
     set(BUILD_TYPE ${CMAKE_BUILD_TYPE})
   endif()
   if(NOT MSVC)
     set(pthread event_pthreads)
   endif()
+  find_package(OpenSSL REQUIRED)
   ExternalProject_Add(
       fhtlib
       BINARY_DIR fhtlib/build
@@ -40,11 +44,17 @@ You need include to your cmake file, if you want to use it:
   set(FHT_LIBRARIES
     fht
     event
+    event_core
+    event_extra
+    event_openssl
+    ${OPENSSL_LIBRARIES}
     ${pthread})
   set(LINKER
     ${BINARY_DIR}/${BUILD_TYPE}
     ${BINARY_DIR}/libevent/lib/${BUILD_TYPE})
-  include_directories(${SOURCE_DIR}/src/FHT/Interfice)
+  include_directories(
+    ${SOURCE_DIR}/src/FHT/Interfice
+    ${OPENSSL_INCLUDE_DIR})
   link_directories(${LINKER})
   add_dependencies(${YourTarget} fhtlib)
   target_link_libraries(${YourTarget} 

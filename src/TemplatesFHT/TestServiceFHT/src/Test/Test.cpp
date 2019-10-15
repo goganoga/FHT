@@ -17,21 +17,22 @@ namespace FHT {
 	Test::Test() {
 		auto H = FHT::iConrtoller::hendlerManager;
 		H->addUniqueHendler("/test", std::bind(&Test::mainTest, this, std::placeholders::_1));
+		H->addUniqueHendler("/testGet", std::bind(&Test::mainTestGet, this, std::placeholders::_1));
 	}
 	std::string Test::mainTest(FHT::iHendler::data resp) {
 		std::string buf = resp.str0;
 		std::string location = resp.str1;
-		FHT::iHendler::FHT_MAP headers = *(FHT::iHendler::FHT_MAP*)resp.obj2;
+		auto headers = resp.map0;
 		std::string postBody = resp.str2;
 
 		std::string body;
 		try {
 			std::map< std::string, std::string> resp_map;
-			FHT::iHendler::FHT_MAP postParam(postBody);
+			auto postParam(postBody);
 			std::string param_test("null");
 			auto test = headers.find("qq");
-			if (test != nullptr) 
-				param_test = test;
+			if (test != headers.end())
+				param_test = test->second;
 			std::string hash_buf = buf;
 			hash_buf.append(md5Hash(buf.c_str()));
 			hash_buf.append(std::to_string(time(nullptr)));
@@ -58,7 +59,26 @@ namespace FHT {
 		}
 		return body;
 	}
-
+	std::string Test::mainTestGet(FHT::iHendler::data resp) {
+		auto headers = resp.map0;
+		std::map< std::string, std::string> resp_map;
+		char* id_buf = nullptr;
+		try {
+			std::string param_test("http://localhost:10800/test?qq=test&test=test");
+			auto test = headers.find("url");
+			if (test != headers.end())
+				param_test = test->second;
+			std::string bodyRequest = FHT::iConrtoller::webClient->get(param_test);
+			resp_map.emplace("GetUrl", param_test);
+			resp_map.emplace("bodyRequest", bodyRequest);
+		}
+		catch (const std::exception& e) {
+			std::cerr << "Error: " << e.what() << std::endl;
+			delete id_buf;
+		}
+		delete id_buf;
+		return jsonParse(resp_map);
+	}
 	std::string Test::md5Hash(const char* string) {
 		unsigned char digest[MD5_DIGEST_LENGTH];
 		MD5_CTX ctx;
