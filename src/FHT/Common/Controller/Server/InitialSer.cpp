@@ -28,7 +28,7 @@ InitSer::InitSer(void(*onRequestHandler_)(evhttp_request *, void *), std::string
         evthread_use_pthreads();
 #endif
     
-	event_config_set_num_cpus_hint(cfg, 16);
+	event_config_set_num_cpus_hint(cfg, std::thread::hardware_concurrency());
 	for (int i = 0; i < std::thread::hardware_concurrency(); ++i) {
 		threadPtr thread(new std::thread(&InitSer::Start, this), [&](std::thread *t) { IsRun = false; t->join(); delete t; });
 		threads.push_back(std::move(thread));

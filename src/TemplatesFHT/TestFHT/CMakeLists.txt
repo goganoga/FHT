@@ -25,6 +25,9 @@ ExternalProject_Add(
 ExternalProject_Get_property(fhtlib BINARY_DIR SOURCE_DIR)
 set(FHT_LIBRARIES 
   event
+  event_core
+  event_extra
+  event_openssl
   fht)
 set(LINKER 
   ${libevent_BINARY_DIR}/lib

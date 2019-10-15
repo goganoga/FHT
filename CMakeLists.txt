@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(FHT CXX)
+project(FHT CXX C)
 include(ExternalProject)
 set (EXECUTABLE_OUTPUT_PATH lib)
 
@@ -8,10 +8,13 @@ if(NOT MSVC)
 endif()
 if(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
-  set(LIB_FOR_WIN ws2_32)
+  set(LIB_FOR_WIN 
+    ws2_32
+    Crypt32)
 endif()
 find_package(Git REQUIRED)
 set(build ${CMAKE_CURRENT_BINARY_DIR})
+find_package(OpenSSL REQUIRED)
 #libevent
 ExternalProject_Add(
     libevent
@@ -36,7 +39,10 @@ set(libevent_BINARY_DIR ${BINARY_DIR})
 set(libevent_SOURCE_DIR ${SOURCE_DIR})
 link_directories(${libevent_BINARY_DIR}/lib)
 set(LibEvent_LIBRARIES 
-  event)
+  event
+  event_core
+  event_extra
+  event_openssl)
 
 #FHT
 set(SOURCE_LIB 
@@ -44,10 +50,12 @@ set(SOURCE_LIB
   src/FHT/Common/Controller/Task/Task.cpp
   src/FHT/Common/Controller/Server/InitialSer.cpp
   src/FHT/Common/Controller/Server/Server.cpp
-  src/FHT/Common/Controller/Client/Client.cpp)
+  src/FHT/Common/Controller/Client/Client.cpp
+  src/FHT/Common/Controller/Client/HostCheckCurl.cpp)
   
 set(HEADERS 
-  src/FHT/Interface)
+  src/FHT/Interface
+  ${OPENSSL_INCLUDE_DIR})
 set(HEADER 
   src/FHT/Common
   ${libevent_SOURCE_DIR}/include
@@ -60,5 +68,6 @@ target_include_directories(fht PUBLIC ${HEADERS})
 target_include_directories(fht PRIVATE ${HEADER})
 target_link_libraries(fht
   ${LIB_FOR_WIN}
-  ${LibEvent_LIBRARIES})
+  ${LibEvent_LIBRARIES}
+  ${OPENSSL_LIBRARIES})
 set(FHT_LIBRARIES fht)

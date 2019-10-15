@@ -10,7 +10,9 @@ endif()
 if(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
   set(BUILD_TYPE ${CMAKE_BUILD_TYPE})
-  set(LIB_FOR_WIN ws2_32)
+  set(LIB_FOR_WIN 
+    ws2_32
+    Crypt32)
 endif()
 add_definitions(-DBOOST_UUID_FORCE_AUTO_LINK)
 #ssl
@@ -70,6 +72,10 @@ ExternalProject_Get_property(fhtlib BINARY_DIR SOURCE_DIR)
 set(FHT_LIBRARIES 
     fht
     event
+    event_core
+    event_extra
+    event_openssl
+    ${OPENSSL_LIBRARIES}
     ${pthread})
 set(LINKER
   ${BINARY_DIR}/${BUILD_TYPE}
@@ -86,5 +92,4 @@ add_dependencies(TestServiceFHT fhtlib)
 target_link_libraries(TestServiceFHT 
   ${LIB_FOR_WIN}
   ${FHT_LIBRARIES}
-  ${BOOST_LIBRARIES}
-  ${OPENSSL_LIBRARIES})
+  ${BOOST_LIBRARIES})

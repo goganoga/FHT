@@ -11,10 +11,14 @@
 #include <functional>
 namespace FHT {
 	struct iClient {
+		struct respClient {
+			int status;
+			std::string body;
+		};
 		virtual std::string post(std::string url, std::string body) = 0;
 		virtual std::string get(std::string url) = 0;
-		virtual void postAsync(std::string url, std::string body, std::function<void(void)> func) = 0;
-		virtual void getAsync(std::string url, std::function<void(void)> func) = 0;
+		virtual void postAsync(std::string url, std::string body, std::function<void(respClient)> func) = 0;
+		virtual void getAsync(std::string url, std::function<void(respClient)> func) = 0;
 		virtual ~iClient() = default;
 	};
 }

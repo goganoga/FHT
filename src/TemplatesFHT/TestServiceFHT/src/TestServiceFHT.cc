@@ -19,7 +19,8 @@
 #include "iTest.h"
 void skeleton_daemon(char* args);
 struct inizialaizer {
-	FHT::iTest *test = FHT::iTest::Run.get();
+	FHT::iTest *Test = FHT::iTest::Run.get();
+	FHT::iClient *Client = FHT::iConrtoller::webClient.get();
 	FHT::iServer *Serv = FHT::iConrtoller::webServer.get(); //end
 };
 int main(int argc, char* argv[])
@@ -33,6 +34,8 @@ int main(int argc, char* argv[])
 		inizialaizerServer.Serv->setHost("0.0.0.0");
 		inizialaizerServer.Serv->setPort(10800);
 		inizialaizerServer.Serv->run();
+
+		std::cout << inizialaizerServer.Client->get("https://google.com") << std::endl;
 	} catch (std::exception const &e) {
 		std::cerr << "Error: " << e.what() << std::endl;
 	}
