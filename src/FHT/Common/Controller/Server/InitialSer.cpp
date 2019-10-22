@@ -69,7 +69,7 @@ void InitSer::Start() {
 	catch (std::exception const &e)
 	{
 		IsRun = false;
-		std::cerr << e.what() << std::endl;
+		std::cerr << "Error start server: " << e.what() << std::endl;
 	}
 }
 InitSer::~InitSer() {

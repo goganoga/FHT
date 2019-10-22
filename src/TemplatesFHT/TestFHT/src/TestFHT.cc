@@ -12,7 +12,6 @@ int main(void)
 {
     auto H = FHT::iConrtoller::hendlerManager;
     auto T = FHT::iConrtoller::taskManager;
-    T->startManager();
 
 	std::function<void(int)> a([](int a) {std::cout << a << std::endl; });
 	a(1);

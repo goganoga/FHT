@@ -17,7 +17,7 @@ namespace FHT {
 		std::string host = "localhost";
 		std::uint16_t port = 10800;
 	public:
-		Server() {};
+		Server();
 		void setPort(std::uint16_t port_) override final;
 		void setHost(std::string host_) override final;
 		void run() override final;

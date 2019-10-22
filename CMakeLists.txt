@@ -45,15 +45,26 @@ set(LibEvent_LIBRARIES
   event_openssl)
 
 #FHT
+set(BUILDER_LIB
+  src/FHT/lib/websocket/base64.cpp
+  src/FHT/lib/websocket/frame.cpp
+  src/FHT/lib/websocket/connection.cpp
+  src/FHT/lib/websocket/websocket.cpp
+  src/FHT/lib/websocket/user.cpp
+)
 set(SOURCE_LIB 
+  ${BUILDER_LIB}
   src/FHT/Common/Controller/Hendler/Hendler.cpp
   src/FHT/Common/Controller/Task/Task.cpp
   src/FHT/Common/Controller/Server/InitialSer.cpp
   src/FHT/Common/Controller/Server/Server.cpp
   src/FHT/Common/Controller/Client/Client.cpp
   src/FHT/Common/Controller/Client/HostCheckCurl.cpp)
-  
+set(HEADER_LIB
+  "lib/websocket"
+)
 set(HEADERS 
+  ${HEADER_LIB}
   src/FHT/Interface
   ${OPENSSL_INCLUDE_DIR})
 set(HEADER 

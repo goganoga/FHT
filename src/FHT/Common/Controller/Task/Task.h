@@ -29,9 +29,9 @@ namespace FHT{
         void addTask(iTask::listTask thread, std::function<void(void)> func) override final;
         void addTask(iTask::listTask thread, std::function<void(void)> func, int ms) override final;
         void addTaskOneRun(iTask::listTask thread, std::function<void(void)> func, int ms) override final;
-        bool startManager() override final;
-        bool stopManager() override final;
     private:
+        bool startManager();
+        bool stopManager();
         std::shared_ptr<iThread> getTaskThread(iTask::listTask thread);
         std::map<std::size_t, std::shared_ptr<iThread>> factory_;
         template <std::size_t ... I>

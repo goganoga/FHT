@@ -21,6 +21,7 @@ namespace FHT{
             std::string str2; //postBody
             std::string str3; //host
             double num = 0;
+            void* obj0;
             std::any obj1;
             std::map<std::string, std::string> map0; //headers
 

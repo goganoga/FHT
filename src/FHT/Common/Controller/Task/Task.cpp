@@ -17,8 +17,12 @@
 #include <memory>
 
 namespace FHT{
-    Task::Task(){}
-    Task::~Task(){}
+    Task::Task(){
+		startManager();
+	}
+    Task::~Task(){
+		stopManager();
+	}
 
     void Task::addTask(iTask::listTask thread, std::function<void(void)> func) {
         getTaskThread(thread)->pull(func);
@@ -105,15 +109,15 @@ public:
         }
 	}
 	void pull(std::function<void(void)> func) {
-        std::lock_guard<std::mutex> lock(mutex);
+        //std::lock_guard<std::mutex> lock(mutex);
         queue_.push(std::make_tuple(func, 0, true, std::chrono::high_resolution_clock::now()));
     }
 	void pull(std::function<void(void)> func, int ms) {
-        std::lock_guard<std::mutex> lock(mutex);
+        //std::lock_guard<std::mutex> lock(mutex);
         queue_.push(std::make_tuple(func, ms, true, std::chrono::high_resolution_clock::now()));
     }
     void pullTime(std::function<void(void)> func, int ms) {
-        std::lock_guard<std::mutex> lock(mutex);
+        //std::lock_guard<std::mutex> lock(mutex);
         queue_.push(std::make_tuple(func, ms, false, std::chrono::high_resolution_clock::now()));
     }
     bool isRun() { return isRun_; }
