@@ -14,7 +14,7 @@
 #include "tools.h"
 #include "frame.h"
 #include "openssl/sha.h"
-#include "base64.h"
+#include "../base64.h"
 #include <iostream>
 #include <string>
 #include <vector>

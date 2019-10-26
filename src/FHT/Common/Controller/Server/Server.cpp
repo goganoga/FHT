@@ -38,7 +38,7 @@ namespace FHT {
 		auto H = FHT::iConrtoller::hendlerManager;
 		auto T = FHT::iConrtoller::taskManager;
 		auto *OutBuf = evhttp_request_get_output_buffer(req);
-		if (evhttp_request_get_command(req) == EVHTTP_REQ_GET || evhttp_request_get_command(req) == EVHTTP_REQ_POST) {
+		if (evhttp_request_get_command(req) == EVHTTP_REQ_GET || evhttp_request_get_command(req) == EVHTTP_REQ_POST || evhttp_request_get_command(req) == EVHTTP_REQ_PUT) {
 			if (!OutBuf) goto err;
 			struct evkeyvalq headers;
 			auto *InBuf = evhttp_request_get_input_buffer(req);
@@ -66,12 +66,7 @@ namespace FHT {
 			if (!location) goto err;
 
 			FHT::iHendler::data data_;
-			data_.str0 = evhttp_request_get_uri(req); //uri
-			data_.str1 = location ? location : ""; // location
 			data_.map0 = map; //headers
-			data_.str2 = postBody.get(); //postBody
-			data_.str3 = evhttp_request_get_host(req); //host
-			data_.id = evhttp_uri_get_port(evhttp_request); //port
 
 			if (auto a = map2.find("Connection"); a != map2.end() && a->second == "Upgrade") {
 				user_t* user = user_create();
@@ -131,6 +126,12 @@ namespace FHT {
 			}
 			auto func = H->getUniqueHendler(lessen_all_ ? "head" : location);
 			if (!func) goto err;
+			data_.str0 = evhttp_request_get_uri(req); //uri
+			data_.str1 = location ? location : ""; // location
+			data_.str2 = postBody.get(); //postBody
+			data_.str3 = evhttp_request_get_host(req); //host
+			data_.id = evhttp_uri_get_port(evhttp_request); //port
+
 			evhttp_add_header(evhttp_request_get_output_headers(req), "Content-Type", "text/plain; charset=utf-8");
 			evbuffer_add_printf(OutBuf, func(data_).c_str());
 			evhttp_clear_headers(&headers);

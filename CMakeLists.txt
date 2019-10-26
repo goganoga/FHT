@@ -46,7 +46,7 @@ set(LibEvent_LIBRARIES
 
 #FHT
 set(BUILDER_LIB
-  src/FHT/lib/websocket/base64.cpp
+  src/FHT/lib/base64.cpp
   src/FHT/lib/websocket/frame.cpp
   src/FHT/lib/websocket/connection.cpp
   src/FHT/lib/websocket/websocket.cpp
@@ -61,7 +61,8 @@ set(SOURCE_LIB
   src/FHT/Common/Controller/Client/Client.cpp
   src/FHT/Common/Controller/Client/HostCheckCurl.cpp)
 set(HEADER_LIB
-  "lib/websocket"
+  lib/websocket
+  lib
 )
 set(HEADERS 
   ${HEADER_LIB}

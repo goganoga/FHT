@@ -148,7 +148,7 @@ void response_write_cb(struct bufferevent *bev, void *ctx) {
 //send a frame
 int32_t send_a_frame(ws_conn_t *conn, const frame_buffer_t *fb) {
 	try {
-		if (conn && conn->bev)
+		if (conn)
 			return bufferevent_write(conn->bev, fb->data, fb->len);
 		throw;
 	}
