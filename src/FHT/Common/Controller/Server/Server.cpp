@@ -77,31 +77,20 @@ namespace FHT {
 				std::function<void(std::string)> func_ptr;
 				func_ptr = [&](std::string id) {
 					if (!H->getUniqueHendler(id + "write")) {
-						auto write = [&](iHendler::data data, user_t* user) {
+						auto write = [&, user](iHendler::data data) {
 							std::string str = data.str1;
 							frame_buffer_t* fb = frame_buffer_new(1, 1, str.size(), str.data());
-							if (send_a_frame(user->wscon, fb) == 0)
-								return "1";
-							return "0";
+							return send_a_frame(user->wscon, fb) ? "1": "0";
 						};
-						H->addUniqueHendler(id + "write", std::bind(write, std::placeholders::_1, user)); 
+						H->addUniqueHendler(id + "write", write); 
 					}
-					if (!H->getHendler(id + "dalete")) {
-						auto dalete = [H, T](std::string id) {
-							T->addTaskOneRun(T->MAIN, [H, id]() {
-								H->removeUniqueHendler(id + "read");
-								H->removeUniqueHendler(id + "write");
-								H->removeHendler(id + "dalete");
-								}, 100);
-						};
-						H->addHendler(id + "dalete", std::bind(dalete, id));
-					}
-					auto user_del_cb = [H](std::string id) {
-						auto func = H->getHendler(id + "dalete");
-						if(func)
-							func();
+					user->close_bind = [H, T, id]() {
+						T->addTaskOneRun(T->MAIN, [H, id]() {
+							H->removeUniqueHendler(id + "read");
+							H->removeUniqueHendler(id + "write");
+						}, 100);
 					};
-					auto user_read_cb = [H](std::string id, std::string msg) {
+					user->read_bind = [H, id](std::string msg) {
 						iHendler::data data;
 						data.str0 = id;
 						data.str1 = msg;
@@ -110,8 +99,6 @@ namespace FHT {
 							auto result = func(data);
 						}
 					};
-					user->close_bind = std::bind(user_del_cb, id);
-					user->read_bind = std::bind(user_read_cb, id, std::placeholders::_1);
 					ws_conn_setcb(user->wscon, FRAME_RECV, frame_recv_cb, user);
 					ws_conn_setcb(user->wscon, CLOSE, user_disconnect_cb, user);
 					};
