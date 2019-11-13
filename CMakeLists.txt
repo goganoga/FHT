@@ -9,6 +9,9 @@ endif()
 if(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
   set(LIB_FOR_WIN 
+    iphlpapi
+    shell32
+    advapi32
     ws2_32
     Crypt32)
 endif()
