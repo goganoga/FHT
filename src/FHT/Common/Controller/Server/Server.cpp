@@ -48,7 +48,7 @@ namespace FHT {
 			evbuffer_copyout(InBuf, postBody.get(), LenBuf);
 			evhttp_parse_query(evhttp_request_get_uri(req), &headers);
 			auto evhttp_request = evhttp_request_get_evhttp_uri(req);
-			auto location = evhttp_uri_get_path(evhttp_request);
+			const char* location = evhttp_uri_get_path(evhttp_request);
 			std::map<std::string, std::string> map;
 			for (struct evkeyval *tqh_first = headers.tqh_first; &tqh_first->next != nullptr; ) {
 				map.emplace(tqh_first->key, tqh_first->value);
@@ -67,43 +67,37 @@ namespace FHT {
 
 			FHT::iHendler::data data_;
 			data_.map0 = map; //headers
+			data_.str0 = evhttp_request_get_uri(req); //uri
+			data_.str1 = location ? location : ""; // location
+			data_.str2 = postBody.get(); //postBody
+			data_.str3 = evhttp_request_get_host(req); //host
+			data_.id = evhttp_uri_get_port(evhttp_request); //port
 
 			if (auto a = map2.find("Connection"); a != map2.end() && a->second == "Upgrade") {
+				auto func = H->getUniqueHendler(FHT::webSocket(location));
+				if (!func) goto err;
 				user_t* user = user_create();
+				long long id_sock = reinterpret_cast<long long>(req);
 				user->wscon->bev = evhttp_connection_get_bufferevent(evhttp_request_get_connection(req));
-				for (auto a : map2)
+				for (auto a : map2) {
 					user->wscon->ws_req_str.append(a.first).append(": ").append(a.second).append("\r\n");
-
-				std::function<void(std::string)> func_ptr;
-				func_ptr = [&](std::string id) {
-					if (!H->getUniqueHendler(id + "write")) {
-						auto write = [&, user](iHendler::data data) {
-							std::string str = data.str1;
-							frame_buffer_t* fb = frame_buffer_new(1, 1, str.size(), str.data());
-							return send_a_frame(user->wscon, fb) ? "1": "0";
-						};
-						H->addUniqueHendler(id + "write", write); 
-					}
-					user->close_bind = [H, T, id]() {
-						T->addTaskOneRun(T->MAIN, [H, id]() {
-							H->removeUniqueHendler(id + "read");
-							H->removeUniqueHendler(id + "write");
-						}, 100);
-					};
-					user->read_bind = [H, id](std::string msg) {
-						iHendler::data data;
-						data.str0 = id;
-						data.str1 = msg;
-						auto func = H->getUniqueHendler("readWebSocket");
-						if (func) {
-							auto result = func(data);
-						}
-					};
-					ws_conn_setcb(user->wscon, FRAME_RECV, frame_recv_cb, user);
-					ws_conn_setcb(user->wscon, CLOSE, user_disconnect_cb, user);
-					};
-				data_.obj0 = (void*)&func_ptr;
-				auto func = H->getUniqueHendler("creatorWebSocket");
+				}
+				auto publisher = [&, user](std::string& str) {
+					frame_buffer_t* fb = frame_buffer_new(1, 1, str.size(), str.data());
+					return send_a_frame(user->wscon, fb);
+				};
+				std::shared_ptr<wsSubscriber> ws = std::make_shared<wsSubscriber>(std::move(publisher));
+				user->close_bind = [ws]() {
+					if(ws->deleter)
+						ws->deleter();
+				};
+				user->read_bind = [ws](std::string msg) {
+					if(ws->subscriber)
+						ws->subscriber(msg);
+				};
+				ws_conn_setcb(user->wscon, FRAME_RECV, frame_recv_cb, user);
+				ws_conn_setcb(user->wscon, CLOSE, user_disconnect_cb, user);
+				data_.obj0 = (void*)&ws;
 				auto result = func(data_);
 				ws_serve_start(user->wscon);
 				bufferevent_enable(user->wscon->bev, EV_WRITE);
@@ -113,11 +107,6 @@ namespace FHT {
 			}
 			auto func = H->getUniqueHendler(lessen_all_ ? "head" : location);
 			if (!func) goto err;
-			data_.str0 = evhttp_request_get_uri(req); //uri
-			data_.str1 = location ? location : ""; // location
-			data_.str2 = postBody.get(); //postBody
-			data_.str3 = evhttp_request_get_host(req); //host
-			data_.id = evhttp_uri_get_port(evhttp_request); //port
 
 			evhttp_add_header(evhttp_request_get_output_headers(req), "Content-Type", "text/plain; charset=utf-8");
 			evbuffer_add_printf(OutBuf, func(data_).c_str());

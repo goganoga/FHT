@@ -18,6 +18,7 @@ namespace FHT {
 		auto H = FHT::iConrtoller::hendlerManager;
 		H->addUniqueHendler("/test", std::bind(&Test::mainTest, this, std::placeholders::_1));
 		H->addUniqueHendler("/testGet", std::bind(&Test::mainTestGet, this, std::placeholders::_1));
+		H->addUniqueHendler(FHT::webSocket("/postData"), std::bind(&Test::mainTestWebSocket, this, std::placeholders::_1));
 	}
 	std::string Test::mainTest(FHT::iHendler::data resp) {
 		std::string buf = resp.str0;
@@ -59,6 +60,7 @@ namespace FHT {
 		}
 		return body;
 	}
+
 	std::string Test::mainTestGet(FHT::iHendler::data resp) {
 		auto headers = resp.map0;
 		std::map< std::string, std::string> resp_map;
@@ -78,6 +80,39 @@ namespace FHT {
 		}
 		delete id_buf;
 		return jsonParse(resp_map);
+	}
+
+	std::string authService::mainTestWebSocket(FHT::iHendler::data resp) {
+		auto headers = resp.map0;
+		std::shared_ptr<FHT::wsSubscriber> func = *(std::shared_ptr<FHT::wsSubscriber>*)resp.obj0;
+		std::map< std::string, std::string> resp_map;
+		try {
+			auto H = FHT::iConrtoller::hendlerManager;
+			auto T = FHT::iConrtoller::taskManager;
+			auto id_buf = headers.find("id");
+			std::string id;
+			if (id_buf != headers.end()) {
+				id = id_buf->second;
+			}
+			std::function<void(std::string)> fun = [](std::string a) {std::cout << a << std::endl; };
+			func->setSubscriber(fun);
+			std::shared_ptr<int> i(new int(0));
+			auto func_time = [func,i](std::string id) {
+				std::string str = id + " massage number: ";
+				str.append(std::to_string(*i.get()));
+				if (func->publisher) {
+					func->publisher(str);
+				}
+				++* i;
+			};
+			T->addTask(T->IO, std::bind(func_time, id), 10000);
+		}
+
+		//user_disconnect_cb add del heandler's
+		catch (const std::exception& e) {
+			std::cerr << "Error: " << e.what() << std::endl;
+		}
+		return std::string();
 	}
 	std::string Test::md5Hash(const char* string) {
 		unsigned char digest[MD5_DIGEST_LENGTH];
