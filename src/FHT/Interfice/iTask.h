@@ -8,7 +8,6 @@
 #define FHTITASK_H
 #include <functional>
 namespace FHT{
-    class Task;
     struct iTask {
         virtual ~iTask() = default;
         enum listTask {
@@ -18,9 +17,14 @@ namespace FHT{
             UI,
             size
         };
-        virtual void addTask(iTask::listTask thread, std::function<void(void)> func) = 0;
-        virtual void addTask(iTask::listTask thread, std::function<void(void)> func, int ms) = 0;
-        virtual void addTaskOneRun(iTask::listTask thread, std::function<void(void)> func, int ms) = 0;
+		enum state {
+			FINISH,
+			CONTINUE
+		};
+        virtual void addTask(iTask::listTask thread, std::function<state(void)> func) = 0;
+        virtual void addTask(iTask::listTask thread, std::function<state(void)> func, int ms) = 0;
+        virtual void addTaskOneRun(iTask::listTask thread, std::function<void(void)> func) = 0;
+		virtual void addTaskOneRun(iTask::listTask thread, std::function<void(void)> func, int ms) = 0;
     };
 }
 #endif //FHTITASK_H
