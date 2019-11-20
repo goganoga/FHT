@@ -32,6 +32,9 @@ namespace FHT {
 		void setSubscriber(std::function<void(std::string&)>& subscriberFunctor) {
 			subscriber = std::move(subscriberFunctor);
 		};
+		void setSubscriber(std::function<void(std::string&)> subscriberFunctor) {
+			subscriber = std::move(subscriberFunctor);
+		};
 		void setSubscriber(void(*subscriberFunctor)(std::string&)) {
 			subscriber = static_cast<std::function<void(std::string&)>>(subscriberFunctor);
 		};
