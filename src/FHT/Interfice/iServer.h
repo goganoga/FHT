@@ -42,7 +42,7 @@ namespace FHT {
 			if(!isDisconnect) subscriber = static_cast<std::function<void(std::string&)>>(subscriberFunctor);
 		};
 		bool getPublisher(std::string& str) {
-			return isDisconnect && !publisher ? false : publisher(str);
+			return isDisconnect ? false : publisher ? publisher(str) : false;
 		}
 	private:
 		bool isDisconnect = false;
