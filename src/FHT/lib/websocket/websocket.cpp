@@ -1,4 +1,5 @@
 #include "websocket.h"
+#include <map>
 #ifdef _WIN32
 
 #define snprintf _snprintf
@@ -11,49 +12,46 @@ int32_t parse_websocket_request(const char *s_req, ws_req_t *ws_req) {
 	if (!s_req || !ws_req) {
 		return -1;
 	}
-	size_t len = strlen(s_req);
-	std::unique_ptr<char> tmp(new char[len + 1]);
-	memcpy(tmp.get(), s_req, len);
-
-	char *delim = "\r\n";
-	char *p = NULL, *q = NULL;
-
-	p = strtok(tmp.get(), delim);
-	if (p) {
-		ws_req->req = p;
-		while (p = strtok(NULL, delim)) {
-			if ((q = strstr(p, ":")) != NULL) {
-				*q = '\0';
-				if (strcasecmp(p, "Connection") == 0) {
-					while (*++q == ' ');
-					ws_req->connection = q;
-				}
-				if (strcasecmp(p, "Upgrade") == 0) {
-					while (*++q == ' ');
-					ws_req->upgrade = q;
-				}
-				if (strcasecmp(p, "Host") == 0) {
-					while (*++q == ' ');
-					ws_req->host = q + 1;
-				}
-				if (strcasecmp(p, "Origin") == 0) {
-					while (*++q == ' ');
-					ws_req->origin = q;
-				}
-				if (strcasecmp(p, "Cookie") == 0) {
-					while (*++q == ' ');
-					ws_req->cookie = q;
-				}
-				if (strcasecmp(p, "Sec-WebSocket-Key") == 0) {
-					while (*++q == ' ');
-					ws_req->sec_websocket_key = q;
-				}
-				if (strcasecmp(p, "Sec-WebSocket-Version") == 0) {
-					while (*++q == ' ');
-					ws_req->sec_websocket_version = q;
-				}
+	std::string str(s_req);
+	std::map<std::string, std::string> map;
+	std::string key;
+	std::string value;
+	for (int i = 0; i < str.size(); i++) {
+		if (str[i] == '\r' && str[i + 1] == '\n') {
+			map.emplace(key, value);
+			++i;
+			key.clear();
+			value.clear();
+		} else if(str[i] == ':' && key.empty()){
+			if (str[i+1] == ' ') {
+				i++;
 			}
+			key = value;
+			value.clear();
+		} else {
+		value += str[i];
 		}
+	}
+	if (auto a = map.find("Connection"); a != map.end()) {
+		ws_req->connection = a->second;
+	}
+	if (auto a = map.find("Upgrade"); a != map.end()) {
+		ws_req->upgrade = a->second;
+	}
+	if (auto a = map.find("Host"); a != map.end()) {
+		ws_req->host = a->second;
+	}
+	if (auto a = map.find("Origin"); a != map.end()) {
+		ws_req->origin = a->second;
+	}
+	if (auto a = map.find("Cookie"); a != map.end()) {
+		ws_req->cookie = a->second;
+	}
+	if (auto a = map.find("Sec-WebSocket-Key"); a != map.end()) {
+		ws_req->sec_websocket_key = a->second;
+	}
+	if (auto a = map.find("Sec-WebSocket-Version"); a != map.end()) {
+		ws_req->sec_websocket_version = a->second;
 	}
 	return 0;
 }

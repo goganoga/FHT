@@ -105,9 +105,11 @@ void respond_websocket_request(ws_conn_t *conn) {
 void request_read_cb(struct bufferevent *bev, void *ctx) {
 	ws_conn_t *conn = (ws_conn_t*)ctx;
 	if (conn && conn->bev) {
+		std::string end("\r\n");
 		char c;
 		bufferevent_read(bev, &c, 1);
 		conn->ws_req_str += c;
+		end += c;
 		size_t n = conn->ws_req_str.size();
 		//TODO
 		//for security
@@ -116,10 +118,10 @@ void request_read_cb(struct bufferevent *bev, void *ctx) {
 		//}
 
 		//receive request completely
-		//if (n >= 4 && conn->ws_req_str.substr(n - 4) == "\r\n\r\n") {
+		if (n >= 4 && conn->ws_req_str.substr(n - 3) == end) {
 			bufferevent_disable(conn->bev, EV_READ); //stop reading before a valid handshake
 			respond_websocket_request(conn); //send websocket response
-		//}
+		}
 	} else {
 		ws_serve_exit(conn);
 	}
@@ -149,7 +151,7 @@ void response_write_cb(struct bufferevent *bev, void *ctx) {
 int32_t send_a_frame(ws_conn_t *conn, const frame_buffer_t *fb) {
 	try {
 		if (conn)
-			return bufferevent_write(conn->bev, fb->data, fb->len);
+			return bufferevent_write(conn->bev, fb->data, fb->len) == 0 ? 200 : 500;
 		throw;
 	}
 	catch (const std::exception& e) {

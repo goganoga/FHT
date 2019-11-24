@@ -17,6 +17,8 @@ void user_destroy(user_t *user) {
 		if (user->wscon) {
 			ws_conn_free(user->wscon);
 		}
+		auto a = std::move(user->close_bind);
+		auto b = std::move(user->read_bind);
 		delete user;
 	}
 }

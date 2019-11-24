@@ -40,17 +40,17 @@ namespace FHT {
 		auto *OutBuf = evhttp_request_get_output_buffer(req);
 		if (evhttp_request_get_command(req) == EVHTTP_REQ_GET || evhttp_request_get_command(req) == EVHTTP_REQ_POST || evhttp_request_get_command(req) == EVHTTP_REQ_PUT) {
 			if (!OutBuf) goto err;
-			struct evkeyvalq headers;
+			std::unique_ptr<evkeyvalq> headers(new evkeyvalq());
 			auto *InBuf = evhttp_request_get_input_buffer(req);
 			auto LenBuf = evbuffer_get_length(InBuf);
 			std::unique_ptr<char> postBody(new char[LenBuf + 1]);
 			postBody.get()[LenBuf] = 0;
-			evbuffer_copyout(InBuf, postBody.get(), LenBuf);
-			evhttp_parse_query(evhttp_request_get_uri(req), &headers);
+			evbuffer_copyout(std::move(InBuf), postBody.get(), LenBuf);
+			evhttp_parse_query(evhttp_request_get_uri(req), headers.get());
 			auto evhttp_request = evhttp_request_get_evhttp_uri(req);
 			const char* location = evhttp_uri_get_path(evhttp_request);
 			std::map<std::string, std::string> map;
-			for (struct evkeyval *tqh_first = headers.tqh_first; &tqh_first->next != nullptr; ) {
+			for (struct evkeyval *tqh_first = headers->tqh_first; &tqh_first->next != nullptr; ) {
 				map.emplace(tqh_first->key, tqh_first->value);
 				tqh_first = tqh_first->next.tqe_next;
 			}
@@ -67,37 +67,62 @@ namespace FHT {
 
 			FHT::iHendler::data data_;
 			data_.map0 = map; //headers
-			data_.str0 = evhttp_request_get_uri(req); //uri
+			data_.str0 = std::move(evhttp_request_get_uri(req)); //uri
 			data_.str1 = location ? location : ""; // location
 			data_.str2 = postBody.get(); //postBody
-			data_.str3 = evhttp_request_get_host(req); //host
-			data_.id = evhttp_uri_get_port(evhttp_request); //port
+			data_.str3 = std::move(evhttp_request_get_host(req)); //host
+			data_.id = evhttp_uri_get_port(std::move(evhttp_request)); //port
 
 			if (auto a = map2.find("Connection"); a != map2.end() && a->second == "Upgrade") {
 				auto func = H->getUniqueHendler(FHT::webSocket(location));
 				if (!func) goto err;
 				user_t* user = user_create();
 				long long id_sock = reinterpret_cast<long long>(req);
-				user->wscon->bev = evhttp_connection_get_bufferevent(evhttp_request_get_connection(req));
+				user->wscon->bev = std::move(evhttp_connection_get_bufferevent(evhttp_request_get_connection(req)));
 				for (auto a : map2) {
 					user->wscon->ws_req_str.append(a.first).append(": ").append(a.second).append("\r\n");
 				}
-				auto publisher = [&, user](std::string& str) {
-					frame_buffer_t* fb = frame_buffer_new(1, 1, str.size(), str.data());
-					return send_a_frame(user->wscon, fb);
+				std::mutex* mu_p(new std::mutex());
+				wsSubscriber *ws = new wsSubscriber();
+				auto publisher = [&, ws, user, mu_p](std::string& str) {
+					try {
+						std::lock_guard<std::mutex> lock(*mu_p);
+						if (!ws || ws->isDisconnect) {
+							return false;
+						}
+						std::unique_ptr<frame_buffer_t> fb(frame_buffer_new(1, 1, str.size(), str.data()));
+						return send_a_frame(user->wscon, fb.get()) == 200;
+					} catch (std::exception const& e) {
+						std::cerr << "Error WS: " << e.what() << std::endl; 
+					}
+					return false;
 				};
-				std::shared_ptr<wsSubscriber> ws = std::make_shared<wsSubscriber>(std::move(publisher));
-				user->close_bind = [ws]() {
-					if(ws->deleter)
-						ws->deleter();
+				ws->publisher = publisher;
+				user->read_bind = [&, ws, mu_p](std::string msg) {
+					try {
+						std::lock_guard<std::mutex> lock(*mu_p);
+						if (ws || !ws->isDisconnect) {
+							ws->subscriber(msg); 
+						} 
+					} catch (std::exception const& e) {
+						std::cerr << "Error WS: " << e.what() << std::endl;
+					}
 				};
-				user->read_bind = [ws](std::string msg) {
-					if(ws->subscriber)
-						ws->subscriber(msg);
+				user->close_bind = [&, ws, mu_p]() {
+					try {
+						std::lock_guard<std::mutex> lock(*mu_p);
+						ws->isDisconnect = true;
+						if (ws && ws->deleter)
+							ws->deleter();
+						delete ws;
+					} catch (std::exception const& e) {
+						std::cerr << "Error WS: " << e.what() << std::endl;
+					}
+					delete mu_p;
 				};
+				data_.obj0 = (void*)ws;
 				ws_conn_setcb(user->wscon, FRAME_RECV, frame_recv_cb, user);
 				ws_conn_setcb(user->wscon, CLOSE, user_disconnect_cb, user);
-				data_.obj0 = (void*)&ws;
 				auto result = func(data_);
 				ws_serve_start(user->wscon);
 				bufferevent_enable(user->wscon->bev, EV_WRITE);
@@ -108,9 +133,8 @@ namespace FHT {
 			auto func = H->getUniqueHendler(lessen_all_ ? "head" : location);
 			if (!func) goto err;
 
-			evhttp_add_header(evhttp_request_get_output_headers(req), "Content-Type", "text/plain; charset=utf-8");
+			evhttp_add_header(std::move(evhttp_request_get_output_headers(req)), "Content-Type", "text/plain; charset=utf-8");
 			evbuffer_add_printf(OutBuf, func(data_).c_str());
-			evhttp_clear_headers(&headers);
 			evhttp_send_reply(req, HTTP_OK, "", OutBuf); // nead realization webSocket
 		}
 		else {

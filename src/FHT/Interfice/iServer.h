@@ -23,24 +23,31 @@ namespace FHT {
 	struct wsSubscriber {
 		friend class Server;
 		wsSubscriber(
-			std::function<bool(std::string&)> publisher_,
+			std::function<bool(std::string&)> publisher_ = nullptr,
 			std::function<void()> deleter_ = nullptr,
 			std::function<void(std::string&)> subscriber_ = nullptr) :
 			publisher(publisher_),
 			deleter(deleter_),
 			subscriber(subscriber_) {}
 		void setSubscriber(std::function<void(std::string&)>& subscriberFunctor) {
-			subscriber = std::move(subscriberFunctor);
+			if (!isDisconnect) subscriber = std::move(subscriberFunctor);
 		};
+		~wsSubscriber() {
+			//delete this;
+		}
 		void setSubscriber(std::function<void(std::string&)> subscriberFunctor) {
-			subscriber = std::move(subscriberFunctor);
+			if (!isDisconnect) subscriber = std::move(subscriberFunctor);
 		};
 		void setSubscriber(void(*subscriberFunctor)(std::string&)) {
-			subscriber = static_cast<std::function<void(std::string&)>>(subscriberFunctor);
+			if(!isDisconnect) subscriber = static_cast<std::function<void(std::string&)>>(subscriberFunctor);
 		};
-		std::function<bool(std::string&)> const publisher;
-		std::function<void()> const deleter;
+		bool getPublisher(std::string& str) {
+			return isDisconnect && !publisher ? false : publisher(str);
+		}
 	private:
+		bool isDisconnect = false;
+		std::function<void()> deleter;
+		std::function<bool(std::string&)> publisher;
 		std::function<void(std::string&)> subscriber;
 	};
 }

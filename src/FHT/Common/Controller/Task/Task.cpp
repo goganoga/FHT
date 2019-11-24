@@ -103,8 +103,8 @@ public:
             if(difftime.count() < timerun){
                 queue_.push(a);
             } else {
-				FHT::iTask::state result = std::get<tuple::function>(a)();
-                if(result == FHT::iTask::state::CONTINUE && std::get<tuple::isLoop>(a)){
+				auto functor = std::get<tuple::function>(a);
+                if(functor && functor() == FHT::iTask::state::CONTINUE && std::get<tuple::isLoop>(a)){
                     std::get<tuple::ts>(a) = std::chrono::high_resolution_clock::now();
                     queue_.push(a);
                 }
