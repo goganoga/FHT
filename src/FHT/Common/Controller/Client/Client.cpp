@@ -87,7 +87,6 @@ namespace {
 	void webClient::http_request_done(struct evhttp_request* req, void* ctx) {
 			FHT::iClient::respClient resp;
 			char buffer[256];
-			int nread;
 			if (!req || !evhttp_request_get_response_code(req)) {
 				struct bufferevent* bev = (struct bufferevent*) ctx;
 				unsigned long oslerr;
@@ -142,9 +141,9 @@ namespace {
 				path = "/";
 			query = evhttp_uri_get_query(http_uri);
 			if (query == nullptr)
-				snprintf(uri, sizeof(uri) - 1, "%s", path);
+				printf(uri, sizeof(uri) - 1, "%s", path); //snprintf
 			else
-				snprintf(uri, sizeof(uri) - 1, "%s?%s", path, query);
+				printf(uri, sizeof(uri) - 1, "%s?%s", path, query); //snprintf
 			uri[sizeof(uri) - 1] = '\0';
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || \
 	(defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x20700000L)
@@ -284,10 +283,10 @@ namespace {
 		delete data_file;
 		delete crt;
 		delete scheme, host, path, query;
-		delete bev;
 		delete req;
 		delete output_headers;
-		delete output_buffer;
+		bufferevent_free(bev);
+		evbuffer_free(output_buffer);
 	}
 	webClient::HostnameValidationResult webClient::matches_subject_alternative_name(const char* hostname, const X509* server_cert) {
 			HostnameValidationResult result = MatchNotFound;

@@ -65,6 +65,9 @@ namespace FHT {
 			}
 			if (!location) goto err;
 
+			auto func = H->getUniqueHendler(lessen_all_ ? "head" : location);
+			if (!func) goto err;
+
 			FHT::iHendler::data data_;
 			data_.map0 = map; //headers
 			data_.str0 = std::move(evhttp_request_get_uri(req)); //uri
@@ -77,50 +80,34 @@ namespace FHT {
 				auto func = H->getUniqueHendler(FHT::webSocket(location));
 				if (!func) goto err;
 				user_t* user = user_create();
-				long long id_sock = reinterpret_cast<long long>(req);
-				user->wscon->bev = std::move(evhttp_connection_get_bufferevent(evhttp_request_get_connection(req)));
+				user->wscon->bev = evhttp_connection_get_bufferevent(evhttp_request_get_connection(req));
+				//user->wscon->bev = std::move(evhttp_connection_get_bufferevent(evhttp_request_get_connection(req)));
 				for (auto a : map2) {
 					user->wscon->ws_req_str.append(a.first).append(": ").append(a.second).append("\r\n");
 				}
-				std::mutex* mu_p(new std::mutex());
-				wsSubscriber *ws = new wsSubscriber();
-				auto publisher = [&, ws, user, mu_p](std::string& str) {
-					try {
-						std::lock_guard<std::mutex> lock(*mu_p);
-						if (!ws || ws->isDisconnect) {
-							return false;
-						}
-						std::unique_ptr<frame_buffer_t> fb(frame_buffer_new(1, 1, str.size(), str.data()));
-						return send_a_frame(user->wscon, fb.get()) == 200;
-					} catch (std::exception const& e) {
-						std::cerr << "Error WS: " << e.what() << std::endl; 
-					}
-					return false;
+				//long long id_sock = reinterpret_cast<long long>(req);
+				std::shared_ptr<bool> close(new bool(false));
+				std::shared_ptr<wsSubscriber> ws(new wsSubscriber());
+				ws->publisher = [&, wscon = user->wscon, close](std::string& str) {
+					if (*close.get()) return false;
+					if (!wscon) return false;
+					std::unique_ptr<frame_buffer_t> fb(frame_buffer_new(1, 1, str.size(), str.data()));
+					std::cout << str << "\n";
+					return send_a_frame(wscon, fb.get()) == 200;
 				};
-				ws->publisher = publisher;
-				user->read_bind = [&, ws, mu_p](std::string msg) {
-					try {
-						std::lock_guard<std::mutex> lock(*mu_p);
-						if (ws || !ws->isDisconnect) {
-							ws->subscriber(msg); 
-						} 
-					} catch (std::exception const& e) {
-						std::cerr << "Error WS: " << e.what() << std::endl;
+				user->read_bind = [&, ws](std::string msg) {
+					if (ws && ws->subscriber) {
+						ws->subscriber(msg); 
 					}
 				};
-				user->close_bind = [&, ws, mu_p]() {
-					try {
-						std::lock_guard<std::mutex> lock(*mu_p);
-						ws->isDisconnect = true;
-						if (ws && ws->deleter)
-							ws->deleter();
-						delete ws;
-					} catch (std::exception const& e) {
-						std::cerr << "Error WS: " << e.what() << std::endl;
+				user->close_bind = [&, ws, close]() {
+					*close.get() = true;
+					if (ws && ws->deleter) {
+						ws->deleter();
 					}
-					delete mu_p;
 				};
-				data_.obj0 = (void*)ws;
+				//data_.obj0 = (void*)ws;
+				data_.obj1 = ws;
 				ws_conn_setcb(user->wscon, FRAME_RECV, frame_recv_cb, user);
 				ws_conn_setcb(user->wscon, CLOSE, user_disconnect_cb, user);
 				auto result = func(data_);
@@ -130,8 +117,6 @@ namespace FHT {
 				return;
 
 			}
-			auto func = H->getUniqueHendler(lessen_all_ ? "head" : location);
-			if (!func) goto err;
 
 			evhttp_add_header(std::move(evhttp_request_get_output_headers(req)), "Content-Type", "text/plain; charset=utf-8");
 			evbuffer_add_printf(OutBuf, func(data_).c_str());

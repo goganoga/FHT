@@ -15,6 +15,7 @@ user_t *user_create() {
 void user_destroy(user_t *user) {
 	if (user) {
 		if (user->wscon) {
+			//ws_serve_exit(user->wscon);
 			ws_conn_free(user->wscon);
 		}
 		auto a = std::move(user->close_bind);
