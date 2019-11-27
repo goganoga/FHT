@@ -79,8 +79,11 @@ namespace FHT {
 			if (auto a = map2.find("Connection"); a != map2.end() && a->second == "Upgrade") {
 				auto func = H->getUniqueHendler(FHT::webSocket(location));
 				if (!func) goto err;
+				//evbuffer_add_printf(OutBuf, "<html><body><center><h1>404</h1></center></body></html>");
+				//evhttp_send_reply(req, HTTP_NOTFOUND, "", OutBuf);
 				user_t* user = user_create();
-				user->wscon->bev = evhttp_connection_get_bufferevent(evhttp_request_get_connection(req));
+				user->wscon->conev = evhttp_request_get_connection(req);
+				user->wscon->bev = evhttp_connection_get_bufferevent(user->wscon->conev);
 				//user->wscon->bev = std::move(evhttp_connection_get_bufferevent(evhttp_request_get_connection(req)));
 				for (auto a : map2) {
 					user->wscon->ws_req_str.append(a.first).append(": ").append(a.second).append("\r\n");
@@ -92,7 +95,6 @@ namespace FHT {
 					if (*close.get()) return false;
 					if (!wscon) return false;
 					std::unique_ptr<frame_buffer_t> fb(frame_buffer_new(1, 1, str.size(), str.data()));
-					std::cout << str << "\n";
 					return send_a_frame(wscon, fb.get()) == 200;
 				};
 				user->read_bind = [&, ws](std::string msg) {
@@ -100,7 +102,7 @@ namespace FHT {
 						ws->subscriber(msg); 
 					}
 				};
-				user->close_bind = [&, ws, close]() {
+				user->close_bind = [&, ws, close, req]() {
 					*close.get() = true;
 					if (ws && ws->deleter) {
 						ws->deleter();

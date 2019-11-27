@@ -6,6 +6,7 @@ ws_conn_t *ws_conn_new() {
 	ws_conn_t *conn = new (nothrow) ws_conn_t;
 	if (conn) {
 		conn->bev = NULL;
+		conn->conev = nullptr;
 		conn->ws_req_str = "";
 		conn->ws_resp_str = "";
 		conn->step = ZERO;
@@ -29,13 +30,11 @@ ws_conn_t *ws_conn_new() {
 //destroy a websocket connection
 void ws_conn_free(ws_conn_t *conn) {
 	if (conn) {
-        if (conn->bev) {
-            bufferevent_free(conn->bev);
-            conn->bev = NULL;
-        }
+		if (conn->conev) {
+			evhttp_connection_free(conn->conev);
+		}
 		if (conn->frame) {
 			frame_free(conn->frame);
-			conn->frame = NULL;
 		}
 		delete conn;
 	}

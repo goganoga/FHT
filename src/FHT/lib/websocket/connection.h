@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <event2/event.h>
+#include <event2/http.h>
 #include <event2/bufferevent.h>
 #include "websocket.h"
 using namespace std;
@@ -27,7 +28,8 @@ typedef struct {
 
 
 typedef struct websocket_connection {
-	struct bufferevent *bev;
+	struct bufferevent* bev;
+	struct evhttp_connection* conev;
 	string ws_req_str;
 	string ws_resp_str;
 	enum Step step;
