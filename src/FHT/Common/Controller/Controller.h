@@ -6,10 +6,10 @@
 ***************************************/
 #ifndef FHTCONTROLLER_H
 #define FHTCONTROLLER_H
-#include "../../Interfice/iTask.h"
-#include "../../Interfice/iServer.h"
-#include "../../Interfice/iClient.h"
-#include "../../Interfice/iHendler.h"
+#include "iTask.h"
+#include "iServer.h"
+#include "iClient.h"
+#include "iHendler.h"
 #include <memory>
 namespace FHT{
     struct Conrtoller {

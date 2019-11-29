@@ -16,7 +16,6 @@ if(MSVC)
     Crypt32)
 endif()
 find_package(Git REQUIRED)
-set(build ${CMAKE_CURRENT_BINARY_DIR})
 find_package(OpenSSL REQUIRED)
 #libevent
 ExternalProject_Add(
@@ -49,11 +48,8 @@ set(LibEvent_LIBRARIES
 
 #FHT
 set(BUILDER_LIB
-  src/FHT/lib/base64.cpp
-  src/FHT/lib/websocket/frame.cpp
-  src/FHT/lib/websocket/connection.cpp
-  src/FHT/lib/websocket/websocket.cpp
-  src/FHT/lib/websocket/user.cpp
+  src/FHT/lib/Base64.cpp
+  src/FHT/lib/HostCheckCurl.cpp
 )
 set(SOURCE_LIB 
   ${BUILDER_LIB}
@@ -62,10 +58,12 @@ set(SOURCE_LIB
   src/FHT/Common/Controller/Server/InitialSer.cpp
   src/FHT/Common/Controller/Server/Server.cpp
   src/FHT/Common/Controller/Client/Client.cpp
-  src/FHT/Common/Controller/Client/HostCheckCurl.cpp)
+  src/FHT/Common/Controller/Server/WebSocket/User.cpp
+  src/FHT/Common/Controller/Server/WebSocket/Frame.cpp
+  src/FHT/Common/Controller/Server/WebSocket/WebSocket.cpp
+  src/FHT/Common/Controller/Server/WebSocket/Connection.cpp)
 set(HEADER_LIB
-  lib/websocket
-  lib
+  src/FHT/lib
 )
 set(HEADERS 
   ${HEADER_LIB}

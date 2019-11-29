@@ -5,12 +5,12 @@
 *  Copyright (C) goganoga 2019
 ***************************************/
 #include "Hendler.h"
-#include "../Controller.h"
+#include "Controller/Controller.h"
 #include <memory>
 namespace FHT{
     Hendler::Hendler(){}
     Hendler::~Hendler(){}
-    void Hendler::addUniqueHendler(std::string id, std::function<std::string(iHendler::data)> func){
+    void Hendler::addUniqueHendler(std::string id, uniqueHendler func){
         if (auto a = mapHendler.find(id); a != end(mapHendler))
             throw;
         if (auto b = mapList.find(id); b != end(mapList))
@@ -24,10 +24,10 @@ namespace FHT{
         }
         return false;
     };
-    std::function<std::string(iHendler::data)> Hendler::getUniqueHendler(std::string id){
+	Hendler::uniqueHendler& Hendler::getUniqueHendler(std::string id) {
         if (auto a = mapHendler.find(id); a != end(mapHendler))
             return a->second;
-        return nullptr;
+		return std::forward<uniqueHendler>(nullptr);
 
     };
     void Hendler::addHendler(std::string id, std::function<void(void)> func){
@@ -45,10 +45,10 @@ namespace FHT{
         return false;
 
     };
-    std::function<void(void)> Hendler::getHendler(std::string id){
+    std::function<void(void)>& Hendler::getHendler(std::string id){
         if (auto a = mapList.find(id); a != end(mapList))
             return a->second;
-        return nullptr;
+		return std::forward<std::function<void(void)>>(nullptr);
     };
 }
 namespace FHT{

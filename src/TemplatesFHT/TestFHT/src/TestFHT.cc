@@ -20,7 +20,7 @@ int main(void)
 
     H->addHendler("a", []() {std::cout << "a" << std::endl; });
 	H->getHendler("a")();
-    auto f([](FHT::iHendler::data data) {
+    auto f([](FHT::iHendler::data& data) {
 		std::cout << "b" << std::endl;
 		std::cout << data.id << std::endl;
 		std::cout << data.num << std::endl;

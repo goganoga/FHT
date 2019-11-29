@@ -7,8 +7,8 @@
 #ifndef FHTCLIENT_H
 #define FHTCLIENT_H
 
-#include "../Server/InitialSer.h"
-#include "../../../Interfice/iClient.h"
+#include "Controller/Server/InitialSer.h"
+#include "iClient.h"
 #include <iostream>
 namespace FHT {
 	class Client : public iClient {

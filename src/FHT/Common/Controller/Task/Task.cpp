@@ -5,7 +5,7 @@
 *  Copyright (C) goganoga 2019
 ***************************************/
 #include "Task.h"
-#include "../Controller.h"
+#include "Controller/Controller.h"
 #include <chrono>
 #include <thread>
 #include <mutex>

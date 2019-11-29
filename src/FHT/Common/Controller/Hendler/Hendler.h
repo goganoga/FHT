@@ -6,7 +6,7 @@
 ***************************************/
 #ifndef FHTHENDLER_H
 #define FHTHENDLER_H
-#include "../../../Interfice/iHendler.h"
+#include "iHendler.h"
 #include <map>
 
 namespace FHT{
@@ -14,15 +14,15 @@ namespace FHT{
     {
     public:
         Hendler();
-        void addUniqueHendler(std::string id, std::function<std::string(iHendler::data)> func) override final;
+        void addUniqueHendler(std::string id, uniqueHendler func) override final;
         void addHendler(std::string id, std::function<void(void)> func) override final;
         bool removeUniqueHendler(std::string id) override final;
         bool removeHendler(std::string id) override final;
-        std::function<std::string(iHendler::data)> getUniqueHendler(std::string id) override final;
-        std::function<void(void)> getHendler(std::string id) override final;
+        uniqueHendler& getUniqueHendler(std::string id) override final;
+        std::function<void(void)>& getHendler(std::string id) override final;
         virtual ~Hendler() override;
     private:
-        std::map<std::string, std::function<std::string(iHendler::data)>> mapHendler;
+        std::map<std::string, uniqueHendler> mapHendler;
         std::map<std::string, std::function<void(void)>> mapList;
     };
 }

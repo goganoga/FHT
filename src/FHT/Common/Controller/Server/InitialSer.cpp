@@ -9,27 +9,27 @@
 #include <event2/event.h>
 #include <event2/thread.h>
 
-InitSer::InitSer(void(*onRequestHandler_)(evhttp_request *, void *), std::string srvAddress, std::uint16_t srvPort) {
+InitSer::InitSer(void(*onRequestHandler_)(evhttp_request *, void *), std::string srvAddress, std::uint16_t srvPort):
+	cfg(event_config_new(), &event_config_free){
 #ifdef _WIN32
 	WORD wVersionRequested = MAKEWORD(2, 2);
 	WSADATA wsaData;
-	int a = WSAStartup(wVersionRequested, &wsaData);
+	WSAStartup(wVersionRequested, &wsaData);
 	SYSTEM_INFO sysinfo;
 	GetSystemInfo(&sysinfo);
 #endif
 	SrvAddress = srvAddress;
 	SrvPort = srvPort;
 	OnRequest = onRequestHandler_;
-	cfg = event_config_new();
 #ifdef _WIN32
 	evthread_use_windows_threads();
 #elif __linux__
 	//signal(SIGPIPE, SIG_IGN);
-        evthread_use_pthreads();
+    evthread_use_pthreads();
 #endif
-    
-	event_config_set_num_cpus_hint(cfg, std::thread::hardware_concurrency());
-	for (int i = 0; i < std::thread::hardware_concurrency(); ++i) {
+	const int num_core = std::thread::hardware_concurrency();
+	event_config_set_num_cpus_hint(cfg.get(), num_core);
+	for (int i = 0; i < num_core; ++i) {
 		threadPtr thread(new std::thread(&InitSer::Start, this), [&](std::thread *t) { IsRun = false; t->join(); delete t; });
 		threads.push_back(std::move(thread));
 	}
@@ -37,7 +37,7 @@ InitSer::InitSer(void(*onRequestHandler_)(evhttp_request *, void *), std::string
 void InitSer::Start() {
 	try
 	{
-		std::unique_ptr<event_base, decltype(&event_base_free)> EventBase(event_base_new_with_config(cfg), &event_base_free);
+		std::unique_ptr<event_base, decltype(&event_base_free)> EventBase(event_base_new_with_config(cfg.get()), &event_base_free);
 		if (!EventBase)
 			throw std::runtime_error("Failed to create new base_event.");
 		std::unique_ptr<evhttp, decltype(&evhttp_free)> EvHttp(evhttp_new(EventBase.get()), &evhttp_free);
@@ -78,5 +78,4 @@ InitSer::~InitSer() {
 #ifdef _WIN32
 	WSACleanup();
 #endif
-	delete cfg;
 };

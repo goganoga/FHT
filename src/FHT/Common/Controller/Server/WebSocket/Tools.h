@@ -36,12 +36,12 @@ inline uint32_t myntohl(uint32_t n) {
 
 
 inline uint64_t myhtonll(uint64_t n) {
-	return (uint64_t)myhtonl(n >> 32) | ((uint64_t)myhtonl(n) << 32);
+	return (uint64_t)myhtonl(n >> 32) | ((uint64_t)myhtonl((uint32_t)n) << 32);
 }
 
 
 inline uint64_t myntohll(uint64_t n) {
-	return (uint64_t)myhtonl(n >> 32) | ((uint64_t)myhtonl(n) << 32);
+	return (uint64_t)myhtonl(n >> 32) | ((uint64_t)myhtonl((uint32_t)n) << 32);
 }
 
 

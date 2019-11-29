@@ -5,8 +5,8 @@
 *  Copyright (C) goganoga 2019
 ***************************************/
 #include "Client.h"
-#include "../Controller.h"
-#include "../../../Interfice/iController.h"
+#include "Controller/Controller.h"
+#include "iController.h"
 #define HOSTNAME_MAX_SIZE 255
 
 #if defined(__APPLE__) && defined(__clang__)
@@ -20,8 +20,8 @@
 //#include <errno.h>
 
 #ifdef _WIN32
-#include <winsock2.h>
-#include <ws2tcpip.h>
+#include <WinSock2.h>
+#include <WS2tcpip.h>
 #include <wincrypt.h>
 
 #define snprintf _snprintf
@@ -42,7 +42,7 @@
 #include <openssl/err.h>
 #include <openssl/rand.h>
 #include <openssl/x509v3.h>
-#include "HostCheckCurl.h"
+#include "../../../lib/HostCheckCurl.h"
 #include <future>
 namespace {
 	struct webClient {

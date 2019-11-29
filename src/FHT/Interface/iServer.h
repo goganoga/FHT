@@ -24,9 +24,9 @@ namespace FHT {
 		friend class Server;
 		wsSubscriber() {}
 		~wsSubscriber() {
-			std::move(publisher);
-			std::move(subscriber);
-			std::move(deleter);
+			publisher = nullptr;
+			subscriber = nullptr;
+			deleter = nullptr;
 		}
 		void setSubscriber(std::function<void(std::string&)>& subscriberFunctor) {
 			subscriber = std::move(subscriberFunctor);

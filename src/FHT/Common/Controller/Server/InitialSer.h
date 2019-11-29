@@ -31,7 +31,7 @@ private:
 	using threadPool = std::vector<threadPtr>;
 	void(*OnRequest)(evhttp_request *, void *);
 	bool volatile IsRun = true;
-	event_config *cfg = nullptr;
+	std::unique_ptr<event_config, decltype(&event_config_free)> cfg;
 	threadPool threads;
 	std::string SrvAddress = "0.0.0.0";
 	std::uint16_t SrvPort = 10800;

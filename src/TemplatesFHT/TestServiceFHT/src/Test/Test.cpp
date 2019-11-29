@@ -20,7 +20,7 @@ namespace FHT {
 		H->addUniqueHendler("/testGet", std::bind(&Test::mainTestGet, this, std::placeholders::_1));
 		H->addUniqueHendler(FHT::webSocket("/postData"), std::bind(&Test::mainTestWebSocket, this, std::placeholders::_1));
 	}
-	std::string Test::mainTest(FHT::iHendler::data resp) {
+	std::string Test::mainTest(FHT::iHendler::data& resp) {
 		std::string buf = resp.str0;
 		std::string location = resp.str1;
 		auto headers = resp.map0;
@@ -61,7 +61,7 @@ namespace FHT {
 		return body;
 	}
 
-	std::string Test::mainTestGet(FHT::iHendler::data resp) {
+	std::string Test::mainTestGet(FHT::iHendler::data& resp) {
 		auto headers = resp.map0;
 		std::map< std::string, std::string> resp_map;
 		char* id_buf = nullptr;
@@ -81,8 +81,8 @@ namespace FHT {
 		delete id_buf;
 		return jsonParse(resp_map);
 	}
-
-	std::string authService::mainTestWebSocket(FHT::iHendler::data resp) {
+/*
+	std::string authService::mainTestWebSocket(FHT::iHendler::data& resp) {
 		auto headers = resp.map0;
 		std::shared_ptr<FHT::wsSubscriber> func = *(std::shared_ptr<FHT::wsSubscriber>*)resp.obj0;
 		std::map< std::string, std::string> resp_map;
@@ -113,7 +113,7 @@ namespace FHT {
 			std::cerr << "Error: " << e.what() << std::endl;
 		}
 		return std::string();
-	}
+	}*/
 	std::string Test::md5Hash(const char* string) {
 		unsigned char digest[MD5_DIGEST_LENGTH];
 		MD5_CTX ctx;

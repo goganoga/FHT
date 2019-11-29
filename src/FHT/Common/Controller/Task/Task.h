@@ -6,7 +6,7 @@
 ***************************************/
 #ifndef FHTTASK_H
 #define FHTTASK_H
-#include "../../../Interfice/iTask.h"
+#include "iTask.h"
 #include <utility>
 #include <memory>
 #include <map>

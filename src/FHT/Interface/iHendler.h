@@ -26,13 +26,14 @@ namespace FHT{
             std::map<std::string, std::string> map0; //headers
 
         };
-        virtual void addUniqueHendler(std::string id, std::function<std::string(iHendler::data)> func) = 0;
+		using uniqueHendler = std::function<std::string(iHendler::data)>;
+        virtual void addUniqueHendler(std::string id, uniqueHendler func) = 0;
         virtual bool removeUniqueHendler(std::string id) = 0;
-        virtual std::function<std::string(iHendler::data)> getUniqueHendler(std::string id) = 0;
+        virtual uniqueHendler& getUniqueHendler(std::string id) = 0;
 
         virtual void addHendler(std::string id, std::function<void(void)> func) = 0;
         virtual bool removeHendler(std::string id) = 0;
-        virtual std::function<void(void)> getHendler(std::string id) = 0;
+        virtual std::function<void(void)>& getHendler(std::string id) = 0;
     };
 }
 #endif //FHTIHENDLER_H
