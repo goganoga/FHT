@@ -34,7 +34,7 @@ namespace FHT {
 	}
 	
 	void Server::OnRequest(evhttp_request *req, void *) {
-        bool lessen_all = lessen_all_;
+        bool lessen_all = Server::lessen_all_;
 		auto H = FHT::iConrtoller::hendlerManager;
 		auto T = FHT::iConrtoller::taskManager;
 		auto *OutBuf = evhttp_request_get_output_buffer(req);
