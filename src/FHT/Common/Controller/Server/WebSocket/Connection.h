@@ -4,9 +4,8 @@
 *  Created: 29.11.19
 *  Copyright (C) goganoga 2019
 ***************************************/
-#ifndef WS_CONNECTION_H
-#define WS_CONNECTION_H
-#include <stdlib.h>
+#ifndef FHTWSCONNECTION_H
+#define FHTWSCONNECTION_H
 #include <iostream>
 #include <event2/event.h>
 #include <event2/http.h>
@@ -52,5 +51,4 @@ void wsFrameReadHendler(struct bufferevent *bev, void *ctx);
 void writeHendler(struct bufferevent *bev, void *ctx);
 void closeHendler(struct bufferevent *bev, short what, void *ctx);
 
-
-#endif
+#endif //FHTWSCONNECTION_H

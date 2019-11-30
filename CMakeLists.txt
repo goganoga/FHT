@@ -58,6 +58,7 @@ set(SOURCE_LIB
   src/FHT/Common/Controller/Server/InitialSer.cpp
   src/FHT/Common/Controller/Server/Server.cpp
   src/FHT/Common/Controller/Client/Client.cpp
+  src/FHT/Common/Controller/Client/WebClient.cpp
   src/FHT/Common/Controller/Server/WebSocket/User.cpp
   src/FHT/Common/Controller/Server/WebSocket/Frame.cpp
   src/FHT/Common/Controller/Server/WebSocket/WebSocket.cpp

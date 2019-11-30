@@ -4,8 +4,8 @@
 *  Created: 29.11.19
 *  Copyright (C) goganoga 2019
 ***************************************/
-#ifndef WS_WEBSOCKET_H
-#define WS_WEBSOCKET_H
+#ifndef FHTWSWEBSOCKET_H
+#define FHTWSWEBSOCKET_H
 #include "Tools.h"
 #include "Frame.h"
 #include "openssl/sha.h"
@@ -36,4 +36,4 @@ struct wsRequest {
     std::string secWebsocketVersion_;
 };
 
-#endif
+#endif //FHTWSWEBSOCKET_H

@@ -12,6 +12,7 @@
 #include <iostream>
 namespace FHT {
 	class Client : public iClient {
+
 	public:
 		Client() {};
 		std::string post(std::string url, std::string body) override final;

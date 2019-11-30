@@ -4,9 +4,8 @@
 *  Created: 29.11.19
 *  Copyright (C) goganoga 2019
 ***************************************/
-#ifndef WS_FRAME_H
-#define WS_FRAME_H
-#include <string.h>
+#ifndef FHTWSFRAME_H
+#define FHTWSFRAME_H
 #include <iostream>
 #include "Tools.h"
 
@@ -32,4 +31,4 @@ struct wsFrameBuffer{
     char *data_ = nullptr;
     uint64_t len_ = 0;
 };
-#endif
+#endif //FHTWSFRAME_H

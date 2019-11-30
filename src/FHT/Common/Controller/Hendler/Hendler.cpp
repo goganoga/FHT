@@ -11,44 +11,44 @@ namespace FHT{
     Hendler::Hendler(){}
     Hendler::~Hendler(){}
     void Hendler::addUniqueHendler(std::string id, uniqueHendler func){
-        if (auto a = mapHendler.find(id); a != end(mapHendler))
+        if (auto a = mapHendler_.find(id); a != end(mapHendler_))
             throw;
-        if (auto b = mapList.find(id); b != end(mapList))
+        if (auto b = mapList_.find(id); b != end(mapList_))
             throw;
-        mapHendler.emplace(id, func);
+        mapHendler_.emplace(id, func);
     };
     bool Hendler::removeUniqueHendler(std::string id){
-        if (auto a = mapHendler.find(id); a != end(mapHendler)) {
-            mapHendler.erase(a);
+        if (auto a = mapHendler_.find(id); a != end(mapHendler_)) {
+            mapHendler_.erase(a);
             return true;
         }
         return false;
     };
 	Hendler::uniqueHendler& Hendler::getUniqueHendler(std::string id) {
-        if (auto a = mapHendler.find(id); a != end(mapHendler))
+        if (auto a = mapHendler_.find(id); a != end(mapHendler_))
             return a->second;
-		return std::forward<uniqueHendler>(nullptr);
+		return emptyU_;
 
     };
     void Hendler::addHendler(std::string id, std::function<void(void)> func){
-        if (auto a = mapHendler.find(id); a != end(mapHendler))
+        if (auto a = mapHendler_.find(id); a != end(mapHendler_))
             throw;
-        if (auto b = mapList.find(id); b != end(mapList))
+        if (auto b = mapList_.find(id); b != end(mapList_))
             throw;
-        mapList.emplace(id, func);
+        mapList_.emplace(id, func);
     };
     bool Hendler::removeHendler(std::string id){
-        if (auto a = mapList.find(id); a != end(mapList)) {
-            mapList.erase(a);
+        if (auto a = mapList_.find(id); a != end(mapList_)) {
+            mapList_.erase(a);
             return true;
         }
         return false;
 
     };
     std::function<void(void)>& Hendler::getHendler(std::string id){
-        if (auto a = mapList.find(id); a != end(mapList))
+        if (auto a = mapList_.find(id); a != end(mapList_))
             return a->second;
-		return std::forward<std::function<void(void)>>(nullptr);
+		return emptyV_;
     };
 }
 namespace FHT{

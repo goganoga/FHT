@@ -4,15 +4,15 @@
 *  Created: 29.11.19
 *  Copyright (C) goganoga 2019
 ***************************************/
-#ifndef WS_USER_H
-#define WS_USER_H
+#ifndef FHTWSUSER_H
+#define FHTWSUSER_H
 #include <event2/http.h>
 #include "Connection.h"
 #include <functional>
 
 struct wsUser {
     ~wsUser();
-	wsUser(evhttp_connection *conev);
+    wsUser(evhttp_connection *conev);
     void frameRead();
     uint32_t id_;
     std::shared_ptr<wsConnect> wsConn_;
@@ -21,6 +21,4 @@ struct wsUser {
     std::function<void(std::string)> readBind_;
 };
 
-
-
-#endif
+#endif //FHTWSUSER_H

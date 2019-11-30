@@ -145,10 +145,10 @@ namespace FHT {
         lessen_all_ = flag;
 		return flag ? "head" : "";
 	}
-	void Server::setPort(std::uint16_t port_) {
-        port_ = port_;
+	void Server::setPort(std::uint16_t port) {
+        port_ = port;
 	}
-	void Server::setHost(std::string host_) {
-        host_ = host_;
+	void Server::setHost(std::string host) {
+        host_ = host;
 	}
 }

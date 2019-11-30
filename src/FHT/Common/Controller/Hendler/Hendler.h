@@ -22,8 +22,11 @@ namespace FHT{
         std::function<void(void)>& getHendler(std::string id) override final;
         virtual ~Hendler() override;
     private:
-        std::map<std::string, uniqueHendler> mapHendler;
-        std::map<std::string, std::function<void(void)>> mapList;
+        std::map<std::string, uniqueHendler> mapHendler_;
+        std::map<std::string, std::function<void(void)>> mapList_;
+
+		uniqueHendler emptyU_ = nullptr;
+		std::function<void(void)> emptyV_ = nullptr;
     };
 }
 #endif //FHTHENDLER_H
