@@ -59,13 +59,6 @@ namespace FHT{
 			func_(resp);
 		}
 	webClient::webClient(std::string url, std::string body, std::function<void(FHT::iClient::respClient)>* func) {
-#ifdef _WIN32
-		WORD wVersionRequested = MAKEWORD(2, 2);
-		WSADATA wsaData;
-		WSAStartup(wVersionRequested, &wsaData);
-		SYSTEM_INFO sysinfo;
-		GetSystemInfo(&sysinfo);
-#endif
         func_ = *func;
         FHT::iClient::respClient resp;
         resp.status = 404;
@@ -103,43 +96,44 @@ namespace FHT{
             uri += query;}
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || \
 	(defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x20700000L)
-			// Initialize OpenSSL
-			SSL_library_init();
-			ERR_load_crypto_strings();
-			SSL_load_error_strings();
-			OpenSSL_add_all_algorithms();
+		// Initialize OpenSSL
+		SSL_library_init();
+		ERR_load_crypto_strings();
+		SSL_load_error_strings();
+		OpenSSL_add_all_algorithms();
 #endif
-			if (!RAND_poll()) {
-				resp.body = "Error: Openssl RAND_poll failed";
-				func_(resp);
-				return;
-            }
-            std::unique_ptr<SSL_CTX, decltype (&SSL_CTX_free)> ssl_ctx(SSL_CTX_new(SSLv23_method()) ,&SSL_CTX_free);
-			if (!ssl_ctx) {
-				resp.body = "Error: Openssl SSL_CTX_new failed";
-				func_(resp);
-				return;
-            }
-            X509_STORE* store;
-            store = SSL_CTX_get_cert_store(ssl_ctx.get());
+		if (!RAND_poll()) {
+			resp.body = "Error: Openssl RAND_poll failed";
+			func_(resp);
+			return;
+         }
+         std::unique_ptr<SSL_CTX, decltype (&SSL_CTX_free)> ssl_ctx(SSL_CTX_new(SSLv23_method()) ,&SSL_CTX_free);
+		if (!ssl_ctx) {
+			resp.body = "Error: Openssl SSL_CTX_new failed";
+			func_(resp);
+			return;
+         }
+         X509_STORE* store;
+         store = SSL_CTX_get_cert_store(ssl_ctx.get());
 #ifdef _WIN32
-            if (addCertForStore(store, "CA") < 0 ||
-                addCertForStore(store, "AuthRoot") < 0 ||
-                addCertForStore(store, "ROOT") < 0) {
-                resp.body = "Error: Openssl X509_STORE_set_default_paths failed";
-                func_(resp);
-                return;
-            }
+         if (addCertForStore(store, "CA") < 0 ||
+             addCertForStore(store, "AuthRoot") < 0 ||
+             addCertForStore(store, "ROOT") < 0) {
+             resp.body = "Error: Openssl X509_STORE_set_default_paths failed";
+             func_(resp);
+             return;
+         }
 #else // _WIN32
-            if (X509_STORE_set_default_paths(store) != 1) {
-                resp.body = "Error: Openssl X509_STORE_set_default_paths failed";
-                func_(resp);
-                return;
-            }
+         if (X509_STORE_set_default_paths(store) != 1) {
+             resp.body = "Error: Openssl X509_STORE_set_default_paths failed";
+             func_(resp);
+             return;
+         }
 #endif // _WIN32
          SSL_CTX_set_verify(ssl_ctx.get(), SSL_VERIFY_PEER, nullptr);
          SSL_CTX_set_cert_verify_callback(ssl_ctx.get(), cert_verify_callback, (void*)host);
-         std::unique_ptr<event_base, decltype(&event_base_free)> base(event_base_new() ,&event_base_free);
+         /*Не удоляются файлы*/
+		 std::unique_ptr<event_base, decltype(&event_base_free)> base(event_base_new() ,&event_base_free);
          if (!base) {
             resp.body = "Error: New connection failed";
             func_(resp);
@@ -198,9 +192,6 @@ namespace FHT{
         event_base_dispatch(base.get());
     }
 	webClient::~webClient() {
-#ifdef _WIN32
-		WSACleanup();
-#endif
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || \
 	(defined(LIBRESSL_VERSION_NUMBER) && LIBRESSL_VERSION_NUMBER < 0x20700000L)
 		EVP_cleanup();

@@ -15,6 +15,18 @@ namespace FHT {
 		auto static a = std::make_shared<Client>();
 		return a;
 	}
+	Client::Client() {
+#ifdef _WIN32
+		WORD wVersionRequested = MAKEWORD(2, 2);
+		WSADATA wsaData;
+		WSAStartup(wVersionRequested, &wsaData);
+#endif
+	}
+	Client::~Client(){
+#ifdef _WIN32
+		WSACleanup();
+#endif
+	}
 	std::string Client::post(std::string url, std::string body){
 		std::promise<std::string> pr;
 		std::future<std::string> barrier_future = pr.get_future();

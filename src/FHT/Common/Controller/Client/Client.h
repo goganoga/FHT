@@ -14,12 +14,12 @@ namespace FHT {
 	class Client : public iClient {
 
 	public:
-		Client() {};
+		Client();
 		std::string post(std::string url, std::string body) override final;
 		std::string get(std::string url) override final;
 		void postAsync(std::string url, std::string body, std::function<void(respClient)> func) override final;
 		void getAsync(std::string url, std::function<void(respClient)> func) override final;
-		virtual ~Client() override {};
+		virtual ~Client() override;
 	};
 }
 #endif //FHTCLIENT_H
