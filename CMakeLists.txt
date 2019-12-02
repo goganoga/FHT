@@ -48,7 +48,7 @@ set(LibEvent_LIBRARIES
 
 #FHT
 set(BUILDER_LIB
-  src/FHT/lib/Base64.cpp
+  src/FHT/lib/base64.cpp
   src/FHT/lib/HostCheckCurl.cpp
 )
 set(SOURCE_LIB 

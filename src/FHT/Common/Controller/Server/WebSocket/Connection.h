@@ -10,8 +10,9 @@
 #include <event2/event.h>
 #include <event2/http.h>
 #include <event2/bufferevent.h>
-#include "Websocket.h"
+#include "WebSocket.h"
 #include <functional>
+#include <memory>
 
 struct wsConnect{
     wsConnect(evhttp_connection* conev);

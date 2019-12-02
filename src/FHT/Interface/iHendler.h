@@ -26,7 +26,7 @@ namespace FHT{
             std::map<std::string, std::string> map0; //headers
 
         };
-        using uniqueHendler = std::function<std::string(iHendler::data)>;
+        using uniqueHendler = std::function<std::string(iHendler::data&)>;
         virtual void addUniqueHendler(std::string id, uniqueHendler func) = 0;
         virtual bool removeUniqueHendler(std::string id) = 0;
         virtual uniqueHendler& getUniqueHendler(std::string id) = 0;

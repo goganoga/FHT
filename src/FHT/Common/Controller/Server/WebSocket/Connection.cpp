@@ -6,6 +6,7 @@
 ***************************************/
 #include "Connection.h"
 #include "User.h"
+#include <cstring>
 
 wsConnect::wsConnect(evhttp_connection* conev):
     frame_(std::make_unique<wsFrame>()),

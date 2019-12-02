@@ -5,6 +5,7 @@
 *  Copyright (C) goganoga 2019
 ***************************************/
 #include "Frame.h"
+#include <cstring>
 
 wsFrame::wsFrame() {}
 

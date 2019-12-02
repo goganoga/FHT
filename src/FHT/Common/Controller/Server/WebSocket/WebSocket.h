@@ -9,7 +9,7 @@
 #include "Tools.h"
 #include "Frame.h"
 #include "openssl/sha.h"
-#include "Base64.h"
+#include "base64.h"
 #include <iostream>
 #include <string>
 #include <vector>
