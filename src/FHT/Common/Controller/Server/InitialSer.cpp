@@ -15,8 +15,6 @@ InitSer::InitSer(void(*onRequestHandler_)(evhttp_request *, void *), std::string
     WORD wVersionRequested = MAKEWORD(2, 2);
     WSADATA wsaData;
     WSAStartup(wVersionRequested, &wsaData);
-    SYSTEM_INFO sysinfo;
-    GetSystemInfo(&sysinfo);
 #endif
     SrvAddress = srvAddress;
     SrvPort = srvPort;

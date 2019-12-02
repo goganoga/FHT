@@ -9,18 +9,22 @@
 #include "iController.h"
 #include "WebClient.h"
 #include <future>
-
+namespace {
+	event_base* eventBaseNew() {
+#ifdef _WIN32
+		WORD wVersionRequested = MAKEWORD(2, 2);
+		WSADATA wsaData;
+		WSAStartup(wVersionRequested, &wsaData);
+#endif
+		return event_base_new();
+	}
+}
 namespace FHT {
     std::shared_ptr<iClient> Conrtoller::getClient() {
         auto static a = std::make_shared<Client>();
         return a;
     }
-    Client::Client():base_(event_base_new(), &event_base_free) {
-#ifdef _WIN32
-        WORD wVersionRequested = MAKEWORD(2, 2);
-        WSADATA wsaData;
-        WSAStartup(wVersionRequested, &wsaData);
-#endif
+    Client::Client():base_(eventBaseNew(), &event_base_free) {
     }
     Client::~Client(){
 #ifdef _WIN32
