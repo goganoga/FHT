@@ -10,11 +10,13 @@
 #include <cstdint>
 namespace FHT {
     struct iServer {
+		enum Type {SYNC, ASYNC};
         virtual void run() = 0;
         virtual void setPort(std::uint16_t port_) = 0;
         virtual void setHost(std::string host_) = 0;
         //return Hendler lessen name
         virtual std::string lessenAll(bool flag) = 0;
+		virtual void setTypeProcessorHandler(Type type) = 0;
         virtual ~iServer() = default;
     };
 

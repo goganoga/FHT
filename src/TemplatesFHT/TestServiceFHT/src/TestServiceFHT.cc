@@ -33,6 +33,7 @@ int main(int argc, char* argv[])
 		inizialaizer inizialaizerServer;
 		inizialaizerServer.Serv->setHost("0.0.0.0");
 		inizialaizerServer.Serv->setPort(10800);
+		inizialaizerServer.Serv->setTypeProcessorHandler(FHT::iServer::SYNC);
 		inizialaizerServer.Serv->run();
 	} catch (std::exception const &e) {
 		std::cerr << "Error: " << e.what() << std::endl;
