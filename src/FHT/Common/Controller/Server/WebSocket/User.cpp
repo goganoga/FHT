@@ -23,10 +23,10 @@ wsUser::~wsUser(){
 void wsUser::frameRead() {
     if (wsConn_->frame_->payload_len_ > 0) {
         msg_ += std::string(wsConn_->frame_->payload_data_, wsConn_->frame_->payload_len_);
-	}
+    }
     if (wsConn_->frame_->fin_ == 1) {
         if (readBind_)
             readBind_(msg_);
         msg_ = "";
-	}
+    }
 }

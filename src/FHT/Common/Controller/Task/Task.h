@@ -12,11 +12,11 @@
 #include <map>
 
 struct iThread {
-	virtual ~iThread() = default;
-	virtual void pull(std::function<FHT::iTask::state(void)> func) = 0;
-	virtual void pull(std::function<FHT::iTask::state(void)> func, int ms) = 0;
+    virtual ~iThread() = default;
+    virtual void pull(std::function<FHT::iTask::state(void)> func) = 0;
+    virtual void pull(std::function<FHT::iTask::state(void)> func, int ms) = 0;
     virtual void pullTime(std::function<FHT::iTask::state(void)> func, int ms) = 0;
-	virtual void pullTime(std::function<FHT::iTask::state(void)> func) = 0;
+    virtual void pullTime(std::function<FHT::iTask::state(void)> func) = 0;
     virtual bool isRun() { return false; }
 };
 
@@ -30,7 +30,7 @@ namespace FHT{
         void addTask(iTask::listTask thread, std::function<state(void)> func) override final;
         void addTask(iTask::listTask thread, std::function<state(void)> func, int ms) override final;
         void addTaskOneRun(iTask::listTask thread, std::function<void(void)> func) override final;
-		void addTaskOneRun(iTask::listTask thread, std::function<void(void)> func, int ms) override final;
+        void addTaskOneRun(iTask::listTask thread, std::function<void(void)> func, int ms) override final;
     private:
         bool startManager();
         bool stopManager();

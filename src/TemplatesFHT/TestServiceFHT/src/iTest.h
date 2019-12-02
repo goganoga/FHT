@@ -8,9 +8,9 @@
 #define FHTITEST_H
 #include <memory>
 namespace FHT {
-	struct iTest {
-		static std::shared_ptr<iTest> Run;
-		virtual ~iTest() = default;
-	};
+    struct iTest {
+        static std::shared_ptr<iTest> Run;
+        virtual ~iTest() = default;
+    };
 }
 #endif //FHTITEST_H

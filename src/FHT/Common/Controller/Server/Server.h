@@ -11,21 +11,21 @@
 #include <iostream>
 #include <map>
 namespace FHT {
-	class Server : public iServer {
-		static void OnRequest (evhttp_request *req, void *);
+    class Server : public iServer {
+        static void OnRequest (evhttp_request *req, void *);
         static bool lessen_all_;
         static std::string parseGetUrl(evhttp_request* req, std::map<std::string, std::string>& get_param);
         static std::string parceHttpRequestParam(evhttp_request* req, std::map<std::string, std::string>& http_request_param);
         std::shared_ptr<InitSer> initSer_;
         std::string host_ = "localhost";
         std::uint16_t port_ = 10800;
-	public:
-		Server();
-		void setPort(std::uint16_t port_) override final;
-		void setHost(std::string host_) override final;
-		void run() override final;
-		std::string lessenAll(bool flag) override final;
-		virtual ~Server() override {};
-	};
+    public:
+        Server();
+        void setPort(std::uint16_t port_) override final;
+        void setHost(std::string host_) override final;
+        void run() override final;
+        std::string lessenAll(bool flag) override final;
+        virtual ~Server() override {};
+    };
 }
 #endif //FHTSERVER_H

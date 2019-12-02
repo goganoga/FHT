@@ -25,8 +25,8 @@ namespace FHT{
         std::map<std::string, uniqueHendler> mapHendler_;
         std::map<std::string, std::function<void(void)>> mapList_;
 
-		uniqueHendler emptyU_ = nullptr;
-		std::function<void(void)> emptyV_ = nullptr;
+        uniqueHendler emptyU_ = nullptr;
+        std::function<void(void)> emptyV_ = nullptr;
     };
 }
 #endif //FHTHENDLER_H

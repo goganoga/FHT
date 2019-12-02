@@ -11,26 +11,26 @@
 #include "iController.h"
 #include <openssl/x509v3.h>
 namespace FHT {
-	struct webClient {
-		webClient(std::string url, std::string body, std::function<void(FHT::iClient::respClient)>* func, event_base* base);
-		~webClient();
-	private:
+    struct webClient {
+        webClient(std::string url, std::string body, std::function<void(FHT::iClient::respClient)>* func, event_base* base);
+        ~webClient();
+    private:
         static void httpRequestDone(struct evhttp_request* req, void* ctx);
-        static std::function<void(FHT::iClient::respClient)> func_;
-        enum hostnameValidationResult {
-			MatchFound,
-			MatchNotFound,
-			NoSANPresent,
-			MalformedCertificate,
-			Error
-		};
-        static hostnameValidationResult matchesSubjectAlternativeName(const char* hostname, const X509* serverCert);
-        static hostnameValidationResult matchesCommonName(const char* hostname, const X509* serverCert);
-        static hostnameValidationResult validate_hostname(const char* hostname, const X509* serverCert);
+        static std::function<void(FHT::iClient::respClient)> funcCallback;
+        enum hostnameValidation {
+            MatchFound,
+            MatchNotFound,
+            NoSANPresent,
+            MalformedCertificate,
+            Error
+        };
+        static hostnameValidation matchesSubjectAlternativeName(const char* hostname, const X509* serverCert);
+        static hostnameValidation matchesCommonName(const char* hostname, const X509* serverCert);
+        static hostnameValidation validateHostname(const char* hostname, const X509* serverCert);
 #ifdef _WIN32
         int addCertForStore(X509_STORE* store, const char* name);
 #endif
-        static int cert_verify_callback(X509_STORE_CTX* x509Ctx, void* arg);
-	};
+        static int certVerifyCallback(X509_STORE_CTX* x509Ctx, void* arg);
+    };
 }
 #endif //FHTWEBCLIENT_H

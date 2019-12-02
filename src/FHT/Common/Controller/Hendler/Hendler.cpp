@@ -24,10 +24,10 @@ namespace FHT{
         }
         return false;
     };
-	Hendler::uniqueHendler& Hendler::getUniqueHendler(std::string id) {
+    Hendler::uniqueHendler& Hendler::getUniqueHendler(std::string id) {
         if (auto a = mapHendler_.find(id); a != end(mapHendler_))
             return a->second;
-		return emptyU_;
+        return emptyU_;
 
     };
     void Hendler::addHendler(std::string id, std::function<void(void)> func){
@@ -48,12 +48,12 @@ namespace FHT{
     std::function<void(void)>& Hendler::getHendler(std::string id){
         if (auto a = mapList_.find(id); a != end(mapList_))
             return a->second;
-		return emptyV_;
+        return emptyV_;
     };
 }
 namespace FHT{
-	std::shared_ptr<iHendler> Conrtoller::getHendler() {
-		auto static a = std::make_shared<Hendler>();
-		return a;
-	}
+    std::shared_ptr<iHendler> Conrtoller::getHendler() {
+        auto static a = std::make_shared<Hendler>();
+        return a;
+    }
 }

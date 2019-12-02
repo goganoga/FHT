@@ -20,21 +20,21 @@
 class InitSer
 {
 public:
-	InitSer(void(*onRequestHandler_)(evhttp_request *, void *), std::string SrvAddress, std::uint16_t srvPort);
-	~InitSer();
+    InitSer(void(*onRequestHandler_)(evhttp_request *, void *), std::string SrvAddress, std::uint16_t srvPort);
+    ~InitSer();
 private:
-	void Start();
+    void Start();
 
 private:
-	evutil_socket_t Socket = -1;
-	using threadPtr = std::unique_ptr<std::thread, std::function<void(std::thread*)>>;
-	using threadPool = std::vector<threadPtr>;
-	void(*OnRequest)(evhttp_request *, void *);
-	bool volatile IsRun = true;
-	std::unique_ptr<event_config, decltype(&event_config_free)> cfg;
-	threadPool threads;
-	std::string SrvAddress = "0.0.0.0";
-	std::uint16_t SrvPort = 10800;
-	std::mutex mu;
+    evutil_socket_t Socket = -1;
+    using threadPtr = std::unique_ptr<std::thread, std::function<void(std::thread*)>>;
+    using threadPool = std::vector<threadPtr>;
+    void(*OnRequest)(evhttp_request *, void *);
+    bool volatile IsRun = true;
+    std::unique_ptr<event_config, decltype(&event_config_free)> cfg;
+    threadPool threads;
+    std::string SrvAddress = "0.0.0.0";
+    std::uint16_t SrvPort = 10800;
+    std::mutex mu;
 };
 #endif //FHTINITIALSER_H

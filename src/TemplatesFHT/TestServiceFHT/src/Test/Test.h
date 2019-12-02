@@ -18,19 +18,19 @@
 #include <functional>
 #include <map>
 namespace FHT {
-	class Test : public iTest {
-		std::string mainTest(iHendler::data& resp);
-		std::string mainTestGet(iHendler::data& resp);
-		std::string md5Hash(const char* string);
-		std::string guid();
-		std::string guid(std::string ab);
-		std::string hash(const char *string);
-		std::string hash512(const char *string);
-		std::string gen();
-		std::string jsonParse(std::map<std::string, std::string> map);
-	public:
-		Test();
-		virtual ~Test() override {};
-	};
+    class Test : public iTest {
+        std::string mainTest(iHendler::data& resp);
+        std::string mainTestGet(iHendler::data& resp);
+        std::string md5Hash(const char* string);
+        std::string guid();
+        std::string guid(std::string ab);
+        std::string hash(const char *string);
+        std::string hash512(const char *string);
+        std::string gen();
+        std::string jsonParse(std::map<std::string, std::string> map);
+    public:
+        Test();
+        virtual ~Test() override {};
+    };
 }
 #endif //FHTTEST_H

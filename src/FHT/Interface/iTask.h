@@ -17,14 +17,14 @@ namespace FHT{
             UI,
             size
         };
-		enum state {
-			FINISH,
-			CONTINUE
-		};
+        enum state {
+            FINISH,
+            CONTINUE
+        };
         virtual void addTask(iTask::listTask thread, std::function<state(void)> func) = 0;
         virtual void addTask(iTask::listTask thread, std::function<state(void)> func, int ms) = 0;
         virtual void addTaskOneRun(iTask::listTask thread, std::function<void(void)> func) = 0;
-		virtual void addTaskOneRun(iTask::listTask thread, std::function<void(void)> func, int ms) = 0;
+        virtual void addTaskOneRun(iTask::listTask thread, std::function<void(void)> func, int ms) = 0;
     };
 }
 #endif //FHTITASK_H
