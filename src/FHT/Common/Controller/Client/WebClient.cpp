@@ -58,7 +58,7 @@ namespace FHT{
 			}
 			func_(resp);
 		}
-	webClient::webClient(std::string url, std::string body, std::function<void(FHT::iClient::respClient)>* func) {
+	webClient::webClient(std::string url, std::string body, std::function<void(FHT::iClient::respClient)>* func, event_base* base) {
         func_ = *func;
         FHT::iClient::respClient resp;
         resp.status = 404;
@@ -133,7 +133,8 @@ namespace FHT{
          SSL_CTX_set_verify(ssl_ctx.get(), SSL_VERIFY_PEER, nullptr);
          SSL_CTX_set_cert_verify_callback(ssl_ctx.get(), cert_verify_callback, (void*)host);
          /*Не удоляются файлы*/
-		 std::unique_ptr<event_base, decltype(&event_base_free)> base(event_base_new() ,&event_base_free);
+		 //пытатся сделать глобальной или решить проблему с tmp файлами
+		 //std::unique_ptr<event_base, decltype(&event_base_free)> base(event_base_new() ,&event_base_free);
          if (!base) {
             resp.body = "Error: New connection failed";
             func_(resp);
@@ -150,9 +151,9 @@ namespace FHT{
 #endif
         struct bufferevent* bev = nullptr;
         if (strcasecmp(scheme, "http") == 0)
-            bev = bufferevent_socket_new(base.get(), -1, BEV_OPT_CLOSE_ON_FREE);
+            bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
         else {
-            bev = bufferevent_openssl_socket_new(base.get(), -1, ssl.get(), BUFFEREVENT_SSL_CONNECTING, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS);
+            bev = bufferevent_openssl_socket_new(base, -1, ssl.get(), BUFFEREVENT_SSL_CONNECTING, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS);
         }
         if (bev == nullptr) {
             resp.body = "Error: Can't read buffer with openssl";
@@ -160,7 +161,7 @@ namespace FHT{
             return;
         }
         bufferevent_openssl_set_allow_dirty_shutdown(bev, 1);
-        std::unique_ptr<evhttp_connection, decltype(&evhttp_connection_free)> evcon(evhttp_connection_base_bufferevent_new(base.get(), nullptr, bev, host, port) ,&evhttp_connection_free);
+        std::unique_ptr<evhttp_connection, decltype(&evhttp_connection_free)> evcon(evhttp_connection_base_bufferevent_new(base, nullptr, bev, host, port) ,&evhttp_connection_free);
         if (evcon == nullptr) {
             resp.body = "Error: Can't read buffer with";
             func_(resp);
@@ -189,7 +190,7 @@ namespace FHT{
             func_(resp);
             return;
         }
-        event_base_dispatch(base.get());
+        event_base_dispatch(base);
     }
 	webClient::~webClient() {
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || \

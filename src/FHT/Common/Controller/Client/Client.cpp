@@ -15,7 +15,7 @@ namespace FHT {
 		auto static a = std::make_shared<Client>();
 		return a;
 	}
-	Client::Client() {
+	Client::Client():base_(event_base_new(), &event_base_free) {
 #ifdef _WIN32
 		WORD wVersionRequested = MAKEWORD(2, 2);
 		WSADATA wsaData;
@@ -33,7 +33,7 @@ namespace FHT {
 		std::function<void(FHT::iClient::respClient)> func([&pr](FHT::iClient::respClient a) {
 			pr.set_value(a.body);
 			});
-		webClient a(url, body, &func);
+		webClient a(url, body, &func, base_.get());
 		barrier_future.wait();
 		return barrier_future.get();
 	}
@@ -44,17 +44,16 @@ namespace FHT {
 		std::future<std::string> barrier_future = pr.get_future();
 		std::function<void(FHT::iClient::respClient)> func([&pr](FHT::iClient::respClient a) {
 			pr.set_value(a.body);
-			//pr.set_value(std::to_string(a.status) + " " + a.body);
 		});
-		webClient a(url, std::string(), &func);
+		webClient a(url, std::string(), &func, base_.get());
 		barrier_future.wait();
 		return barrier_future.get();
 	}
 	void Client::postAsync(std::string url, std::string body, std::function<void(respClient)> func){
-		webClient a(url, body, &func);
+		webClient a(url, body, &func, base_.get());
 	}
 	void Client::getAsync(std::string url, std::function<void(respClient)> func){
-		webClient a(url, std::string(), &func);
+		webClient a(url, std::string(), &func, base_.get());
 	}
 
 }

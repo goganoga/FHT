@@ -12,7 +12,7 @@
 #include <openssl/x509v3.h>
 namespace FHT {
 	struct webClient {
-		webClient(std::string url, std::string body, std::function<void(FHT::iClient::respClient)>* func);
+		webClient(std::string url, std::string body, std::function<void(FHT::iClient::respClient)>* func, event_base* base);
 		~webClient();
 	private:
         static void httpRequestDone(struct evhttp_request* req, void* ctx);

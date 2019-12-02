@@ -10,9 +10,10 @@
 #include "Controller/Server/InitialSer.h"
 #include "iClient.h"
 #include <iostream>
+#include <event2/http.h>
 namespace FHT {
 	class Client : public iClient {
-
+		const std::unique_ptr<event_base, decltype(&event_base_free)> base_;
 	public:
 		Client();
 		std::string post(std::string url, std::string body) override final;
