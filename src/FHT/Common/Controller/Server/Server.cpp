@@ -99,12 +99,10 @@ namespace FHT {
             if (!func) goto err;
             evhttp_add_header(std::move(evhttp_request_get_output_headers(req)), "Content-Type", "text/plain; charset=utf-8");
 			if (type_ == ASYNC) {
-				std::shared_ptr<std::thread> thread;
-				thread.reset(new std::thread([req, OutBuf, func, data_, thread]() mutable {
+				 std::thread{[req, OutBuf, func, data_]() mutable {
 					evbuffer_add_printf(OutBuf, func(data_).c_str());
 					evhttp_send_reply(req, HTTP_OK, "", OutBuf);
-					}));
-				thread->detach();
+					}}.detach();
 			} else {
 				evbuffer_add_printf(OutBuf, func(data_).c_str());
 				evhttp_send_reply(req, HTTP_OK, "", OutBuf);
