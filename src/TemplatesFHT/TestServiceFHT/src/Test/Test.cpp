@@ -18,7 +18,7 @@ namespace FHT {
 		auto H = FHT::iConrtoller::hendlerManager;
 		H->addUniqueHendler("/test", std::bind(&Test::mainTest, this, std::placeholders::_1));
 		H->addUniqueHendler("/testGet", std::bind(&Test::mainTestGet, this, std::placeholders::_1));
-		H->addUniqueHendler(FHT::webSocket("/postData"), std::bind(&Test::mainTestWebSocket, this, std::placeholders::_1));
+		//H->addUniqueHendler(FHT::webSocket("/postData"), std::bind(&Test::mainTestWebSocket, this, std::placeholders::_1));
 	}
 	std::string Test::mainTest(FHT::iHendler::data& resp) {
 		std::string buf = resp.str0;
