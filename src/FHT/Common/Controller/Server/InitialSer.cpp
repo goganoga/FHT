@@ -62,7 +62,7 @@ void InitSer::Start() {
         }
         for (; IsRun; ) {
             event_base_loop(EventBase.get(), EVLOOP_NONBLOCK);
-            std::this_thread::sleep_for(std::chrono::microseconds(1));
+            std::this_thread::sleep_for(std::chrono::microseconds(50));
         }
     }
     catch (std::exception const &e)
