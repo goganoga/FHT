@@ -19,14 +19,12 @@ namespace FHT {
         std::shared_ptr<InitSer> initSer_;
         std::string host_ = "localhost";
         std::uint16_t port_ = 10800;
-		static Type type_;
     public:
         Server();
         void setPort(std::uint16_t port_) override final;
         void setHost(std::string host_) override final;
         void run() override final;
         std::string lessenAll(bool flag) override final;
-		void setTypeProcessorHandler(Type type) override final;
         virtual ~Server() override {};
     };
 }

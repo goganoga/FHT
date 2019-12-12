@@ -23,7 +23,6 @@ namespace FHT {
     Server::Server() {
     }
     bool Server::lessen_all_ = false;
-	iServer::Type Server::type_ = iServer::SYNC;
     void Server::run() {
         try {
             initSer_.reset(new InitSer(&Server::OnRequest, host_, port_));
@@ -98,15 +97,9 @@ namespace FHT {
             data_.str2 = postBody.get(); //postBody
             if (!func) goto err;
             evhttp_add_header(std::move(evhttp_request_get_output_headers(req)), "Content-Type", "text/plain; charset=utf-8");
-			if (type_ == ASYNC) {
-				 std::thread{[req, OutBuf, func, data_]() mutable {
-					evbuffer_add_printf(OutBuf, func(data_).c_str());
-					evhttp_send_reply(req, HTTP_OK, "", OutBuf);
-					}}.detach();
-			} else {
-				evbuffer_add_printf(OutBuf, func(data_).c_str());
-				evhttp_send_reply(req, HTTP_OK, "", OutBuf);
-			}
+			evbuffer_add_printf(OutBuf, func(data_).c_str());
+			evhttp_send_reply(req, HTTP_OK, "", OutBuf);
+			
         }
         else {
         err:
@@ -158,7 +151,4 @@ namespace FHT {
     void Server::setHost(std::string host) {
         host_ = host;
     }
-	void Server::setTypeProcessorHandler(Type type) {
-		type_ = type;
-	}
 }

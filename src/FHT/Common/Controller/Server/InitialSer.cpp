@@ -61,8 +61,12 @@ void InitSer::Start() {
                 EVHTTP_REQ_POST);
         }
         for (; IsRun; ) {
-            event_base_loop(EventBase.get(), EVLOOP_NONBLOCK);
-            std::this_thread::sleep_for(std::chrono::nanoseconds(50));
+#ifdef BLOCKING_IO
+            event_base_loop(EventBase.get(), EVLOOP_NO_EXIT_ON_EMPTY);
+#else 
+			event_base_loop(EventBase.get(), EVLOOP_NONBLOCK);
+            std::this_thread::sleep_for(std::chrono::nanoseconds(500));
+#endif// BLOCKING_IO
         }
     }
     catch (std::exception const &e)

@@ -17,6 +17,11 @@ if(MSVC)
 endif()
 find_package(Git REQUIRED)
 find_package(OpenSSL REQUIRED)
+option(BLOCKING_IO_MODE "Build the blocking io socket" OFF)
+if(BLOCKING_IO_MODE)
+  message(STATUS "Build the blocking io socket")
+  add_compile_definitions(BLOCKING_IO)
+endif()
 #libevent
 ExternalProject_Add(
     libevent
