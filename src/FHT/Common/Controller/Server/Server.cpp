@@ -60,8 +60,9 @@ namespace FHT {
             data_.str1 = location ? location : ""; // location
             data_.str3 = evhttp_uri_get_path(evhttp_request); //host
             data_.id = evhttp_uri_get_port(evhttp_request); //port
-
-            if (auto a = http_request_param.find("Connection"); a != http_request_param.end() && a->second == "Upgrade") {
+			auto a = http_request_param.find("Connection");
+            auto b = http_request_param.find("Upgrade");
+            if (a != http_request_param.end() && a->second == "Upgrade" && b != http_request_param.end() && b->second == "websocket") {
                 auto func = H->getUniqueHendler(FHT::webSocket(location));
                 if (!func) goto err;
                 std::shared_ptr<wsUser> user(new wsUser(evhttp_request_get_connection(req)));
