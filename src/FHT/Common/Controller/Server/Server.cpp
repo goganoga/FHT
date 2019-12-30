@@ -85,8 +85,9 @@ namespace FHT {
                     ws.reset();
                 };
                 data_.obj1 = std::weak_ptr<wsSubscriber>(ws);
-                wsConnectSetHendler(user->wsConn_.get(), wsConnect::FRAME_RECV, std::bind(&wsUser::frameRead, user.get()));
-                wsConnectSetHendler(user->wsConn_.get(), wsConnect::CLOSE, [user]() mutable { user.reset(); });
+                wsConnect* wsu = user->wsConn_.get();
+                wsConnectSetHendler(wsu, wsConnect::FRAME_RECV, [user]() mutable { user->frameRead(); });
+                wsConnectSetHendler(wsu, wsConnect::CLOSE, [user]() mutable { user.reset(); });
                 auto result = func(data_);
                 user->wsConn_->wsServerStart();
                 bufferevent_enable(user->wsConn_->bev_, EV_WRITE);

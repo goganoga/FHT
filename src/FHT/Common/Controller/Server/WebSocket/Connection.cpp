@@ -123,7 +123,7 @@ void wsFrameReadHendler(struct bufferevent *bev_, void *ctx) {
             std::unique_ptr<char> tmp(new char[conn->ntoread_]);
             bufferevent_read(bev_, tmp.get(), conn->ntoread_);
             //parse header
-            if (conn->frame_->parseFrameHeader(tmp.get()) == 0) {
+            if (conn->frame_->parseFrameHeader(tmp.get()) != 0) {
                 if (conn->frame_->payload_len_ <= 125) {
                     conn->step_ = wsRequest::step::THREE;
                     conn->ntoread_ = 4;
