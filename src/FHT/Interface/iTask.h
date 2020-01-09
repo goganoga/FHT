@@ -17,7 +17,7 @@ namespace FHT{
             UI,
             size
         };
-        enum state {
+        enum struct state {
             FINISH,
             CONTINUE
         };
