@@ -37,6 +37,15 @@ namespace FHT {
         void setSubscriber(void(*subscriberFunctor)(std::string&)) {
             subscriber = static_cast<std::function<void(std::string&)>>(subscriberFunctor);
         };
+        void setDeleter(std::function<void()>& deleterFunctor) {
+            deleter = std::move(deleterFunctor);
+        };
+        void setDeleter(std::function<void()> deleterFunctor) {
+            deleter = std::move(deleterFunctor);
+        };
+        void setDeleter(void(*deleterFunctor)()) {
+            deleter = static_cast<std::function<void()>>(deleterFunctor);
+        };
         bool getPublisher(std::string& str) {
             return publisher ? publisher(str) : false;
         }
