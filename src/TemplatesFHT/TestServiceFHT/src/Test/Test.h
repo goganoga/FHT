@@ -21,6 +21,7 @@ namespace FHT {
     class Test : public iTest {
         std::string mainTest(iHendler::data& resp);
         std::string mainTestGet(iHendler::data& resp);
+        std::string mainTestWebSocket(iHendler::data& resp);
         std::string md5Hash(const char* string);
         std::string guid();
         std::string guid(std::string ab);
