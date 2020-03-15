@@ -11,6 +11,9 @@ if(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
   set(BUILD_TYPE ${CMAKE_BUILD_TYPE})
   set(LIB_FOR_WIN 
+    iphlpapi
+    shell32
+    advapi32
     ws2_32
     Crypt32)
 endif()
@@ -41,7 +44,7 @@ set(LINKER
   ${BINARY_DIR}/${CMAKE_BUILD_TYPE}
   ${BINARY_DIR}/libevent/lib/${CMAKE_BUILD_TYPE})
 set(HEADER 
-  ${SOURCE_DIR}/src/FHT/Interfice
+  ${SOURCE_DIR}/src/FHT/Interface
   ${OPENSSL_INCLUDE_DIR})
 include_directories(${HEADER})
 link_directories(${LINKER})
