@@ -68,6 +68,7 @@ ExternalProject_Add(
     GIT_REPOSITORY https://github.com/goganoga/FHT.git
     TIMEOUT 10
     UPDATE_COMMAND ${GIT_EXECUTABLE} pull
+    CMAKE_ARGS -DBLOCKING_IO_MODE=ON
     INSTALL_COMMAND ""
     LOG_DOWNLOAD ON
 )

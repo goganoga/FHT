@@ -22,6 +22,9 @@ You need include to your cmake file, if you want to use it:
 ```bash
   if(MSVC)
     set(LIB_FOR_WIN 
+    iphlpapi
+    shell32
+    advapi32
     ws2_32
     Crypt32)
     set(BUILD_TYPE ${CMAKE_BUILD_TYPE})
@@ -37,6 +40,7 @@ You need include to your cmake file, if you want to use it:
       GIT_REPOSITORY https://github.com/goganoga/FHT.git
       TIMEOUT 10
       UPDATE_COMMAND ${GIT_EXECUTABLE} pull
+      CMAKE_ARGS -DBLOCKING_IO_MODE=ON
       INSTALL_COMMAND ""
       LOG_DOWNLOAD ON
   )
