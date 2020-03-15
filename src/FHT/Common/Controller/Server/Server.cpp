@@ -40,7 +40,7 @@ namespace FHT {
         auto *OutBuf = evhttp_request_get_output_buffer(req);
         if (evhttp_request_get_command(req) == EVHTTP_REQ_GET || evhttp_request_get_command(req) == EVHTTP_REQ_POST || evhttp_request_get_command(req) == EVHTTP_REQ_PUT) {
             if (!OutBuf) goto err;
-            auto *InBuf = evhttp_request_get_input_buffer(req);
+            auto* InBuf = evhttp_request_get_input_buffer(req);
             auto LenBuf = evbuffer_get_length(InBuf);
             std::unique_ptr<char> postBody(new char[LenBuf + 1]);
             postBody.get()[LenBuf] = 0;
@@ -55,15 +55,27 @@ namespace FHT {
             if (!location) goto err;
 
             FHT::iHendler::data data_;
+            FHT::iHendler::uniqueHendler func;
             data_.map0 = get_param; //get param
+            data_.map1 = http_request_param; //get param
             data_.str0 = request_get; //uri
-            data_.str1 = location ? location : ""; // location
+            data_.str1 = "."; //nextLocation
             data_.str3 = evhttp_uri_get_path(evhttp_request); //host
             data_.id = evhttp_uri_get_port(evhttp_request); //port
-			auto a = http_request_param.find("Connection");
+            std::string loc = lessen_all ? "head" : location;
+            loc.append("/");
+            auto a = http_request_param.find("Connection");
             auto b = http_request_param.find("Upgrade");
             if (a != http_request_param.end() && a->second == "Upgrade" && b != http_request_param.end() && b->second == "websocket") {
-                auto func = H->getUniqueHendler(FHT::webSocket(location));
+                for (int i = loc.size() - 1; i > 0; i--) {
+                    if (loc.at(i) == '/' || loc.at(i - 1) == '/') {
+                        func = H->getUniqueHendler(FHT::webSocket(loc.substr(0, i)));
+                        if (func) {
+                            data_.str1 += loc.substr(i, loc.size() - (i + 1)); //nextLocation
+                            break;
+                        }
+                    }
+                }
                 if (!func) goto err;
                 std::shared_ptr<wsUser> user(new wsUser(evhttp_request_get_connection(req)));
                 user->wsConn_->wsReqStr_ = http_request_param_str;
@@ -75,7 +87,7 @@ namespace FHT {
                 };
                 user->readBind_ = [ws](std::string msg) mutable {
                     if (ws && ws->subscriber) {
-                        ws->subscriber(msg); 
+                        ws->subscriber(msg);
                     }
                 };
                 user->closeBind_ = [&, ws]() mutable {
@@ -95,10 +107,35 @@ namespace FHT {
                 return;
 
             }
-            auto func = H->getUniqueHendler(lessen_all ? "head" : location);
+            for (int i = loc.size() - 1; i > 0; i--) {
+                if (loc.at(i) == '/' || loc.at(i - 1) == '/') {
+                    func = H->getUniqueHendler(loc.substr(0, i));
+                    if (func) {
+                        data_.str1 += loc.substr( i, loc.size() - (i + 1)); //nextLocation
+                        break;
+                    }
+                }
+            }
             data_.str2 = postBody.get(); //postBody
             if (!func) goto err;
-            evhttp_add_header(std::move(evhttp_request_get_output_headers(req)), "Content-Type", "text/plain; charset=utf-8");
+            evhttp_add_header(std::move(evhttp_request_get_output_headers(req)), "Content-Type", "*/*; charset=utf-8");
+            /*{
+                { "txt", "text/plain" },
+                { "c", "text/plain" },
+                { "h", "text/plain" },
+                { "html", "text/html" },
+                { "htm", "text/htm" },
+                { "css", "text/css" },
+                { "gif", "image/gif" },
+                { "jpg", "image/jpeg" },
+                { "jpeg", "image/jpeg" },
+                { "png", "image/png" },
+                { "pdf", "application/pdf" },
+                { "ps", "application/postscript" },
+                { NULL, NULL },
+            };
+            evhttp_add_header(std::move(evhttp_request_get_output_headers(req)), "Content-Type", "image/*; charset=utf-8")
+        };*/
 			evbuffer_add_printf(OutBuf, func(data_).c_str());
 			evhttp_send_reply(req, HTTP_OK, "", OutBuf);
 			

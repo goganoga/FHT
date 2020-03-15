@@ -8,6 +8,7 @@
 #define FHTHENDLER_H
 #include "iHendler.h"
 #include <map>
+#include <mutex>
 
 namespace FHT{
     class Hendler: public iHendler
@@ -27,6 +28,9 @@ namespace FHT{
 
         uniqueHendler emptyU_ = nullptr;
         std::function<void(void)> emptyV_ = nullptr;
+
+        std::mutex mutex1;
+        std::mutex mutex2;
     };
 }
 #endif //FHTHENDLER_H

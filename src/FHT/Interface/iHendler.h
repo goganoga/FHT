@@ -17,13 +17,14 @@ namespace FHT{
         struct data {
             int id = 0; //port
             std::string str0; //uri
-            std::string str1; //location
+            std::string str1; //nextLocation
             std::string str2; //postBody
             std::string str3; //host
             double num = 0;
             void* obj0;
             std::any obj1;
-            std::map<std::string, std::string> map0; //headers
+            std::map<std::string, std::string> map0; //params
+            std::map<std::string, std::string> map1; //headers
 
         };
         using uniqueHendler = std::function<std::string(iHendler::data&)>;

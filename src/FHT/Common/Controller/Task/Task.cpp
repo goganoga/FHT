@@ -83,19 +83,21 @@ public:
             if(size < 10) sleep = std::chrono::microseconds(100); else
             if(size < 100) sleep = std::chrono::microseconds(10); else
             if(size < 1000) sleep = std::chrono::microseconds(1);
-            std::lock_guard<std::mutex> lock(mutex);
             std::this_thread::sleep_for(sleep);
             tuple_ a;
             try{
-                if(!queue_.empty())
+                const std::lock_guard<decltype(mutex)> lock(mutex);
+                if (!queue_.empty()) {
                     a = queue_.front();
+                    queue_.pop();
+                }
                 else
                     continue;
             }
             catch(std::exception e) {
                 continue;
             }
-            queue_.pop();
+            
             auto realtime = std::chrono::high_resolution_clock::now();
             auto timestamp = std::get<tuple::ts>(a);
             auto timerun = std::get<tuple::ms>(a);
@@ -112,19 +114,19 @@ public:
         }
     }
     void pull(std::function<FHT::iTask::state(void)> func) {
-        //std::lock_guard<std::mutex> lock(mutex);
+        const std::lock_guard<decltype(mutex)> lock(mutex);
         queue_.push(std::make_tuple(func, 0, true, std::chrono::high_resolution_clock::now()));
     }
     void pull(std::function<FHT::iTask::state(void)> func, int ms) {
-        //std::lock_guard<std::mutex> lock(mutex);
+        const std::lock_guard<decltype(mutex)> lock(mutex);
         queue_.push(std::make_tuple(func, ms, true, std::chrono::high_resolution_clock::now()));
     }
     void pullTime(std::function<FHT::iTask::state(void)> func) {
-        //std::lock_guard<std::mutex> lock(mutex);
+        const std::lock_guard<decltype(mutex)> lock(mutex);
         queue_.push(std::make_tuple(func, 0, false, std::chrono::high_resolution_clock::now()));
     }
     void pullTime(std::function<FHT::iTask::state(void)> func, int ms) {
-        //std::lock_guard<std::mutex> lock(mutex);
+        const std::lock_guard<decltype(mutex)> lock(mutex);
         queue_.push(std::make_tuple(func, ms, false, std::chrono::high_resolution_clock::now()));
     }
     bool isRun() { return isRun_; }
