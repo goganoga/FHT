@@ -16,9 +16,7 @@ namespace FHT{
         const std::lock_guard<decltype(mutex1)> lock(mutex1);
         if (auto a = mapHendler_.find(id); a != end(mapHendler_))
             throw;
-        if (auto b = mapList_.find(id); b != end(mapList_))
-            throw;
-        mapHendler_.emplace(id, func);
+        mapHendler_.emplace(id, std::make_shared<decltype(func)>(std::move(func)));
     };
     bool Hendler::removeUniqueHendler(std::string id){
         const std::lock_guard<decltype(mutex1)> lock(mutex1);
@@ -28,7 +26,7 @@ namespace FHT{
         }
         return false;
     };
-    Hendler::uniqueHendler& Hendler::getUniqueHendler(std::string id) {
+    std::shared_ptr<iHendler::uniqueHendler> Hendler::getUniqueHendler(std::string id) {
         const std::lock_guard<decltype(mutex1)> lock(mutex1);
         if (auto a = mapHendler_.find(id); a != end(mapHendler_))
             return a->second;
@@ -37,11 +35,9 @@ namespace FHT{
     };
     void Hendler::addHendler(std::string id, std::function<void(void)> func){
         const std::lock_guard<decltype(mutex2)> lock(mutex2);
-        if (auto a = mapHendler_.find(id); a != end(mapHendler_))
-            throw;
         if (auto b = mapList_.find(id); b != end(mapList_))
             throw;
-        mapList_.emplace(id, func);
+        mapList_.emplace(id, std::make_shared<decltype(func)>(std::move(func)));
     };
     bool Hendler::removeHendler(std::string id){
         const std::lock_guard<decltype(mutex2)> lock(mutex2);
@@ -52,7 +48,7 @@ namespace FHT{
         return false;
 
     };
-    std::function<void(void)>& Hendler::getHendler(std::string id){
+    std::shared_ptr<std::function<void(void)>> Hendler::getHendler(std::string id){
         const std::lock_guard<decltype(mutex2)> lock(mutex2);
         if (auto a = mapList_.find(id); a != end(mapList_))
             return a->second;

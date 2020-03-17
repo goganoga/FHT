@@ -9,6 +9,7 @@
 #include <functional>
 #include <string>
 #include <cstring>
+#include <memory>
 #include <any>
 #include <map>
 namespace FHT{
@@ -30,11 +31,11 @@ namespace FHT{
         using uniqueHendler = std::function<std::string(iHendler::data&)>;
         virtual void addUniqueHendler(std::string id, uniqueHendler func) = 0;
         virtual bool removeUniqueHendler(std::string id) = 0;
-        virtual uniqueHendler& getUniqueHendler(std::string id) = 0;
+        virtual std::shared_ptr<uniqueHendler> getUniqueHendler(std::string id) = 0;
 
         virtual void addHendler(std::string id, std::function<void(void)> func) = 0;
         virtual bool removeHendler(std::string id) = 0;
-        virtual std::function<void(void)>& getHendler(std::string id) = 0;
+        virtual std::shared_ptr < std::function<void(void)>> getHendler(std::string id) = 0;
     };
 }
 #endif //FHTIHENDLER_H

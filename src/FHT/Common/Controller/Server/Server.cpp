@@ -55,7 +55,7 @@ namespace FHT {
             if (!location) goto err;
 
             FHT::iHendler::data data_;
-            FHT::iHendler::uniqueHendler func;
+            std::shared_ptr<FHT::iHendler::uniqueHendler> func;
             data_.map0 = get_param; //get param
             data_.map1 = http_request_param; //get param
             data_.str0 = request_get; //uri
@@ -100,7 +100,7 @@ namespace FHT {
                 wsConnect* wsu = user->wsConn_.get();
                 wsConnectSetHendler(wsu, wsConnect::FRAME_RECV, [user]() mutable { user->frameRead(); });
                 wsConnectSetHendler(wsu, wsConnect::CLOSE, [user]() mutable { user.reset(); });
-                auto result = func(data_);
+                auto result = (*func)(data_);
                 user->wsConn_->wsServerStart();
                 bufferevent_enable(user->wsConn_->bev_, EV_WRITE);
                 requestReadHendler(user->wsConn_->bev_, user->wsConn_.get());
@@ -136,7 +136,7 @@ namespace FHT {
             };
             evhttp_add_header(std::move(evhttp_request_get_output_headers(req)), "Content-Type", "image/*; charset=utf-8")
         };*/
-			evbuffer_add_printf(OutBuf, func(data_).c_str());
+			evbuffer_add_printf(OutBuf, (*func)(data_).c_str());
 			evhttp_send_reply(req, HTTP_OK, "", OutBuf);
 			
         }
