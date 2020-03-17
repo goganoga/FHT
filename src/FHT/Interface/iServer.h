@@ -27,6 +27,7 @@ namespace FHT {
             publisher = nullptr;
             subscriber = nullptr;
             deleter = nullptr;
+            close = nullptr;
         }
         void setSubscriber(std::function<void(std::string&)>& subscriberFunctor) {
             subscriber = std::move(subscriberFunctor);
@@ -48,11 +49,16 @@ namespace FHT {
         };
         bool getPublisher(std::string& str) {
             return publisher ? publisher(str) : false;
-        }
+        };
+        void stop() {
+            if(close) close();
+        };
+        
     private:
         std::function<void()> deleter;
         std::function<bool(std::string&)> publisher;
         std::function<void(std::string&)> subscriber;
+        std::function<void()> close;
     };
 }
 #endif //FHTISERVER_H

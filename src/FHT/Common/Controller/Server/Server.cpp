@@ -80,6 +80,7 @@ namespace FHT {
                 std::shared_ptr<wsUser> user(new wsUser(evhttp_request_get_connection(req)));
                 user->wsConn_->wsReqStr_ = http_request_param_str;
                 std::shared_ptr<wsSubscriber> ws(new wsSubscriber());
+                ws->close = [user]() mutable { user.reset(); };
                 ws->publisher = [wsConn = user->wsConn_](std::string& str) {
                     if (!wsConn) return false;
                     std::unique_ptr<wsFrameBuffer> fb(new wsFrameBuffer(1, 1, str.size(), str.data()));
@@ -99,7 +100,7 @@ namespace FHT {
                 data_.obj1 = std::weak_ptr<wsSubscriber>(ws);
                 wsConnect* wsu = user->wsConn_.get();
                 wsConnectSetHendler(wsu, wsConnect::FRAME_RECV, [user]() mutable { user->frameRead(); });
-                wsConnectSetHendler(wsu, wsConnect::CLOSE, [user]() mutable { user.reset(); });
+                wsConnectSetHendler(wsu, wsConnect::CLOSE, ws->close);
                 auto result = (*func)(data_);
                 user->wsConn_->wsServerStart();
                 bufferevent_enable(user->wsConn_->bev_, EV_WRITE);
