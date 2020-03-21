@@ -67,7 +67,7 @@ namespace FHT {
                 loc.append("/");
                 auto a = http_request_param.find("Connection");
                 auto b = http_request_param.find("Upgrade");
-                if (a != http_request_param.end() && a->second == "Upgrade" && b != http_request_param.end() && b->second == "websocket") {
+                if (a != http_request_param.end() && a->second.rfind("Upgrade") != std::string::npos && b != http_request_param.end() && b->second.find("websocket") != std::string::npos) {
                     for (int i = loc.size() - 1; i > 0; i--) {
                         if (loc.at(i) == '/' || loc.at(i - 1) == '/') {
                             func = H->getUniqueHendler(FHT::webSocket(loc.substr(0, i)));
