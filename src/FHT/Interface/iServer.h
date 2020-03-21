@@ -51,14 +51,14 @@ namespace FHT {
             return publisher ? publisher(str) : false;
         };
         void stop() {
-            if(close) close();
+            if(close) (*close.get())();
         };
         
     private:
         std::function<void()> deleter;
         std::function<bool(std::string&)> publisher;
         std::function<void(std::string&)> subscriber;
-        std::function<void()> close;
+        std::shared_ptr<std::function<void()>> close;
     };
 }
 #endif //FHTISERVER_H
