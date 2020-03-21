@@ -5,6 +5,7 @@
 *  Copyright (C) goganoga 2019
 ***************************************/
 #include "WebSocket.h"
+#include "Template.h"
 #include <map>
 #include <iostream>
 
@@ -32,27 +33,28 @@ bool wsRequest::parseWebsocketRequest(const char *s_req) {
         value += str[i];
         }
     }
-    if (auto a = map.find("Connection"); a != map.end()) {
+    if(auto a = map_find(map, "Connection", "connection"); a != map.end()) {
         connection_ = a->second;
     }
-    if (auto a = map.find("Upgrade"); a != map.end()) {
+    if (auto a = map_find(map, "Upgrade", "upgrade"); a != map.end()) {
         upgrade_ = a->second;
     }
-    if (auto a = map.find("Host"); a != map.end()) {
+    if (auto a = map_find(map, "Host", "host"); a != map.end()) {
         host_ = a->second;
     }
-    if (auto a = map.find("Origin"); a != map.end()) {
+    if (auto a = map_find(map, "Origin", "origin"); a != map.end()) {
         origin_ = a->second;
     }
-    if (auto a = map.find("Cookie"); a != map.end()) {
+    if (auto a = map_find(map, "Cookie", "cookie"); a != map.end()) {
         cookie_ = a->second;
     }
-    if (auto a = map.find("Sec-WebSocket-Key"); a != map.end()) {
+    if (auto a = map_find(map, "Sec-WebSocket-Key", "sec-websocket-key"); a != map.end()) {
         secWebsocketKey_ = a->second;
     }
-    if (auto a = map.find("Sec-WebSocket-Version"); a != map.end()) {
+    if (auto a = map_find(map, "Sec-WebSocket-Version", "sec-websocket-version"); a != map.end()) {
         secWebsocketVersion_ = a->second;
     }
+
     return true;
 }
 
