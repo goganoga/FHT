@@ -124,6 +124,7 @@ namespace FHT {
                 }
                 data_.str2 = postBody.get(); //postBody
                 if (!func) goto err;
+                evhttp_add_header(std::move(evhttp_request_get_output_headers(req)), "Server", "FHT Server");
                 evhttp_add_header(std::move(evhttp_request_get_output_headers(req)), "Content-Type", "*/*; charset=utf-8");
                 /*{
                     { "txt", "text/plain" },

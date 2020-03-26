@@ -63,7 +63,7 @@ std::string wsRequest::generateWebsocketResponse() {
     resp += "HTTP/1.1 101 WebSocket Protocol\r\n";
     resp += "Connection: Upgrade\r\n";
     resp += "Upgrade: websocket\r\n";
-    resp += "Server: AI Math\r\n";
+    resp += "Server: FHT Server\r\n";
     resp += "Sec-WebSocket-Accept: " + generateKey(secWebsocketKey_) + "\r\n";
     resp += "\r\n";
     return resp;
