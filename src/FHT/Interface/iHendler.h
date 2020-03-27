@@ -20,7 +20,7 @@ namespace FHT{
             std::string str0; //uri
             std::string str1; //nextLocation
             std::string str2; //postBody
-            std::string str3; //host
+            std::string str3; //ip
             double num = 0;
             void* obj0;
             std::any obj1;

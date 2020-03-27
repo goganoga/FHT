@@ -56,14 +56,18 @@ namespace FHT {
                 std::string http_request_param_str = parceHttpRequestParam(req, http_request_param);
                 if (!location) goto err;
 
+                char* client_ip;
+                unsigned short client_port;
+                evhttp_connection_get_peer(evhttp_request_get_connection(req), &client_ip, &client_port);
+
                 FHT::iHendler::data data_;
                 std::shared_ptr<FHT::iHendler::uniqueHendler> func;
                 data_.map0 = get_param; //get param
                 data_.map1 = http_request_param; //get param
                 data_.str0 = request_get; //uri
                 data_.str1 = "."; //nextLocation
-                data_.str3 = evhttp_uri_get_path(evhttp_request); //host
-                data_.id = evhttp_uri_get_port(evhttp_request); //port
+                data_.str3 = client_ip; //ip
+                data_.id = (int)client_port; //port
                 std::string loc = lessen_all ? "head" : location;
                 loc.append("/");
                 auto a = map_find(http_request_param, "Connection", "connection");
