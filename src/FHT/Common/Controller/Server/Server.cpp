@@ -110,10 +110,10 @@ namespace FHT {
                     wsConnect* wsu = user->wsConn_.get();
                     wsConnectSetHendler(wsu, wsConnect::FRAME_RECV, [user = std::weak_ptr<wsUser>(user)]() mutable { if (auto f = user.lock(); f) f->frameRead(); });
                     wsConnectSetHendler(wsu, wsConnect::CLOSE, [ws = ws->close]() {(*ws)(); });
-                    auto result = (*func)(data_);
                     user->wsConn_->wsServerStart();
                     bufferevent_enable(user->wsConn_->bev_, EV_WRITE);
                     requestReadHendler(user->wsConn_->bev_, user->wsConn_.get());
+                    auto result = (*func)(data_);
                     return;
 
                 }
