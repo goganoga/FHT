@@ -15,9 +15,12 @@
 #endif
 
 #include <iostream>
+#include <fstream>
+#include <iterator>
+#include <json/json.h>
 #include "iController.h"
 #include "iTest.h"
-void skeleton_daemon(char* args);
+void skeleton_daemon();
 struct inizialaizer {
 	FHT::iTest *Test = FHT::iTest::Run.get();
 	FHT::iClient *Client = FHT::iConrtoller::webClient.get(); //pre init
@@ -25,14 +28,33 @@ struct inizialaizer {
 };
 int main(int argc, char* argv[])
 {
+	std::string conf_path("config.json");
 	if (argc > 1) {
-		skeleton_daemon(argv[1]);
-	} else
-		std::cout << "For start daimon - run programm with [daemon] " << std::endl;;
+		if (argv[1] == "-c" || argv[1] == "--config" || argv[2]) {
+			conf_path = std::string(argv[2]);
+		} else {
+			std::cout << "-c | --config <path_to_config>               path to file config.json" << std::endl;
+			return 1;
+		}
+	}
 	try {
+		Json::Reader reader;
+		std::ifstream data(conf_path);
+		std::string raw((std::istreambuf_iterator<char>(data)), std::istreambuf_iterator<char>());
+		Json::Value root;
+		reader.parse(raw, root);
+		auto daemon = root["daemon"];
+		if (auto daemon_ = daemon.asBool(); daemon_) {
+			skeleton_daemon();
+		}
+		auto host_server = root["host_server"];
+		auto port_server = root["port_server"];
+		std::cout << "Start server host - " << (host_server.empty() ? "0.0.0.0" : host_server.asCString()) << std::endl;
+		std::cout << "Start server port - " << (port_server.empty() ? 10800 : port_server.asInt()) << std::endl;
+		
 		inizialaizer inizialaizerServer;
-		inizialaizerServer.Serv->setHost("0.0.0.0");
-		inizialaizerServer.Serv->setPort(10800);
+		inizialaizerServer.Serv->setHost(host_server.empty() ? "0.0.0.0" : host_server.asCString());
+		inizialaizerServer.Serv->setPort(port_server.empty() ? 10800 : port_server.asInt());
 		inizialaizerServer.Serv->run();
 	} catch (std::exception const &e) {
 		std::cerr << "Error: " << e.what() << std::endl;
@@ -43,13 +65,8 @@ int main(int argc, char* argv[])
 }
 
 #ifdef __linux__ 
-void skeleton_daemon(char* args)
+void skeleton_daemon()
 {
-	if (std::string(args) != std::string("daemon")) {
-		std::cout << "Not exist!!!!" << std::endl;
-		std::cout << "For start daimon - run programm with [daemon] " << std::endl;
-		return;
-	}
 	pid_t pid, sid;
 	pid = fork();
 	if (pid < 0)
@@ -69,5 +86,5 @@ void skeleton_daemon(char* args)
 
 }
 #else
-void skeleton_daemon(char* args) {}
+void skeleton_daemon() {}
 #endif

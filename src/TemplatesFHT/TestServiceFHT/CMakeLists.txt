@@ -5,7 +5,7 @@ include(ExternalProject)
 if(NOT MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -pthread")
   set(pthread event_pthreads)
-  set (EXECUTABLE_OUTPUT_PATH bin)
+  set(EXECUTABLE_OUTPUT_PATH bin)
 endif()
 if(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++17")
@@ -22,6 +22,31 @@ add_definitions(-DBOOST_UUID_FORCE_AUTO_LINK)
 find_package(OpenSSL REQUIRED)
 find_package(Git REQUIRED)
 add_definitions(-DBOOST_ALL_NO_LIB)
+#JSONcpp
+list(APPEND CMAKE_ARGS_JSON 
+      -DJSONCPP_WITH_TESTS=OFF
+      -DJSONCPP_WITH_POST_BUILD_UNITTEST=OFF
+      -j 24)
+ExternalProject_Add(
+    Jsoncpp
+    PREFIX jsoncpp
+    GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp.git
+    TIMEOUT 10
+    UPDATE_COMMAND ${GIT_EXECUTABLE} pull
+    CMAKE_ARGS ${CMAKE_ARGS_JSON}
+    INSTALL_COMMAND ""
+    LOG_DOWNLOAD ON
+)
+
+ExternalProject_Get_property(Jsoncpp SOURCE_DIR BINARY_DIR)
+
+set(JSONCPP_INCLUDE_DIR ${SOURCE_DIR}/include)
+set(JSONCPP_LIBRARIES_DIR ${BINARY_DIR}/lib/${BUILD_TYPE})
+set(JSONCPP_LIBRARIES jsoncpp)
+link_directories(${JSONCPP_LIBRARIES_DIR})
+include_directories(
+  ${JSONCPP_INCLUDE_DIR}
+)
 #boost
 set(BOOST_LIBRARIES
   system
@@ -96,4 +121,11 @@ add_dependencies(TestServiceFHT fhtlib)
 target_link_libraries(TestServiceFHT 
   ${LIB_FOR_WIN}
   ${FHT_LIBRARIES}
-  ${BOOST_LIBRARIES})
+  ${BOOST_LIBRARIES}
+  ${JSONCPP_LIBRARIES})
+
+add_custom_command(
+        TARGET TestServiceFHT POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+                ${CMAKE_CURRENT_SOURCE_DIR}/src/config.json
+                ${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE_OUTPUT_PATH}/config.json)

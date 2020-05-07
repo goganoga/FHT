@@ -158,8 +158,8 @@ namespace FHT {
             }
         }
         catch (const std::string e) {
-            evbuffer_add_printf(OutBuf, "<html><body><center><h1>404</h1></center></body></html>");
-            evhttp_send_reply(req, HTTP_NOTFOUND, e.c_str(), OutBuf);
+            evbuffer_add_printf(OutBuf, "<html><body><center><h1>405</h1></center></body></html>");
+            evhttp_send_reply(req, HTTP_BADMETHOD, e.c_str(), OutBuf);
             return;
         }
         catch (const char * e) {
