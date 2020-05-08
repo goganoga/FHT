@@ -55,7 +55,7 @@ namespace FHT {
     };
 
     LoggerStream Logger::log(const LoggerStream::Level level) {
-        if(static_cast<int>(level) <= static_cast<int>(m_verboseLogging)){
+        if(static_cast<int>(level) < static_cast<int>(m_verboseLogging)){
             if(!m_write){
                 m_write.reset(new logWriter(m_fileLoggingName));
 
