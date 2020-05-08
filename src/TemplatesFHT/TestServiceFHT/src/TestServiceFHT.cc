@@ -20,9 +20,12 @@
 #include <json/json.h>
 #include "iController.h"
 #include "iTest.h"
+#include "LoggerStream.h"
+
 void skeleton_daemon();
 struct inizialaizer {
 	FHT::iTest *Test = FHT::iTest::Run.get();
+	FHT::iLogger* Logger = FHT::iConrtoller::logger.get();
 	FHT::iClient *Client = FHT::iConrtoller::webClient.get(); //pre init
 	FHT::iServer *Serv = FHT::iConrtoller::webServer.get(); //end
 };
@@ -49,18 +52,32 @@ int main(int argc, char* argv[])
 		}
 		auto host_server = root["host_server"];
 		auto port_server = root["port_server"];
-		std::cout << "Start server host - " << (host_server.empty() ? "0.0.0.0" : host_server.asCString()) << std::endl;
-		std::cout << "Start server port - " << (port_server.empty() ? 10800 : port_server.asInt()) << std::endl;
+		
+		auto log = root["logging"];
+		auto time = pg.empty() ? decltype(log)() : log["time"];
+		auto fileName = pg.empty() ? decltype(log)() : log["name"];
+		auto level = pg.empty() ? decltype(log)() : log["level"];
 		
 		inizialaizer inizialaizerServer;
+		
+		
+		inizialaizerServer.Logger->setTimeDump(time.empty() ? 0 : time.asInt());
+		inizialaizerServer.Logger->setLevelVerboseLogging(level.empty() ? FHT::iLogger::Verbose::INFO : static_cast<FHT::iLogger::Verbose>(level.asInt()));
+		if (!fileName.empty()) {
+			inizialaizerServer.Logger->setFileLogging(fileName.asCString());
+		}
 		inizialaizerServer.Serv->setHost(host_server.empty() ? "0.0.0.0" : host_server.asCString());
 		inizialaizerServer.Serv->setPort(port_server.empty() ? 10800 : port_server.asInt());
 		inizialaizerServer.Serv->run();
+		
+		FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << METHOD_NAME << "Start Server";
+		FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << METHOD_NAME << "Server host" << (host_server.empty() ? "0.0.0.0" : host_server.asCString());
+		FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << METHOD_NAME << "Server port" << (port_server.empty() ? 10800 : port_server.asInt());
 	} catch (std::exception const &e) {
-		std::cerr << "Error: " << e.what() << std::endl;
+		FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << e.what();
 	}
-	std::cout << "Press Enter fot quit." << std::endl;
-	std::cin.get();
+	std::cout << "For exit press Ctrl + C" << std::endl;
+	for(;;) std::this_thread::sleep_for(std::chrono::seconds(2));
 	return 0;
 }
 

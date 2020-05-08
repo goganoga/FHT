@@ -35,7 +35,7 @@ namespace FHT{
 
         virtual void addHendler(std::string id, std::function<void(void)> func) = 0;
         virtual bool removeHendler(std::string id) = 0;
-        virtual std::shared_ptr < std::function<void(void)>> getHendler(std::string id) = 0;
+        virtual std::shared_ptr<std::function<void(void)>> getHendler(std::string id) = 0;
     };
 }
 #endif //FHTIHENDLER_H

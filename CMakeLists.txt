@@ -59,6 +59,7 @@ set(BUILDER_LIB
 set(SOURCE_LIB 
   ${BUILDER_LIB}
   src/FHT/Common/Controller/Hendler/Hendler.cpp
+  src/FHT/Common/Controller/Logger/Logger.cpp
   src/FHT/Common/Controller/Task/Task.cpp
   src/FHT/Common/Controller/Server/InitialSer.cpp
   src/FHT/Common/Controller/Server/Server.cpp
@@ -70,10 +71,11 @@ set(SOURCE_LIB
   src/FHT/Common/Controller/Server/WebSocket/Connection.cpp)
 set(HEADER_LIB
   src/FHT/lib
+  src/FHT/Common/Log
+  src/FHT/Interface
 )
 set(HEADERS 
   ${HEADER_LIB}
-  src/FHT/Interface
   ${OPENSSL_INCLUDE_DIR})
 set(HEADER 
   src/FHT/Common

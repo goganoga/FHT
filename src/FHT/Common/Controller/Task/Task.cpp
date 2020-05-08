@@ -6,6 +6,8 @@
 ***************************************/
 #include "Task.h"
 #include "Controller/Controller.h"
+#include "Log/LoggerStream.h"
+
 #include <chrono>
 #include <thread>
 #include <mutex>
@@ -78,38 +80,43 @@ public:
     };
     void loop() {
         while (isRun_) {
-            auto size = queue_.size();
-            auto sleep = std::chrono::nanoseconds(100);
-            if(size < 10) sleep = std::chrono::microseconds(100); else
-            if(size < 100) sleep = std::chrono::microseconds(10); else
-            if(size < 1000) sleep = std::chrono::microseconds(1);
-            std::this_thread::sleep_for(sleep);
-            tuple_ a;
-            try{
-                const std::lock_guard<decltype(mutex)> lock(mutex);
-                if (!queue_.empty()) {
-                    a = queue_.front();
-                    queue_.pop();
+            try {
+                auto size = queue_.size();
+                auto sleep = std::chrono::nanoseconds(100);
+                if (size < 10) sleep = std::chrono::microseconds(100); else
+                    if (size < 100) sleep = std::chrono::microseconds(10); else
+                        if (size < 1000) sleep = std::chrono::microseconds(1);
+                std::this_thread::sleep_for(sleep);
+                tuple_ a;
+                try {
+                    const std::lock_guard<decltype(mutex)> lock(mutex);
+                    if (!queue_.empty()) {
+                        a = queue_.front();
+                        queue_.pop();
+                    }
+                    else
+                        continue;
                 }
-                else
+                catch (std::exception e) {
                     continue;
-            }
-            catch(std::exception e) {
-                continue;
-            }
-            
-            auto realtime = std::chrono::high_resolution_clock::now();
-            auto timestamp = std::get<tuple::ts>(a);
-            auto timerun = std::get<tuple::ms>(a);
-            auto difftime(std::chrono::duration_cast<std::chrono::milliseconds>(realtime - timestamp));
-            if(difftime.count() < timerun){
-                queue_.push(a);
-            } else {
-                auto functor = std::get<tuple::function>(a);
-                if(functor && functor() == FHT::iTask::state::CONTINUE && std::get<tuple::isLoop>(a)){
-                    std::get<tuple::ts>(a) = std::chrono::high_resolution_clock::now();
+                }
+
+                auto realtime = std::chrono::high_resolution_clock::now();
+                auto timestamp = std::get<tuple::ts>(a);
+                auto timerun = std::get<tuple::ms>(a);
+                auto difftime(std::chrono::duration_cast<std::chrono::milliseconds>(realtime - timestamp));
+                if (difftime.count() < timerun) {
                     queue_.push(a);
                 }
+                else {
+                    auto functor = std::get<tuple::function>(a);
+                    if (functor && functor() == FHT::iTask::state::CONTINUE && std::get<tuple::isLoop>(a)) {
+                        std::get<tuple::ts>(a) = std::chrono::high_resolution_clock::now();
+                        queue_.push(a);
+                    }
+                }
+            } catch (std::exception const& e) {
+                FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << e.what();
             }
         }
     }

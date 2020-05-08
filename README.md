@@ -58,6 +58,7 @@ You need include to your cmake file, if you want to use it:
     ${BINARY_DIR}/libevent/lib/${BUILD_TYPE})
   include_directories(
     ${SOURCE_DIR}/src/FHT/Interfice
+    ${SOURCE_DIR}/src/FHT/common/Log
     ${OPENSSL_INCLUDE_DIR})
   link_directories(${LINKER})
   add_dependencies(${YourTarget} fhtlib)

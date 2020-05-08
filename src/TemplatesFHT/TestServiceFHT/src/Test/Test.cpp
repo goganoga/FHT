@@ -5,6 +5,7 @@
 *  Copyright (C) goganoga 2019
 ***************************************/
 #include "Test.h"
+#include "LoggerStream.h"
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/random_generator.hpp>
 #include <boost/uuid/name_generator.hpp>
@@ -12,6 +13,7 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <openssl/sha.h>
 #include <openssl/md5.h>
+
 namespace FHT {
     std::shared_ptr<iTest> iTest::Run = std::make_shared<Test>();
     Test::Test() {
@@ -56,7 +58,7 @@ namespace FHT {
             body = jsonParse(resp_map);
         }
         catch (const std::exception& e) {
-            std::cerr << "Error: " << e.what() << std::endl;
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << e.what();
         }
         return body;
     }
@@ -75,7 +77,7 @@ namespace FHT {
             resp_map.emplace("bodyRequest", bodyRequest);
         }
         catch (const std::exception& e) {
-            std::cerr << "Error: " << e.what() << std::endl;
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << e.what();
             delete id_buf;
         }
         delete id_buf;
@@ -99,7 +101,7 @@ namespace FHT {
             }, 5000);
         }
         catch (const std::exception& e) {
-            std::cerr << "Error: " << e.what() << std::endl;
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << e.what();
         }
         return std::string();
     }

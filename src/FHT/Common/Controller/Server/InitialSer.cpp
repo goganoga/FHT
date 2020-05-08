@@ -5,6 +5,7 @@
 *  Copyright (C) goganoga 2019
 ***************************************/
 #include "InitialSer.h"
+#include "Log/LoggerStream.h"
 #include <iostream>
 #include <event2/event.h>
 #include <event2/thread.h>
@@ -72,7 +73,7 @@ void InitSer::Start() {
     catch (std::exception const &e)
     {
         IsRun = false;
-        std::cerr << "Error start server: " << e.what() << std::endl;
+        FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << e.what();
     }
 }
 InitSer::~InitSer() {

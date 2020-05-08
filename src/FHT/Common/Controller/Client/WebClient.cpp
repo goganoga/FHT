@@ -29,6 +29,7 @@
 #include <openssl/rand.h>
 #include <openssl/x509v3.h>
 #include "HostCheckCurl.h"
+#include "Log/LoggerStream.h"
 
 namespace FHT{
     std::function<void(FHT::iClient::respClient)> webClient::funcCallback;
@@ -46,6 +47,7 @@ namespace FHT{
                 }
                 resp.body = "Error: Some request failed";
                 resp.status = 404;
+                FHT::LoggerStream::Log(FHT::LoggerStream::WARN) << METHOD_NAME << resp.body;
             }
             else {
                 auto* InBuf = evhttp_request_get_input_buffer(req);
@@ -65,18 +67,21 @@ namespace FHT{
         std::unique_ptr<evhttp_uri, decltype(&evhttp_uri_free)> http_uri(evhttp_uri_parse(url.c_str()), &evhttp_uri_free);
         if (!http_uri) {
             resp.body = "Error: Malformed url";
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
             funcCallback(resp);
             return;
         }
         const char* scheme = evhttp_uri_get_scheme(http_uri.get());
         if (!scheme || (strcasecmp(scheme, "https") != 0 && strcasecmp(scheme, "http") != 0)) {
             resp.body = "Error: Url must be http or https";
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
             funcCallback(resp);
             return;
         }
         const char* host = evhttp_uri_get_host(http_uri.get());
         if (host == nullptr) {
             resp.body = "Error: Url must have a host";
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
             funcCallback(resp);
             return;
         }
@@ -104,12 +109,14 @@ namespace FHT{
 #endif
         if (!RAND_poll()) {
             resp.body = "Error: Openssl RAND_poll failed";
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
             funcCallback(resp);
             return;
          }
          std::unique_ptr<SSL_CTX, decltype (&SSL_CTX_free)> ssl_ctx(SSL_CTX_new(SSLv23_method()) ,&SSL_CTX_free);
         if (!ssl_ctx) {
             resp.body = "Error: Openssl SSL_CTX_new failed";
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
             funcCallback(resp);
             return;
          }
@@ -120,12 +127,14 @@ namespace FHT{
              addCertForStore(store, "AuthRoot") < 0 ||
              addCertForStore(store, "ROOT") < 0) {
              resp.body = "Error: Openssl X509_STORE_set_default_paths failed";
+             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
              funcCallback(resp);
              return;
          }
 #else // _WIN32
          if (X509_STORE_set_default_paths(store) != 1) {
              resp.body = "Error: Openssl X509_STORE_set_default_paths failed";
+             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
              funcCallback(resp);
              return;
          }
@@ -134,12 +143,14 @@ namespace FHT{
          SSL_CTX_set_cert_verify_callback(ssl_ctx.get(), certVerifyCallback, (void*)host);
          if (!base) {
             resp.body = "Error: New connection failed";
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
             funcCallback(resp);
             return;
          }
          std::unique_ptr<SSL, decltype (&SSL_free)> ssl(SSL_new(ssl_ctx.get()) ,&SSL_free);
          if (ssl == nullptr) {
             resp.body = "Error: Create OpenSSL session failed";
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
             funcCallback(resp);
             return;
          }
@@ -154,6 +165,7 @@ namespace FHT{
         }
         if (bev == nullptr) {
             resp.body = "Error: Can't read buffer with openssl";
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
             funcCallback(resp);
             return;
         }
@@ -161,6 +173,7 @@ namespace FHT{
         std::unique_ptr<evhttp_connection, decltype(&evhttp_connection_free)> evcon(evhttp_connection_base_bufferevent_new(base, nullptr, bev, host, port) ,&evhttp_connection_free);
         if (evcon == nullptr) {
             resp.body = "Error: Can't read buffer with";
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
             funcCallback(resp);
             return;
         }
@@ -169,6 +182,7 @@ namespace FHT{
         struct evhttp_request* req = evhttp_request_new(&httpRequestDone, bev);
         if (req == nullptr) {
             resp.body = "Error: Not create request";
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
             funcCallback(resp);
             return;
         }
@@ -184,6 +198,7 @@ namespace FHT{
         }
         if (evhttp_make_request(evcon.get(), req, !body.empty() ? EVHTTP_REQ_POST : EVHTTP_REQ_GET, uri.c_str())) {
             resp.body = "Error: Can't make request";
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
             funcCallback(resp);
             return;
         }

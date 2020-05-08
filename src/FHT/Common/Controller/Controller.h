@@ -10,6 +10,7 @@
 #include "iServer.h"
 #include "iClient.h"
 #include "iHendler.h"
+#include "iLogger.h"
 #include <memory>
 namespace FHT{
     struct Conrtoller {
@@ -17,6 +18,7 @@ namespace FHT{
         static std::shared_ptr<FHT::iServer> getServer();
         static std::shared_ptr<FHT::iClient> getClient();
         static std::shared_ptr<FHT::iTask> getTask();
+        static std::shared_ptr<FHT::iLogger> getLogger();
     };
 }
 #endif // FHTCONTROLLER_H

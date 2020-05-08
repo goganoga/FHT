@@ -6,6 +6,7 @@
 ***************************************/
 #include "Client.h"
 #include "Controller/Controller.h"
+#include "Log/LoggerStream.h"
 #include "iController.h"
 #include "WebClient.h"
 #include <future>
@@ -32,6 +33,10 @@ namespace FHT {
 #endif
     }
     std::string Client::post(std::string url, std::string body){
+        if (url.empty() || url.length() < 6 || (url.substr(0, 7) != "http://" && url.substr(0, 8) != "https://"))
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << "No correct url";
+            return "No correct url";
+        
         std::promise<std::string> pr;
         std::future<std::string> barrier_future = pr.get_future();
         std::function<void(FHT::iClient::respClient)> func([&pr](FHT::iClient::respClient a) {
@@ -43,6 +48,7 @@ namespace FHT {
     }
     std::string Client::get(std::string url){
         if (url.empty() || url.length() < 6 || (url.substr(0, 7) != "http://" && url.substr(0, 8) != "https://"))
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << "No correct url";
             return "No correct url";
         std::promise<std::string> pr;
         std::future<std::string> barrier_future = pr.get_future();

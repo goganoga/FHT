@@ -6,6 +6,7 @@
 ***************************************/
 #include "Server.h"
 #include "Controller/Controller.h"
+#include "Log/LoggerStream.h"
 #include "iController.h"
 #include "WebSocket/WebSocket.h"
 #include "WebSocket/Connection.h"
@@ -28,9 +29,8 @@ namespace FHT {
         try {
             initSer_.reset(new InitSer(&Server::OnRequest, host_, port_));
         }
-        catch (std::exception const &e)
-        {
-            std::cerr << "Error create instanse server: " << e.what() << std::endl;
+        catch (std::exception const &e) {
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME <<  "Error create instanse server: " << e.what();
         }
     }
     
@@ -39,6 +39,7 @@ namespace FHT {
         auto H = FHT::iConrtoller::hendlerManager;
         auto T = FHT::iConrtoller::taskManager;
         auto *OutBuf = evhttp_request_get_output_buffer(req);
+        const char* location;
         try {
             if (evhttp_request_get_command(req) == EVHTTP_REQ_GET || evhttp_request_get_command(req) == EVHTTP_REQ_POST || evhttp_request_get_command(req) == EVHTTP_REQ_PUT) {
                 if (!OutBuf) goto err;
@@ -48,7 +49,7 @@ namespace FHT {
                 postBody.get()[LenBuf] = 0;
                 evbuffer_copyout(InBuf, postBody.get(), LenBuf);
                 auto evhttp_request = evhttp_request_get_evhttp_uri(req);
-                const char* location = evhttp_uri_get_path(evhttp_request);
+                location = evhttp_uri_get_path(evhttp_request);
 
                 std::map<std::string, std::string> get_param;
                 std::map<std::string, std::string> http_request_param;
@@ -114,6 +115,7 @@ namespace FHT {
                     bufferevent_enable(user->wsConn_->bev_, EV_WRITE);
                     requestReadHendler(user->wsConn_->bev_, user->wsConn_.get());
                     auto result = (*func)(data_);
+                    FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << location << "WebSocket: OK" << result;
                     return;
 
                 }
@@ -147,27 +149,33 @@ namespace FHT {
                 };
                 evhttp_add_header(std::move(evhttp_request_get_output_headers(req)), "Content-Type", "image/*; charset=utf-8")
             };*/
-                evbuffer_add_printf(OutBuf, (*func)(data_).c_str());
-		        evhttp_send_reply(req, HTTP_OK, "", OutBuf);
-		    
+                auto send = (*func)(data_).c_str();
+                evbuffer_add_printf(OutBuf, send);
+                evhttp_send_reply(req, HTTP_OK, "", OutBuf);
+                FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << location << "Http: OK" << send;
+            
             }
             else {
             err:
                 evbuffer_add_printf(OutBuf, "<html><body><center><h1>404</h1></center></body></html>");
                 evhttp_send_reply(req, HTTP_NOTFOUND, "", OutBuf);
+                FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << METHOD_NAME << location << "Http: 404";
             }
         }
         catch (const std::string e) {
             evbuffer_add_printf(OutBuf, "<html><body><center><h1>405</h1></center></body></html>");
             evhttp_send_reply(req, HTTP_BADMETHOD, e.c_str(), OutBuf);
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << location << "Http: 405";
             return;
         }
         catch (const char * e) {
             evhttp_send_reply(req, HTTP_BADREQUEST, e, OutBuf);
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << location << e;
             return;
         }
         catch (...) {
             evhttp_send_reply(req, HTTP_SERVUNAVAIL, "Fatal", OutBuf);
+            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << location;
             return;
         }
     }

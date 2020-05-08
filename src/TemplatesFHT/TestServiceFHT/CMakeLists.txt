@@ -111,6 +111,7 @@ set(LINKER
   ${BINARY_DIR}/libevent/lib/${BUILD_TYPE})
 set(HEADER 
   ${SOURCE_DIR}/src/FHT/Interface
+  ${SOURCE_DIR}/src/FHT/common/Log
   ${BOOST_INCLUDE_DIR}
   ${OPENSSL_INCLUDE_DIR})
 include_directories(${HEADER})

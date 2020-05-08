@@ -5,6 +5,7 @@
 *  Copyright (C) goganoga 2019
 ***************************************/
 #include "Connection.h"
+#include "Log/LoggerStream.h"
 #include "User.h"
 #include <cstring>
 
@@ -106,7 +107,7 @@ void responseWriteHendler(struct bufferevent *, void *ctx) {
         if (conn->handshakeHendlerFunction) {
             conn->handshakeHendlerFunction();
         }
-        conn->wsFrameReceverLoop(); //frame receive loop
+        conn->wsFrameReceverLoop();
     } else {
         conn->wsServerExit();
     }
@@ -122,7 +123,6 @@ void wsFrameReadHendler(struct bufferevent *bev_, void *ctx) {
     case wsRequest::step::ONE: {
             std::unique_ptr<char> tmp(new char[conn->ntoread_]);
             bufferevent_read(bev_, tmp.get(), conn->ntoread_);
-            //parse header
             if (conn->frame_->parseFrameHeader(tmp.get()) != 0) {
                 if (conn->frame_->payload_len_ <= 125) {
                     conn->step_ = wsRequest::step::THREE;
@@ -138,9 +138,8 @@ void wsFrameReadHendler(struct bufferevent *bev_, void *ctx) {
                     bufferevent_setwatermark(bev_, EV_READ, conn->ntoread_, conn->ntoread_);
                 }
             }
-            //TODO
-            //validate frame header
             if (!conn->frame_->isFrameValid()) {
+                FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME;
                 return;
             }
             break;
@@ -227,7 +226,7 @@ void wsFrameReadHendler(struct bufferevent *bev_, void *ctx) {
             break;
         }
     default:
-        std::cout << "FATAL STEP" << std::endl;
+        FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME;
         break;
     }
 
