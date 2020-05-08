@@ -149,8 +149,8 @@ namespace FHT {
                 };
                 evhttp_add_header(std::move(evhttp_request_get_output_headers(req)), "Content-Type", "image/*; charset=utf-8")
             };*/
-                auto send = (*func)(data_).c_str();
-                evbuffer_add_printf(OutBuf, send);
+                std::string send = (*func)(data_);
+                evbuffer_add_printf(OutBuf, send.c_str());
                 evhttp_send_reply(req, HTTP_OK, "", OutBuf);
                 FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << location << "Http: OK" << send;
             
