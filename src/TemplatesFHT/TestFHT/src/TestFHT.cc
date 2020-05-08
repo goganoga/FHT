@@ -5,7 +5,7 @@
 *  Copyright (C) goganoga 2019
 ***************************************/
 #include "iController.h"
-#include "Client/Component.h"
+#include "LoggerStream.h"
 #include <iostream>
 #include <utility>
 #include <functional>
@@ -14,6 +14,8 @@ int main(void)
 {
     auto H = FHT::iConrtoller::hendlerManager;
     auto T = FHT::iConrtoller::taskManager;
+    auto L = FHT::iConrtoller::logger;
+    L->setLevelVerboseLogging(FHT::iLogger::Verbose::INFO);
 
     std::function<void(int)> a([](int a) {FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << a; });
     a(1);

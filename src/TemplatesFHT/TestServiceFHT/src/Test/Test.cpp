@@ -84,20 +84,17 @@ namespace FHT {
         return jsonParse(resp_map);
     }
 
-    std::string authService::mainTestWebSocket(FHT::iHendler::data& resp) {
+    std::string Test::mainTestWebSocket(FHT::iHendler::data& resp) {
         std::weak_ptr<FHT::wsSubscriber> func = std::any_cast<std::weak_ptr<FHT::wsSubscriber>>(resp.obj1);
         std::map<std::string, std::string> resp_map;
         try {
-            auto func_time = [func](std::string &str) mutable {
+            FHT::iConrtoller::taskManager->addTask(FHT::iTask::MAIN, [func]() mutable {
+                std::string str("WebSocket Test!!!");
                 auto func_ptr = func.lock();
                 if (func_ptr && func_ptr->getPublisher(str)) {
                     return FHT::iTask::state::CONTINUE;
                 }
                 return FHT::iTask::state::FINISH;
-            };
-            T->addTask(FHT::iTask::MAIN, [=]() {
-                std::string str("WebSocket Test!!!");
-                return func_time(str);
             }, 5000);
         }
         catch (const std::exception& e) {
