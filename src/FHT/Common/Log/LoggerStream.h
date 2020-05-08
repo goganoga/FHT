@@ -29,10 +29,11 @@ namespace {
 
 namespace FHT {
     class LoggerStream {
+        bool logging = false;
         std::string m_buf;
         const std::function<void(const std::string&)> m_bind;
     public:
-        LoggerStream(const std::string str, const std::function<void(const std::string&)> bind): m_buf(str)/*, m_ptr(this)*/, m_bind(bind){};
+        LoggerStream(const std::string str, const std::function<void(const std::string&)> bind): logging(true), m_buf(str), m_bind(bind){};
         LoggerStream(){};
         ~LoggerStream(){
             if(m_bind){
@@ -42,9 +43,11 @@ namespace FHT {
 
         template<typename T>
         LoggerStream& operator << (const T str) {
-            std::stringstream ss;
-            ss << "|" <<  str;
-            m_buf.append(ss.str());
+            if (logging) {
+                std::stringstream ss;
+                ss << "|" << str;
+                m_buf.append(ss.str());
+            }
             return *this;
         };
 
