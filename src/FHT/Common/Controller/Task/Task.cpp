@@ -64,12 +64,17 @@ class Thread : public iThread {
     bool volatile isRun_ = true;
     using tuple_ = std::tuple<std::function<FHT::iTask::state(void)>, long long, bool, decltype(std::chrono::high_resolution_clock::now())>;
     std::queue<tuple_> queue_;
+    std::queue<tuple_> queue_buf_;
+    std::chrono::microseconds sleep_;
 public:
     virtual ~Thread() {
         isRun_ = false;
         thread_.reset();
     }
-    Thread() {
+    Thread(): sleep_(std::chrono::microseconds(1000)){
+        thread_.reset(new std::thread{ &Thread::loop, this });
+    }
+    Thread(std::chrono::microseconds sleep) : sleep_(sleep) {
         thread_.reset(new std::thread{ &Thread::loop, this });
     }
     enum tuple{
@@ -81,39 +86,43 @@ public:
     void loop() {
         while (isRun_) {
             try {
-                auto size = queue_.size();
-                auto sleep = std::chrono::nanoseconds(100);
-                if (size < 10) sleep = std::chrono::microseconds(100); else
-                    if (size < 100) sleep = std::chrono::microseconds(10); else
-                        if (size < 1000) sleep = std::chrono::microseconds(1);
-                std::this_thread::sleep_for(sleep);
                 tuple_ a;
+                bool find = false;
                 try {
                     const std::lock_guard<decltype(mutex)> lock(mutex);
                     if (!queue_.empty()) {
                         a = queue_.front();
                         queue_.pop();
+                        find = true;
                     }
-                    else
-                        continue;
+                    else {
+                        if (!queue_buf_.empty()) {
+                            queue_.swap(queue_buf_);
+                        }
+                    }
                 }
                 catch (std::exception e) {
-                    continue;
+                    FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << e.what();
                 }
-
-                auto realtime = std::chrono::high_resolution_clock::now();
-                auto timestamp = std::get<tuple::ts>(a);
-                auto timerun = std::get<tuple::ms>(a);
-                auto difftime(std::chrono::duration_cast<std::chrono::milliseconds>(realtime - timestamp));
-                if (difftime.count() < timerun) {
-                    queue_.push(a);
+                if (find) {
+                    auto realtime = std::chrono::high_resolution_clock::now();
+                    auto& timestamp = std::get<tuple::ts>(a);
+                    auto& timerun = std::get<tuple::ms>(a);
+                    auto difftime(std::chrono::duration_cast<std::chrono::milliseconds>(realtime - timestamp));
+                    if (difftime.count() < timerun) {
+                        queue_buf_.push(a);
+                    }
+                    else {
+                        auto& functor = std::get<tuple::function>(a);
+                        if (functor && functor() == FHT::iTask::state::CONTINUE && std::get<tuple::isLoop>(a)) {
+                            timestamp = std::chrono::high_resolution_clock::now();
+                            queue_buf_.push(a);
+                        }
+                    }
+                    std::this_thread::sleep_for(std::chrono::microseconds(100));
                 }
                 else {
-                    auto functor = std::get<tuple::function>(a);
-                    if (functor && functor() == FHT::iTask::state::CONTINUE && std::get<tuple::isLoop>(a)) {
-                        std::get<tuple::ts>(a) = std::chrono::high_resolution_clock::now();
-                        queue_.push(a);
-                    }
+                    std::this_thread::sleep_for(sleep_);
                 }
             } catch (std::exception const& e) {
                 FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << e.what();
