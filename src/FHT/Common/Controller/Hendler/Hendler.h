@@ -10,9 +10,8 @@
 #include <map>
 #include <mutex>
 
-namespace FHT{
-    class Hendler: public iHendler
-    {
+namespace FHT {
+    class Hendler: public iHendler {
     public:
         Hendler();
         void addUniqueHendler(std::string id, uniqueHendler func) override final;
@@ -25,9 +24,6 @@ namespace FHT{
     private:
         std::map<std::string, std::shared_ptr<uniqueHendler>> mapHendler_;
         std::map<std::string, std::shared_ptr<std::function<void(void)>>> mapList_;
-
-        std::shared_ptr<uniqueHendler> emptyU_ = nullptr;
-        std::shared_ptr<std::function<void(void)>> emptyV_ = nullptr;
 
         std::mutex mutex1;
         std::mutex mutex2;

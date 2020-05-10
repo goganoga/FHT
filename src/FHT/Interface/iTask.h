@@ -7,6 +7,7 @@
 #ifndef FHTITASK_H
 #define FHTITASK_H
 #include <functional>
+#include <chrono>
 namespace FHT{
     struct iTask {
         virtual ~iTask() = default;
@@ -25,6 +26,7 @@ namespace FHT{
         virtual void addTask(iTask::listTask thread, std::function<state(void)> func, int ms) = 0;
         virtual void addTaskOneRun(iTask::listTask thread, std::function<void(void)> func) = 0;
         virtual void addTaskOneRun(iTask::listTask thread, std::function<void(void)> func, int ms) = 0;
+        virtual void setDeltaTime(std::chrono::microseconds delta_time) = 0;
     };
 }
 #endif //FHTITASK_H

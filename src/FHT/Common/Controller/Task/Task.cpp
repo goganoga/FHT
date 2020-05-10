@@ -9,6 +9,7 @@
 #include "Log/LoggerStream.h"
 
 #include <chrono>
+#include <condition_variable>
 #include <thread>
 #include <mutex>
 #include <utility>
@@ -19,24 +20,31 @@
 #include <memory>
 
 namespace FHT{
-    Task::Task(){
-        startManager();
-    }
+    Task::Task(): delta_time_(100) {}
+
     Task::~Task(){
         stopManager();
     }
 
-    void Task::addTask(iTask::listTask thread, std::function<state(void)> func) {
-        getTaskThread(thread)->pull(func);
-    }
-    void Task::addTask(iTask::listTask thread, std::function<state(void)> func, int ms) {
-        getTaskThread(thread)->pull(func, ms);
-    }
     void Task::addTaskOneRun(iTask::listTask thread, std::function<void(void)> func) {
-        getTaskThread(thread)->pullTime([func]() {func(); return FHT::iTask::state::FINISH; });
+        addTask(thread, std::move([func = std::move(func)]() {func(); return FHT::iTask::state::FINISH; }));
     }
+
+    void Task::addTask(iTask::listTask thread, std::function<state(void)> func) {
+        addTask(thread, func, 0);
+    }
+
     void Task::addTaskOneRun(iTask::listTask thread, std::function<void(void)> func, int ms) {
-        getTaskThread(thread)->pullTime([func]() {func(); return FHT::iTask::state::FINISH; }, ms);
+        addTask(thread, std::move([func = std::move(func)]() {func(); return FHT::iTask::state::FINISH; }), ms);
+    }
+
+    void Task::addTask(iTask::listTask thread, std::function<state(void)> func, int ms) {
+        if (!isRun) {
+            isRun = startManager();
+        }
+        if (isRun) {
+            getTaskThread(thread)->push(std::move(func), ms);
+        }
     }
 
     std::shared_ptr<iThread> Task::getTaskThread(iTask::listTask thread) {
@@ -44,12 +52,14 @@ namespace FHT{
             return a->second;
         return nullptr;
     }
+
     bool Task::startManager() {
-        factory_ = Task::make_factory(std::make_index_sequence<iTask::listTask::size>{});
+        factory_ = Task::make_factory(delta_time_, std::make_index_sequence<iTask::listTask::size>{});
         if(!factory_.empty())
             return true;
         return false;
     }
+
     bool Task::stopManager() {
         factory_.clear();
         if(factory_.empty())
@@ -57,108 +67,116 @@ namespace FHT{
         return false;
     }
 }
+struct Tuple {
+    Tuple(std::function<FHT::iTask::state(void)> function_, long long ms_, bool isLoop_, decltype(std::chrono::high_resolution_clock::now()) ts_):
+        function(std::move(function_)),
+        ms(ms_),
+        isLoop(isLoop_),
+        ts(ts_){}
+    ~Tuple() {
+    }
+    std::function<FHT::iTask::state(void)> function;
+    long long ms;
+    bool isLoop;
+    decltype(std::chrono::high_resolution_clock::now()) ts;
+};
 class Thread : public iThread {
     std::mutex mutex;
+    std::condition_variable condition_;
     using Threader = std::unique_ptr<std::thread, std::function<void(std::thread *)>>;
     Threader thread_{ nullptr, [](std::thread *a) { if (a) a->join(); delete a; } };
     bool volatile isRun_ = true;
-    using tuple_ = std::tuple<std::function<FHT::iTask::state(void)>, long long, bool, decltype(std::chrono::high_resolution_clock::now())>;
+    using tuple_ = std::shared_ptr<Tuple>;
     std::queue<tuple_> queue_;
-    std::queue<tuple_> queue_buf_;
     std::chrono::microseconds sleep_;
 public:
     virtual ~Thread() {
         isRun_ = false;
         thread_.reset();
     }
-    Thread(): sleep_(std::chrono::microseconds(1000)){
-        thread_.reset(new std::thread{ &Thread::loop, this });
-    }
     Thread(std::chrono::microseconds sleep) : sleep_(sleep) {
         thread_.reset(new std::thread{ &Thread::loop, this });
     }
-    enum tuple{
-        function,
-        ms,
-        isLoop,
-        ts
+    size_t sizeTask() {
+        std::lock_guard<std::mutex> lock_(mutex);
+        return queue_.size();
+    };
+    tuple_ getTask() {
+        std::unique_lock<std::mutex> lock_(mutex);
+        for (; queue_.empty();) {
+            condition_.wait(lock_);
+        }
+        auto task = queue_.front();
+        queue_.pop();
+        return task;
+    };
+    void putTask(tuple_ task) {
+        std::unique_lock<std::mutex> lock_(mutex);
+        queue_.push(task);
+        lock_.unlock();
+        condition_.notify_one();
     };
     void loop() {
         while (isRun_) {
             try {
-                tuple_ a;
-                bool find = false;
-                try {
-                    const std::lock_guard<decltype(mutex)> lock(mutex);
-                    if (!queue_.empty()) {
-                        a = queue_.front();
-                        queue_.pop();
-                        find = true;
-                    }
-                    else {
-                        if (!queue_buf_.empty()) {
-                            queue_.swap(queue_buf_);
+                for (size_t size = sizeTask(); size > 0; --size) {
+                    tuple_ task = getTask();
+                    if (task) {
+                        auto realtime = std::chrono::high_resolution_clock::now();
+                        auto& timestamp = task->ts;
+                        auto& timerun = task->ms;
+                        auto difftime(std::chrono::duration_cast<std::chrono::milliseconds>(realtime - timestamp));
+                        if (difftime.count() < timerun) {
+                            putTask(task);
+                        }
+                        else {
+                            auto& functor = task->function;
+                            if (functor && functor() == FHT::iTask::state::CONTINUE && task->isLoop) {
+                                timestamp = std::chrono::high_resolution_clock::now();
+                                putTask(task);
+                            }
                         }
                     }
-                }
-                catch (std::exception e) {
-                    FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << e.what();
-                }
-                if (find) {
-                    auto realtime = std::chrono::high_resolution_clock::now();
-                    auto& timestamp = std::get<tuple::ts>(a);
-                    auto& timerun = std::get<tuple::ms>(a);
-                    auto difftime(std::chrono::duration_cast<std::chrono::milliseconds>(realtime - timestamp));
-                    if (difftime.count() < timerun) {
-                        queue_buf_.push(a);
-                    }
                     else {
-                        auto& functor = std::get<tuple::function>(a);
-                        if (functor && functor() == FHT::iTask::state::CONTINUE && std::get<tuple::isLoop>(a)) {
-                            timestamp = std::chrono::high_resolution_clock::now();
-                            queue_buf_.push(a);
-                        }
+                        FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME;
                     }
-                    std::this_thread::sleep_for(std::chrono::microseconds(100));
-                }
-                else {
-                    std::this_thread::sleep_for(sleep_);
                 }
             } catch (std::exception const& e) {
                 FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << e.what();
             }
+            std::this_thread::sleep_for(sleep_);
         }
     }
-    void pull(std::function<FHT::iTask::state(void)> func) {
-        const std::lock_guard<decltype(mutex)> lock(mutex);
-        queue_.push(std::make_tuple(func, 0, true, std::chrono::high_resolution_clock::now()));
-    }
-    void pull(std::function<FHT::iTask::state(void)> func, int ms) {
-        const std::lock_guard<decltype(mutex)> lock(mutex);
-        queue_.push(std::make_tuple(func, ms, true, std::chrono::high_resolution_clock::now()));
-    }
-    void pullTime(std::function<FHT::iTask::state(void)> func) {
-        const std::lock_guard<decltype(mutex)> lock(mutex);
-        queue_.push(std::make_tuple(func, 0, false, std::chrono::high_resolution_clock::now()));
-    }
-    void pullTime(std::function<FHT::iTask::state(void)> func, int ms) {
-        const std::lock_guard<decltype(mutex)> lock(mutex);
-        queue_.push(std::make_tuple(func, ms, false, std::chrono::high_resolution_clock::now()));
+    void push(std::function<FHT::iTask::state(void)> func, int ms) {
+        putTask(std::make_shared<Tuple>(std::move(func), ms, true, std::chrono::high_resolution_clock::now()));
     }
     bool isRun() { return isRun_; }
 };
 
-std::shared_ptr<iThread> makeThread/*<iTask::listTask::MAIN>*/() {
-    return std::make_shared<Thread>();
-}
-template <std::size_t ... I>
-std::map<std::size_t, std::shared_ptr<iThread>> FHT::Task::make_factory(std::index_sequence<I ... > const &)
-{
-    return {
-        std::pair<std::size_t, std::shared_ptr<iThread>>{ I, makeThread/*<I>*/() } ...
-    };
-}
-namespace FHT{
+namespace FHT {
+    std::shared_ptr<iThread> Task::makeThread(std::chrono::microseconds delta_time) {
+        return std::make_shared<Thread>(delta_time);
+    }
+
+    void Task::setDeltaTime(std::chrono::microseconds delta_time) {
+        if (isRun) {
+            isRun = stopManager();
+        }
+        if (!isRun) {
+            if (std::chrono::microseconds(1).count() < delta_time.count()) {
+                delta_time_ = delta_time;
+            }
+            isRun = startManager();
+        }
+    }
+
+    template <std::size_t ... I>
+    std::map<std::size_t, std::shared_ptr<iThread>> Task::make_factory(std::chrono::microseconds delta_time, std::index_sequence<I ... > const&) {
+        return {
+            std::pair<std::size_t, std::shared_ptr<iThread>>{ I, makeThread(delta_time) } ...
+        };
+    }
+
     std::shared_ptr<iTask> Conrtoller::getTask() {
         auto static a = std::make_shared<Task>();
         return a;

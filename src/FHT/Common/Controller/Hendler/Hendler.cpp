@@ -17,47 +17,47 @@ namespace FHT{
         const std::lock_guard<decltype(mutex1)> lock(mutex1);
         FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << id;
         if (auto a = mapHendler_.find(id); a != end(mapHendler_)) { 
-            FHT::LoggerStream::Log(FHT::LoggerStream::WARN) << METHOD_NAME << "Not found"  << id;
-            throw;
+            FHT::LoggerStream::Log(FHT::LoggerStream::WARN) << METHOD_NAME << "Found" << id;
+            return;
         }
         mapHendler_.emplace(id, std::make_shared<decltype(func)>(std::move(func)));
     };
     bool Hendler::removeUniqueHendler(std::string id){
         const std::lock_guard<decltype(mutex1)> lock(mutex1);
-        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << id;
+        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Found" << id;
         if (auto a = mapHendler_.find(id); a != end(mapHendler_)) {
             mapHendler_.erase(a);
             return true;
         }
-        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Not found"  << id;
+        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Not found" << id;
         return false;
     };
     std::shared_ptr<iHendler::uniqueHendler> Hendler::getUniqueHendler(std::string id) {
         const std::lock_guard<decltype(mutex1)> lock(mutex1);
-        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << id;
+        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Found" << id;
         if (auto a = mapHendler_.find(id); a != end(mapHendler_))
             return a->second;
-        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Not found"  << id;
-        return emptyU_;
+        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Not found" << id;
+        return {};
 
     };
     void Hendler::addHendler(std::string id, std::function<void(void)> func){
         const std::lock_guard<decltype(mutex2)> lock(mutex2);
-        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << id;
+        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Found" << id;
         if (auto b = mapList_.find(id); b != end(mapList_)) { 
-            FHT::LoggerStream::Log(FHT::LoggerStream::WARN) << METHOD_NAME << "Not found"  << id;
-            throw;
+            FHT::LoggerStream::Log(FHT::LoggerStream::WARN) << METHOD_NAME << "Found" << id;
+            return;
         }
         mapList_.emplace(id, std::make_shared<decltype(func)>(std::move(func)));
     };
     bool Hendler::removeHendler(std::string id){
         const std::lock_guard<decltype(mutex2)> lock(mutex2);
-        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << id;
+        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Found" << id;
         if (auto a = mapList_.find(id); a != end(mapList_)) {
             mapList_.erase(a);
             return true;
         }
-        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Not found"  << id;
+        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Not found" << id;
         return false;
 
     };
@@ -67,7 +67,7 @@ namespace FHT{
         if (auto a = mapList_.find(id); a != end(mapList_))
             return a->second;
         FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Not found"  << id;
-        return emptyV_;
+        return {};
     };
 }
 namespace FHT{
