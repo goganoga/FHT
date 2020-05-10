@@ -27,7 +27,7 @@ namespace FHT {
     bool Server::lessen_all_ = false;
     void Server::run() {
         try {
-            initSer_.reset(new InitSer(&Server::OnRequest, host_, port_));
+            initSer_.reset(new InitSer(&Server::OnRequest, host_, port_, worker_));
         }
         catch (std::exception const &e) {
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME <<  "Error create instanse server: " << e.what();
@@ -217,7 +217,10 @@ namespace FHT {
         lessen_all_ = flag;
         return flag ? "head" : "";
     }
-    void Server::setPort(std::uint16_t port) {
+    void Server::setWorker(int worker) {
+        worker_ = worker;
+    }
+    void Server::setPort(int port) {
         port_ = port;
     }
     void Server::setHost(std::string host) {

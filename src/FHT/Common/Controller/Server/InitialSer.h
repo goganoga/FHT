@@ -20,7 +20,7 @@
 class InitSer
 {
 public:
-    InitSer(void(*onRequestHandler_)(evhttp_request *, void *), std::string SrvAddress, std::uint16_t srvPort);
+    InitSer(void(*onRequestHandler_)(evhttp_request *, void *), std::string SrvAddress, int srvPort, int srvWorker);
     ~InitSer();
 private:
     void Start();

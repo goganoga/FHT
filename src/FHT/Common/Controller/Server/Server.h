@@ -18,11 +18,13 @@ namespace FHT {
         static std::string parceHttpRequestParam(evhttp_request* req, std::map<std::string, std::string>& http_request_param);
         std::shared_ptr<InitSer> initSer_;
         std::string host_ = "localhost";
-        std::uint16_t port_ = 10800;
+        int port_ = 10800;
+        int worker_ = std::thread::hardware_concurrency();
     public:
         Server();
-        void setPort(std::uint16_t port_) override final;
-        void setHost(std::string host_) override final;
+        void setWorker(int worker) override final;
+        void setPort(int port) override final;
+        void setHost(std::string host) override final;
         void run() override final;
         std::string lessenAll(bool flag) override final;
         virtual ~Server() override {};

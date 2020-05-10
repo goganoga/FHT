@@ -11,8 +11,9 @@
 namespace FHT {
     struct iServer {
         virtual void run() = 0;
-        virtual void setPort(std::uint16_t port_) = 0;
-        virtual void setHost(std::string host_) = 0;
+        virtual void setWorker(int worker) = 0;
+        virtual void setPort(int port) = 0;
+        virtual void setHost(std::string host) = 0;
         //return Hendler lessen name
         virtual std::string lessenAll(bool flag) = 0;
         virtual ~iServer() = default;

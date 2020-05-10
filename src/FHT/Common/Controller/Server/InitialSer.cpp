@@ -10,7 +10,7 @@
 #include <event2/event.h>
 #include <event2/thread.h>
 
-InitSer::InitSer(void(*onRequestHandler_)(evhttp_request *, void *), std::string srvAddress, std::uint16_t srvPort):
+InitSer::InitSer(void(*onRequestHandler_)(evhttp_request *, void *), std::string srvAddress, int srvPort, int srvWorker):
     cfg(event_config_new(), &event_config_free){
 #ifdef _WIN32
     WORD wVersionRequested = MAKEWORD(2, 2);
@@ -26,9 +26,7 @@ InitSer::InitSer(void(*onRequestHandler_)(evhttp_request *, void *), std::string
     //signal(SIGPIPE, SIG_IGN);
     evthread_use_pthreads();
 #endif
-    const int num_core = std::thread::hardware_concurrency();
-    event_config_set_num_cpus_hint(cfg.get(), num_core);
-    for (int i = 0; i < num_core; ++i) {
+    for (int i = 0; i < srvWorker; ++i) {
         threadPtr thread(new std::thread(&InitSer::Start, this), [&](std::thread *t) { IsRun = false; t->join(); delete t; });
         threads.push_back(std::move(thread));
     }

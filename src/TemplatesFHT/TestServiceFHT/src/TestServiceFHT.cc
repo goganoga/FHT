@@ -55,6 +55,7 @@ int main(int argc, char* argv[])
         }
         auto host_server = root["host_server"];
         auto port_server = root["port_server"];
+        auto worker_server = root["worker_server"];
         
         auto log = root["logging"];
         auto time = log.empty() ? decltype(log)() : log["time"];
@@ -73,6 +74,7 @@ int main(int argc, char* argv[])
         }
         inizialaizerServer.Serv->setHost(host_server.empty() ? "0.0.0.0" : host_server.asCString());
         inizialaizerServer.Serv->setPort(port_server.empty() ? 10800 : port_server.asInt());
+        inizialaizerServer.Serv->setWorker(worker_server.empty() ? 10800 : worker_server.asInt());
         inizialaizerServer.Serv->run();
         
         FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << METHOD_NAME << "Start Server";
