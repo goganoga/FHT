@@ -31,6 +31,7 @@ class Installer:
         os.chdir('../')
         os.chdir('./build')
         if args[0] == 'ninja':
+            os.system('cmake .. -GNinja')
             os.system(f'cmake --build . --config Release --parallel 16')
             if args[0] == 'win32':
                 os.system('cmake .. -G "Visual Studio 15 2017"')
