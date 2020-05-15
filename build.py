@@ -32,10 +32,10 @@ class Installer:
             print(Installer.critical, 'ERROR! Platform not supported!', Installer.reset)
 
     def building(self, args):
-        
-        os.mkdir(r"build")
-        os.chdir('./build')
-        os.chdir('../')
+        if os.path.isdir(r"build") != True:
+            os.mkdir(r"build")
+            os.chdir('./build')
+            os.chdir('../')
         os.chdir('./build')
         if args.build[0] == 'ninja':
             os.system(f'cmake .. -G {Installer.ninja}')
