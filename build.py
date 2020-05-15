@@ -44,6 +44,7 @@ class Builder:
         elif args.build == 'vs64':
             os.system(f'cmake .. -G {Builder.vs64}')
         os.system(f'cmake --build . --config Release --parallel {args.parallel}')
+        print(Builder.ok, 'OK!', Builder.reset)
 
     def parse_args(self):
         parser = argparse.ArgumentParser(usage=Builder.usage, description=Builder.descript)
