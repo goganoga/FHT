@@ -37,13 +37,13 @@ class Builder:
         if not os.path.isdir(r"build"):
             os.mkdir(r"build")
         os.chdir('./build')
-        if args.build == 'ninja':
+        if args.build[0] == 'ninja':
             os.system(f'cmake .. -G {Builder.ninja}')
-        elif args.build == 'vs32':
+        elif args.build[0] == 'vs32':
             os.system(f'cmake .. -G {Builder.vs32}')
-        elif args.build == 'vs64':
+        elif args.build[0] == 'vs64':
             os.system(f'cmake .. -G {Builder.vs64}')
-        os.system(f'cmake --build . --config Release --parallel {args.parallel}')
+        os.system(f'cmake --build . --config Release --parallel {args.parallel[0]}')
         print(Builder.ok, 'OK!', Builder.reset)
 
     def parse_args(self):
