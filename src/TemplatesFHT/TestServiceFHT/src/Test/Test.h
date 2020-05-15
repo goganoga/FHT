@@ -19,9 +19,9 @@
 #include <map>
 namespace FHT {
     class Test : public iTest {
-        std::string mainTest(iHendler::data& resp);
-        std::string mainTestGet(iHendler::data& resp);
-        std::string mainTestWebSocket(iHendler::data& resp);
+        FHT::iHendler::dataResponse mainTest(iHendler::dataRequest& resp);
+        FHT::iHendler::dataResponse mainTestGet(iHendler::dataRequest& resp);
+        FHT::iHendler::dataResponse mainTestWebSocket(iHendler::dataRequest& resp);
         std::string md5Hash(const char* string);
         std::string guid();
         std::string guid(std::string ab);

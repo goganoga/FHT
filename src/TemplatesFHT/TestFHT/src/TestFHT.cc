@@ -25,14 +25,13 @@ int main(void)
     H->addHendler("a", []() {FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "a"; });
     (*H->getHendler("a"))();
 
-    auto f([](FHT::iHendler::data& data) {
+    auto f([](FHT::iHendler::dataRequest& data) {
         FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "b";
-        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << data.id ;
-        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << data.num;
-        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << data.str0;
-        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << data.str1;
-        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << data.str2; 
-        return std::string();});
+        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << data.portClient;
+        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << data.uri;
+        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << data.nextLocation;
+        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << data.ipClient;
+        return FHT::iHendler::dataResponse{}; });
     H->addUniqueHendler("b", f);
     FHT::iHendler::data c = {12, "dasds", "dasdasds", "dsdasds", "dsds", 3213.2121};
     (*H->getUniqueHendler("b"))(c);

@@ -18,17 +18,17 @@ namespace FHT {
     std::shared_ptr<iTest> iTest::Run = std::make_shared<Test>();
     Test::Test() {
         auto H = FHT::iConrtoller::hendlerManager;
-        H->addUniqueHendler("/test", [this](FHT::iHendler::data &data){return mainTest(data);});
-        H->addUniqueHendler("/testGet", [this](FHT::iHendler::data &data){return mainTestGet(data);});
-        H->addUniqueHendler(FHT::webSocket("/testWS"), [this](FHT::iHendler::data &data){return mainTestWebSocket(data);});
+        H->addUniqueHendler("/test", [this](FHT::iHendler::dataRequest &data){return mainTest(data);});
+        H->addUniqueHendler("/testGet", [this](FHT::iHendler::dataRequest &data){return mainTestGet(data);});
+        H->addUniqueHendler(FHT::webSocket("/testWS"), [this](FHT::iHendler::dataRequest &data){return mainTestWebSocket(data);});
     }
-    std::string Test::mainTest(FHT::iHendler::data& resp) {
-        std::string buf = resp.str0;
-        std::string location = resp.str1;
-        auto headers = resp.map0;
-        std::string postBody = resp.str2;
+    FHT::iHendler::dataResponse Test::mainTest(FHT::iHendler::dataRequest& resp) {
+        std::string buf = resp.uri;
+        std::string location = resp.nextLocation;
+        auto headers = resp.params;
+        std::string postBody(resp.body.get());
 
-        std::string body;
+        FHT::iHendler::dataResponses body;
         try {
             std::map< std::string, std::string> resp_map;
             auto postParam(postBody);
@@ -55,7 +55,13 @@ namespace FHT {
             resp_map.emplace("h_sha512_gen", gen());
             resp_map.emplace("hash_h", hash_buf);
 
-            body = jsonParse(resp_map);
+            std::string str(jsonParse(resp_map));
+            std::shared_ptr<char> buf(new char[str.size() + 1]);
+            buf.get()[str.size()] = 0;
+            memcpy(buf.get(), str.data(), str.size());
+
+            body.body = buf;
+            body.sizeBody = str.size();
         }
         catch (const std::exception& e) {
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << e.what();
@@ -63,10 +69,10 @@ namespace FHT {
         return body;
     }
 
-    std::string Test::mainTestGet(FHT::iHendler::data& resp) {
-        auto headers = resp.map0;
+    FHT::iHendler::dataResponse Test::mainTestGet(FHT::iHendler::dataRequest& resp) {
+        auto headers = resp.params;
         std::map< std::string, std::string> resp_map;
-        char* id_buf = nullptr;
+        FHT::iHendler::dataResponses body;
         try {
             std::string param_test("http://localhost:10800/test?qq=test&test=test");
             auto test = headers.find("url");
@@ -78,14 +84,20 @@ namespace FHT {
         }
         catch (const std::exception& e) {
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << e.what();
-            delete id_buf;
         }
-        delete id_buf;
-        return jsonParse(resp_map);
+        std::string str(jsonParse(resp_map));
+        std::shared_ptr<char> buf(new char[str.size() + 1]);
+        buf.get()[str.size()] = 0;
+        memcpy(buf.get(), str.data(), str.size());
+
+        body.body = buf;
+        body.sizeBody = str.size();
+
+        return body;
     }
 
-    std::string Test::mainTestWebSocket(FHT::iHendler::data& resp) {
-        std::weak_ptr<FHT::wsSubscriber> func = std::any_cast<std::weak_ptr<FHT::wsSubscriber>>(resp.obj1);
+    FHT::iHendler::dataResponse Test::mainTestWebSocket(FHT::iHendler::data& resp) {
+        std::weak_ptr<FHT::wsSubscriber> func = std::any_cast<std::weak_ptr<FHT::wsSubscriber>>(resp.WSInstanse);
         std::map<std::string, std::string> resp_map;
         try {
             FHT::iConrtoller::taskManager->addTask(FHT::iTask::MAIN, [func]() mutable {
@@ -100,7 +112,7 @@ namespace FHT {
         catch (const std::exception& e) {
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << e.what();
         }
-        return std::string();
+        return FHT::iHendler::dataResponse{};
     }
     std::string Test::md5Hash(const char* string) {
         unsigned char digest[MD5_DIGEST_LENGTH];

@@ -45,7 +45,7 @@ namespace FHT {
                 if (!OutBuf) goto err;
                 auto* InBuf = evhttp_request_get_input_buffer(req);
                 auto LenBuf = evbuffer_get_length(InBuf);
-                std::unique_ptr<char> postBody(new char[LenBuf + 1]);
+                std::shared_ptr<char> postBody(new char[LenBuf + 1]);
                 postBody.get()[LenBuf] = 0;
                 evbuffer_copyout(InBuf, postBody.get(), LenBuf);
                 auto evhttp_request = evhttp_request_get_evhttp_uri(req);
@@ -61,14 +61,14 @@ namespace FHT {
                 unsigned short client_port;
                 evhttp_connection_get_peer(evhttp_request_get_connection(req), &client_ip, &client_port);
 
-                FHT::iHendler::data data_;
+                FHT::iHendler::dataRequest dataReq;
                 std::shared_ptr<FHT::iHendler::uniqueHendler> func;
-                data_.map0 = get_param; //get param
-                data_.map1 = http_request_param; //get param
-                data_.str0 = request_get; //uri
-                data_.str1 = "."; //nextLocation
-                data_.str3 = client_ip; //ip
-                data_.id = (int)client_port; //port
+                dataReq.params = get_param;
+                dataReq.headers = http_request_param;
+                dataReq.uri = request_get;
+                dataReq.nextLocation = ".";
+                dataReq.ipClient = client_ip;
+                dataReq.portClient = (int)client_port;
                 std::string loc = lessen_all ? "head" : location;
                 loc.append("/");
                 auto a = map_find(http_request_param, "Connection", "connection");
@@ -78,7 +78,7 @@ namespace FHT {
                         if (loc.at(i) == '/' || loc.at(i - 1) == '/') {
                             func = H->getUniqueHendler(FHT::webSocket(loc.substr(0, i)));
                             if (func) {
-                                data_.str1 += loc.substr(i, loc.size() - (i + 1)); //nextLocation
+                                dataReq.nextLocation += loc.substr(i, loc.size() - (i + 1));
                                 break;
                             }
                         }
@@ -107,15 +107,15 @@ namespace FHT {
                         }
                         ws.reset();
                     };
-                    data_.obj1 = std::weak_ptr<wsSubscriber>(ws);
+                    dataReq.WSInstanse = std::weak_ptr<wsSubscriber>(ws);
                     wsConnect* wsu = user->wsConn_.get();
                     wsConnectSetHendler(wsu, wsConnect::FRAME_RECV, [user = std::weak_ptr<wsUser>(user)]() mutable { if (auto f = user.lock(); f) f->frameRead(); });
                     wsConnectSetHendler(wsu, wsConnect::CLOSE, [ws = ws->close]() {(*ws)(); });
                     user->wsConn_->wsServerStart();
                     bufferevent_enable(user->wsConn_->bev_, EV_WRITE);
                     requestReadHendler(user->wsConn_->bev_, user->wsConn_.get());
-                    auto result = (*func)(data_);
-                    FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << location << "WebSocket: OK" << result;
+                    FHT::iHendler::dataResponse result = (*func)(dataReq);
+                    FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << location << "WebSocket: OK" << result.body.get();
                     return;
 
                 }
@@ -123,15 +123,18 @@ namespace FHT {
                     if (loc.at(i) == '/' || loc.at(i - 1) == '/') {
                         func = H->getUniqueHendler(loc.substr(0, i));
                         if (func) {
-                            data_.str1 += loc.substr( i, loc.size() - (i + 1)); //nextLocation
+                            dataReq.nextLocation += loc.substr( i, loc.size() - (i + 1));
                             break;
                         }
                     }
                 }
-                data_.str2 = postBody.get(); //postBody
+                dataReq.body = postBody;
+                dataReq.sizeBody = LenBuf;
+                if (auto a = map_find(http_request_param, "Content-Type", "content-type"); a != http_request_param.end()) {
+                    dataReq.typeBody = a->second;
+                }
                 if (!func) goto err;
                 evhttp_add_header(std::move(evhttp_request_get_output_headers(req)), "Server", "FHT Server");
-                evhttp_add_header(std::move(evhttp_request_get_output_headers(req)), "Content-Type", "*/*; charset=utf-8");
                 /*{
                     { "txt", "text/plain" },
                     { "c", "text/plain" },
@@ -149,10 +152,22 @@ namespace FHT {
                 };
                 evhttp_add_header(std::move(evhttp_request_get_output_headers(req)), "Content-Type", "image/*; charset=utf-8")
             };*/
-                std::string send = (*func)(data_);
-                evbuffer_add_printf(OutBuf, send.c_str());
+                FHT::iHendler::dataResponse send = (*func)(dataReq);
+                if (send.typeBody == "text/plain") {
+                    evhttp_add_header(std::move(evhttp_request_get_output_headers(req)), "Content-Type", send.typeBody.c_str());
+                    if (send.body) {
+                        evbuffer_add_printf(OutBuf, send.body.get());
+                    }
+                }
+                else {
+                    evhttp_add_header(std::move(evhttp_request_get_output_headers(req)), "Content-Type", send.typeBody.c_str());
+                    if (send.body) {
+                        evbuffer_add_printf(OutBuf, send.body.get());
+                    }
+                }
+
                 evhttp_send_reply(req, HTTP_OK, "", OutBuf);
-                FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << location << "Http: OK" << send;
+                FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << location << "Http: OK" << send.body.get();
             
             }
             else {

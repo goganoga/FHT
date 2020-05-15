@@ -67,7 +67,9 @@ int main(int argc, char* argv[])
         inizialaizer inizialaizerServer;
         
         
-        inizialaizerServer.Logger->setTimeDump(time.empty() ? 0 : time.asInt());
+        if (!time.empty()) {
+            inizialaizerServer.Logger->setTimeDump(time.asInt());
+        }
         inizialaizerServer.Logger->setLevelVerboseLogging(level.empty() ? FHT::iLogger::Verbose::INFO : static_cast<FHT::iLogger::Verbose>(level.asInt()));
         if (!fileName.empty()) {
             inizialaizerServer.Logger->setFileLogging(fileName.asCString());
