@@ -34,8 +34,6 @@ class Installer:
     def building(self, args):
         if os.path.isdir(r"build") != True:
             os.mkdir(r"build")
-            os.chdir('./build')
-            os.chdir('../')
         os.chdir('./build')
         if args.build[0] == 'ninja':
             os.system(f'cmake .. -G {Installer.ninja}')
