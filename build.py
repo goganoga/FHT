@@ -1,11 +1,12 @@
-import time
 import argparse
 import platform
 import os
+import datetime
 import colorama
 
 
 class Builder:
+    start_time = datetime.datetime.now()
     info = colorama.Fore.BLUE
     ok = colorama.Fore.GREEN
     warning = colorama.Fore.LIGHTRED_EX
@@ -32,6 +33,7 @@ class Builder:
             os.environ['CXX'] = 'cl.exe'
         else:
             print(Builder.critical, 'ERROR! Platform not supported!', Builder.reset)
+        print()
 
     def building(self, args):
         if not os.path.isdir(r"build"):
@@ -44,7 +46,8 @@ class Builder:
         elif args.build[0] == 'vs64':
             os.system(f'cmake .. -G {Builder.vs64}')
         os.system(f'cmake --build . --config Release --parallel {args.parallel[0]}')
-        print(Builder.ok, 'OK!', Builder.reset)
+        print(Builder.ok, '\nOK!', Builder.reset)
+        print(f'\nTime building: {datetime.datetime.now() - Builder.start_time}')
 
     def parse_args(self):
         parser = argparse.ArgumentParser(usage=Builder.usage, description=Builder.descript)
