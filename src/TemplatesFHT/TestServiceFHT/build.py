@@ -46,7 +46,7 @@ class Builder:
         elif args.build[0] == 'vs64':
             os.system(f'cmake .. -G {Builder.vs64}')
         os.system(f'cmake --build . --config Release --parallel {args.parallel[0]}')
-        print(Builder.ok, '\nOK!', Builder.reset)
+        print(Builder.ok, '\nSUCCES!', Builder.reset)
         print(f'\nTime building: {datetime.datetime.now() - Builder.start_time}')
 
     def parse_args(self):
