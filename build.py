@@ -27,7 +27,7 @@ class Builder:
         elif 'Ubuntu' in Builder.release:
             os.system('apt-get install build-essential autoconf libtool pkg-config libgflags-dev\
             libgtest-dev clang libc++-dev -y')
-        elif 'nt' in Builder.system:
+        elif 'Windows' in Builder.system:
             os.environ['CC'] = 'cl.exe'
             os.environ['CXX'] = 'cl.exe'
         else:
