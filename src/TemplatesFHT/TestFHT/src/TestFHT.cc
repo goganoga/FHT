@@ -33,8 +33,8 @@ int main(void)
         FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << data.ipClient;
         return FHT::iHendler::dataResponse{}; });
     H->addUniqueHendler("b", f);
-    FHT::iHendler::data c = {12, "dasds", "dasdasds", "dsdasds", "dsds", 3213.2121};
-    (*H->getUniqueHendler("b"))(c);
+    //FHT::iHendler::dataRequest c = {12, "dasds", "dasdasds", "dsdasds", "dsds", 3213.2121};
+    //(*H->getUniqueHendler("b"))(c);
 
     T->addTaskOneRun(FHT::iTask::MAIN, []() {FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test main loop 1s is one"; }, 1000);
     T->addTaskOneRun(FHT::iTask::MAIN, b, 1);

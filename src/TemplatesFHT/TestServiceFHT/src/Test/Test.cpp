@@ -28,7 +28,7 @@ namespace FHT {
         auto headers = resp.params;
         std::string postBody(resp.body.get());
 
-        FHT::iHendler::dataResponses body;
+        FHT::iHendler::dataResponse body;
         try {
             std::map< std::string, std::string> resp_map;
             auto postParam(postBody);
@@ -72,7 +72,7 @@ namespace FHT {
     FHT::iHendler::dataResponse Test::mainTestGet(FHT::iHendler::dataRequest& resp) {
         auto headers = resp.params;
         std::map< std::string, std::string> resp_map;
-        FHT::iHendler::dataResponses body;
+        FHT::iHendler::dataResponse body;
         try {
             std::string param_test("http://localhost:10800/test?qq=test&test=test");
             auto test = headers.find("url");
@@ -96,7 +96,7 @@ namespace FHT {
         return body;
     }
 
-    FHT::iHendler::dataResponse Test::mainTestWebSocket(FHT::iHendler::data& resp) {
+    FHT::iHendler::dataResponse Test::mainTestWebSocket(FHT::iHendler::dataRequest& resp) {
         std::weak_ptr<FHT::wsSubscriber> func = std::any_cast<std::weak_ptr<FHT::wsSubscriber>>(resp.WSInstanse);
         std::map<std::string, std::string> resp_map;
         try {
