@@ -1,78 +1,54 @@
-# coding: cp1251
-import os
-import sys
 import time
-import subprocess
 import argparse
-from functools import reduce
-class build:
-  gen_win32 = 'cmake .. -G "Visual Studio 15 2017"'
-  gen_win64 = 'cmake .. -G "Visual Studio 16 2019"'
-  gen_Ninja = 'cmake .. -GNinja'
-  build_Ninja = 'cmake --build . --config Release --parallel 16'
-  build_Win = 'cmake --build . --config Release --parallel 16'
-class bcolors:
-  HEADER = '\033[95m'
-  OKBLUE = '\033[94m'
-  OKGREEN = '\033[92m'
-  WARNING = '\033[93m'
-  FAIL = '\033[91m'
-  ENDC = '\033[0m'
-  BOLD = '\033[1m'
-  UNDERLINE = '\033[4m'
-def createParser ():
-  parser = argparse.ArgumentParser(add_help=True)
-  parser.add_argument ('-b', '--build', nargs='?', const ='ninja')
-  return parser
-def Win():
-  if os.name != 'nt':
-    subprocess.call('apt-get install build-essential autoconf libtool pkg-config -y', shell=True)
-    subprocess.call('apt-get install libgflags-dev libgtest-dev -y', shell=True)
-    subprocess.call('apt-get install clang libc++-dev -y', shell=True)
-    return
-  os.environ['CC']='cl.exe'
-  os.environ['CXX']='cl.exe'
-  #outFromProcessCall(r'call "' +os.environ["VS2017INSTALLDIR"]+ r'\VC\Auxiliary\Build\vcvarsall.bat" x64')
-def outFromProcess(args):
-  callprocess = subprocess.Popen(args, stdout=subprocess.PIPE, shell=True)
-  if callprocess.wait():
-    print (bcolors.FAIL + "fatal"+ bcolors.ENDC)
-  return callprocess.communicate()
-def outFromProcessCall(args):
-  callprocess = subprocess.call(args, shell=True)
-  print(args)
-  return callprocess
-def secondsToStr(t):
-  return "%d:%02d:%02d.%03d" % reduce(lambda ll,b : divmod(ll[0],b) + ll[1:],[(t*1000,),1000,60,60])
-def main(namespace):
-  start_time = time.time()
-  if os.path.isdir(r"build") != True:
-    os.mkdir(r"build")
-    os.chdir('./build')
-    os.chdir('../')
-  os.chdir('./build')
-  if namespace.build == 'ninja':
-    if os.name == 'nt':
-      Win()
-    outFromProcessCall(build.gen_Ninja)
-    outFromProcessCall(build.build_Ninja)
-  elif namespace.build == 'vs32':
-    Win()
-    outFromProcessCall(build.gen_win32)
-    outFromProcessCall(build.build_Win)
-  elif namespace.build == 'vs64':
-    Win()
-    outFromProcessCall(build.gen_win64)
-    outFromProcessCall(build.build_Win)
-  print (bcolors.OKBLUE + '\n\r---> Build Time ---> ' + secondsToStr(time.time() - start_time) + bcolors.ENDC)
-  return False
-if __name__ == "__main__":
-  if len(sys.argv) < 2: 
-    print (bcolors.FAIL + "---> !!! Not found parameters of build use '-b' + 'ninja|vs32|vs64  !!!" + bcolors.ENDC)
-    sys.exit(1)
-  parser = createParser()
-  namespace = parser.parse_args(sys.argv[1:])
-  if namespace.build != 'vs32' and namespace.build != 'vs64' and namespace.build != 'ninja': 
-    print (bcolors.FAIL + "---> !!! Not found parameters of build use '-b' + 'ninja|vs32|vs64  !!!" + bcolors.ENDC)
-    sys.exit(1)
-  sys.exit(main(namespace))
+import subprocess
+import platform
+import os
+import colorama
+
+
+class Installer:
+    info = colorama.Fore.BLUE
+    ok = colorama.Fore.GREEN
+    warning = colorama.Fore.LIGHTRED_EX
+    critical = colorama.Fore.RED
+    reset = colorama.Style.RESET_ALL
+    system = platform.system()
+    release = platform.release()
+
+    def check_depends(self):
+        print(Installer.info, 'Установка зависимостей...', Installer.reset)
+        if 'MAJARO' or 'ARCH' in Installer.release:
+            os.system('pacman -S --needed cmake gcc ninja openssl')
+        elif 'Ubuntu' in Installer.release:
+            os.system('apt-get install build-essential autoconf libtool pkg-config libgflags-dev\
+            libgtest-dev clang libc++-dev -y')
+        else:
+            print(Installer.critical, 'ERROR! Platform not supported!', Installer.reset)
+
+    def building(self, args):
+        os.mkdir(r"build")
+        os.chdir('./build')
+        os.chdir('../')
+        os.chdir('./build')
+        if args[0] == 'ninja':
+            os.system(f'cmake --build . --config Release --parallel 16')
+            if args[0] == 'win32':
+                os.system('cmake .. -G "Visual Studio 15 2017"')
+            if args[0] == 'win64':
+                os.system('cmake .. -G "Visual Studio 16 2019"')
+
+    def parse_args(self):
+        parser = argparse.ArgumentParser(usage='sudo python3 install.py -b ninja')
+        parser.add_argument('-b', '--build', nargs=2, required=True, help='Build FHT', dest='b')
+        return parser.parse_args()
+
+
+if __name__ == '__main__':
+    install = Installer()
+    args = install.parse_args()
+    install.check_depends()
+    install.building(args.b)
+
+
+
+
