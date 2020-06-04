@@ -7,6 +7,7 @@
 #ifndef FHTTASK_H
 #define FHTTASK_H
 #include "iTask.h"
+#include <atomic>
 #include <chrono>
 #include <utility>
 #include <memory>
@@ -33,11 +34,11 @@ namespace FHT{
         void setDeltaTime(std::chrono::microseconds delta_time) override final;
     private:
         template <std::size_t ... I>
-        static std::map<std::size_t, std::shared_ptr<iThread>> make_factory(std::chrono::microseconds delta_time, std::index_sequence<I ... > const &);
-        static std::shared_ptr<iThread> makeThread(std::chrono::microseconds delta_time);
+        static std::map<std::size_t, std::shared_ptr<iThread>> make_factory(std::atomic<std::chrono::microseconds> &delta_time, std::index_sequence<I ... > const &);
+        static std::shared_ptr<iThread> makeThread(std::atomic<std::chrono::microseconds> &delta_time);
 
-        bool isRun = false;
-        std::chrono::microseconds delta_time_;
+        bool volatile isRun = false;
+        std::atomic<std::chrono::microseconds> delta_time_;
         std::map<std::size_t, std::shared_ptr<iThread>> factory_;
     };
 }

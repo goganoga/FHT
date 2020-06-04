@@ -20,7 +20,7 @@
 #include <memory>
 
 namespace FHT{
-    Task::Task(): delta_time_(100) {}
+    Task::Task(): delta_time_(std::chrono::microseconds(100)) {}
 
     Task::~Task(){
         stopManager();
@@ -88,13 +88,13 @@ class Thread : public iThread {
     bool volatile isRun_ = true;
     using tuple_ = std::shared_ptr<Tuple>;
     std::queue<tuple_> queue_;
-    std::chrono::microseconds sleep_;
+    std::atomic<std::chrono::microseconds> &sleep_;
 public:
     virtual ~Thread() {
         isRun_ = false;
         thread_.reset();
     }
-    Thread(std::chrono::microseconds sleep) : sleep_(sleep) {
+    Thread(std::atomic<std::chrono::microseconds> &sleep) : sleep_(sleep) {
         thread_.reset(new std::thread{ &Thread::loop, this });
     }
     size_t sizeTask() {
@@ -144,7 +144,7 @@ public:
             } catch (std::exception const& e) {
                 FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << e.what();
             }
-            std::this_thread::sleep_for(sleep_);
+            std::this_thread::sleep_for(sleep_.load());
         }
     }
     void push(std::function<FHT::iTask::state(void)> func, int ms) {
@@ -154,24 +154,18 @@ public:
 };
 
 namespace FHT {
-    std::shared_ptr<iThread> Task::makeThread(std::chrono::microseconds delta_time) {
+    std::shared_ptr<iThread> Task::makeThread(std::atomic<std::chrono::microseconds> &delta_time) {
         return std::make_shared<Thread>(delta_time);
     }
 
     void Task::setDeltaTime(std::chrono::microseconds delta_time) {
-        if (isRun) {
-            isRun = stopManager();
-        }
-        if (!isRun) {
-            if (std::chrono::microseconds(1).count() < delta_time.count()) {
-                delta_time_ = delta_time;
-            }
-            isRun = startManager();
+        if (std::chrono::microseconds(1).count() < delta_time.count()) {
+            delta_time_.store(delta_time);
         }
     }
 
     template <std::size_t ... I>
-    std::map<std::size_t, std::shared_ptr<iThread>> Task::make_factory(std::chrono::microseconds delta_time, std::index_sequence<I ... > const&) {
+    std::map<std::size_t, std::shared_ptr<iThread>> Task::make_factory(std::atomic<std::chrono::microseconds> &delta_time, std::index_sequence<I ... > const&) {
         return {
             std::pair<std::size_t, std::shared_ptr<iThread>>{ I, makeThread(delta_time) } ...
         };
