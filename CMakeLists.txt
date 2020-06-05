@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(FHT CXX C)
 include(ExternalProject)
+include(submodule/boost.cmake)
 set (EXECUTABLE_OUTPUT_PATH lib)
 
 if(NOT MSVC)
@@ -21,11 +22,21 @@ if(MSVC)
 endif()
 find_package(Git REQUIRED)
 find_package(OpenSSL REQUIRED)
+
 option(BLOCKING_IO_MODE "Build the blocking io socket" OFF)
 if(BLOCKING_IO_MODE)
   message(STATUS "Build the blocking io socket")
   add_compile_definitions(BLOCKING_IO)
 endif()
+#submodule sync
+
+execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
+                        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                        RESULT_VARIABLE GIT_SUBMOD_RESULT)
+                        
+#PostgreSQL
+find_package(PostgreSQL REQUIRED)
+
 #libevent
 ExternalProject_Add(
     libevent
@@ -72,7 +83,10 @@ set(SOURCE_LIB
   src/FHT/Common/Controller/Server/WebSocket/User.cpp
   src/FHT/Common/Controller/Server/WebSocket/Frame.cpp
   src/FHT/Common/Controller/Server/WebSocket/WebSocket.cpp
-  src/FHT/Common/Controller/Server/WebSocket/Connection.cpp)
+  src/FHT/Common/Controller/Server/WebSocket/Connection.cpp
+  src/FHT/Common/Controller/DBFacade/DBFacade.cpp
+  src/FHT/Common/Controller/DBFacade/Postgresql/Postgresql.cpp
+  src/FHT/Common/Controller/DBFacade/Postgresql/PostgresConnection.cpp)
 set(HEADER_LIB
   src/FHT/lib
   src/FHT/Common/Log
@@ -80,19 +94,23 @@ set(HEADER_LIB
 )
 set(HEADERS 
   ${HEADER_LIB}
-  ${OPENSSL_INCLUDE_DIR})
+  ${boost_Header}
+  ${OPENSSL_INCLUDE_DIR}
+  ${PostgreSQL_INCLUDE_DIRS})
 set(HEADER 
   src/FHT/Common
   ${libevent_SOURCE_DIR}/include
   ${libevent_BINARY_DIR}/include)
-message(${HEADER})
 add_library(fht STATIC ${SOURCE_LIB})
 add_dependencies(fht 
-  libevent)
+  libevent
+  ${boost_Deps})
 target_include_directories(fht PUBLIC ${HEADERS})
 target_include_directories(fht PRIVATE ${HEADER})
 target_link_libraries(fht
+  ${PostgreSQL_LIBRARIES}
   ${LIB_FOR_WIN}
   ${LibEvent_LIBRARIES}
-  ${OPENSSL_LIBRARIES})
+  ${OPENSSL_LIBRARIES}
+  ${PostgreSQL_LIBRARY_DIRS})
 set(FHT_LIBRARIES fht)

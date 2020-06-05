@@ -1,0 +1,76 @@
+[submodule "submodule/boost/io"]
+	path = submodule/boost/io
+	url = https://github.com/boostorg/io.git
+	branch = master
+[submodule "submodule/boost/throw_exception"]
+	path = submodule/boost/throw_exception
+	url = https://github.com/boostorg/throw_exception.git
+	branch = master
+[submodule "submodule/boost/uuid"]
+	path = submodule/boost/uuid
+	url = https://github.com/boostorg/uuid.git
+	branch = master
+[submodule "submodule/boost/config"]
+	path = submodule/boost/config
+	url = https://github.com/boostorg/config.git
+	branch = master
+[submodule "submodule/boost/type_traits"]
+	path = submodule/boost/type_traits
+	url = https://github.com/boostorg/type_traits.git
+	branch = master
+[submodule "submodule/boost/tti"]
+	path = submodule/boost/tti
+	url = https://github.com/boostorg/tti.git
+	branch = master
+[submodule "submodule/boost/move"]
+	path = submodule/boost/move
+	url = https://github.com/boostorg/move.git
+	branch = master
+[submodule "submodule/boost/core"]
+	path = submodule/boost/core
+	url = https://github.com/boostorg/core.git
+	branch = master
+[submodule "submodule/boost/random"]
+	path = submodule/boost/random
+	url = https://github.com/boostorg/random.git
+	branch = master
+[submodule "submodule/boost/assert"]
+	path = submodule/boost/assert
+	url = https://github.com/boostorg/assert.git
+	branch = master
+[submodule "submodule/boost/static_assert"]
+	path = submodule/boost/static_assert
+	url = https://github.com/boostorg/static_assert.git
+	branch = master
+[submodule "submodule/boost/preprocessor"]
+	path = submodule/boost/preprocessor
+	url = https://github.com/boostorg/preprocessor.git
+	branch = master
+[submodule "submodule/boost/mpl"]
+	path = submodule/boost/mpl
+	url = https://github.com/boostorg/mpl.git
+	branch = master
+[submodule "submodule/boost/integer"]
+	path = submodule/boost/integer
+	url = https://github.com/boostorg/integer.git
+	branch = master
+[submodule "submodule/boost/function_types"]
+	path = submodule/boost/function_types
+	url = https://github.com/boostorg/function_types.git
+	branch = master
+[submodule "submodule/boost/detail"]
+	path = submodule/boost/detail
+	url = https://github.com/boostorg/detail.git
+	branch = master
+[submodule "submodule/boost/predef"]
+	path = submodule/boost/predef
+	url = https://github.com/boostorg/predef.git
+	branch = master
+[submodule "submodule/boost/winapi"]
+	path = submodule/boost/winapi
+	url = https://github.com/boostorg/winapi.git
+	branch = master
+[submodule "submodule/boost/numeric_conversion"]
+	path = submodule/boost/numeric_conversion
+	url = https://github.com/boostorg/numeric_conversion.git
+	branch = master
