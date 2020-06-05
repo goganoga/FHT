@@ -6,7 +6,7 @@
 ***************************************/
 #ifndef FHTLOGGER_H
 #define FHTLOGGER_H
-#include "iLogger.h"
+#include "Common/iLogger.h"
 #include "LoggerStream.h"
 
 #include <vector>

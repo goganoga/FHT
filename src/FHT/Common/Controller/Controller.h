@@ -6,11 +6,12 @@
 ***************************************/
 #ifndef FHTCONTROLLER_H
 #define FHTCONTROLLER_H
-#include "iTask.h"
-#include "iServer.h"
-#include "iClient.h"
-#include "iHendler.h"
-#include "iLogger.h"
+#include "Common/iTask.h"
+#include "Common/iServer.h"
+#include "Common/iClient.h"
+#include "Common/iHendler.h"
+#include "Common/iLogger.h"
+#include "Common/iDBFacade.h"
 #include <memory>
 namespace FHT{
     struct Conrtoller {
@@ -19,6 +20,7 @@ namespace FHT{
         static std::shared_ptr<FHT::iClient> getClient();
         static std::shared_ptr<FHT::iTask> getTask();
         static std::shared_ptr<FHT::iLogger> getLogger();
+        static std::shared_ptr<FHT::iDBFacade> getDBFacade();
     };
 }
 #endif // FHTCONTROLLER_H

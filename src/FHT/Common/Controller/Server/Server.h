@@ -7,7 +7,7 @@
 #ifndef FHTSERVER_H
 #define FHTSERVER_H
 #include "InitialSer.h"
-#include "iServer.h"
+#include "Common/iServer.h"
 #include <iostream>
 #include <map>
 namespace FHT {

@@ -22,12 +22,12 @@ class Builder:
     the calculation: the number of processor cores * 2 + 1'
 
     def check_depends(self):
-        print(Builder.info, 'Install Dependent Libraries\n', Builder.reset)
+        print(Builder.info, 'Install Dependent Libraries', Builder.reset)
         if ('MANJARO' or 'ARCH') in Builder.release:
             os.system('pacman -S --needed cmake gcc ninja openssl')
         elif 'Ubuntu' in Builder.release:
             os.system('apt-get install build-essential autoconf libtool pkg-config libgflags-dev\
-            libgtest-dev clang libc++-dev -y')
+            libgtest-dev clang libc++-dev libpq-dev postgresql-server-dev-all -y')
         elif 'Windows' in Builder.system:
             os.environ['CC'] = 'cl.exe'
             os.environ['CXX'] = 'cl.exe'
