@@ -28,9 +28,6 @@ namespace FHT {
 
         virtual ~iDBFacade() = default;
     protected:
-        //postgres
-        virtual void setDBType(std::string arg) {};
-
         virtual void setHost(std::string arg) = 0;
         virtual void setName(std::string arg) = 0;
         virtual void setUser(std::string arg) = 0;

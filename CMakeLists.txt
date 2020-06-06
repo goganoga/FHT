@@ -24,19 +24,24 @@ find_package(Git REQUIRED)
 find_package(OpenSSL REQUIRED)
 
 option(BLOCKING_IO_MODE "Build the blocking io socket" OFF)
+set(DBCOMPILE "None" CACHE STRING "None | Postgresql")
+
 if(BLOCKING_IO_MODE)
   message(STATUS "Build the blocking io socket")
   add_compile_definitions(BLOCKING_IO)
 endif()
 #submodule sync
-
 execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                         RESULT_VARIABLE GIT_SUBMOD_RESULT)
-                        
-#PostgreSQL
-find_package(PostgreSQL REQUIRED)
 
+if(${DBCOMPILE} STREQUAL "Postgresql")
+  find_package(PostgreSQL REQUIRED)
+  add_compile_definitions(DBPOSTGRESQL)
+  set(DBCPP 
+  src/FHT/Common/Controller/DBFacade/Postgresql/Postgresql.cpp
+  src/FHT/Common/Controller/DBFacade/Postgresql/PostgresConnection.cpp)
+endif()
 #libevent
 ExternalProject_Add(
     libevent
@@ -85,8 +90,7 @@ set(SOURCE_LIB
   src/FHT/Common/Controller/Server/WebSocket/WebSocket.cpp
   src/FHT/Common/Controller/Server/WebSocket/Connection.cpp
   src/FHT/Common/Controller/DBFacade/DBFacade.cpp
-  src/FHT/Common/Controller/DBFacade/Postgresql/Postgresql.cpp
-  src/FHT/Common/Controller/DBFacade/Postgresql/PostgresConnection.cpp)
+  ${DBCPP})
 set(HEADER_LIB
   src/FHT/lib
   src/FHT/Interface

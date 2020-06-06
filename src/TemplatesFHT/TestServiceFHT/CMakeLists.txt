@@ -22,6 +22,7 @@ add_definitions(-DBOOST_UUID_FORCE_AUTO_LINK)
 find_package(OpenSSL REQUIRED)
 find_package(Git REQUIRED)
 add_definitions(-DBOOST_ALL_NO_LIB)
+
 #JSONcpp
 list(APPEND CMAKE_ARGS_JSON 
       -DJSONCPP_WITH_TESTS=OFF
@@ -44,46 +45,6 @@ set(JSONCPP_INCLUDE_DIR ${SOURCE_DIR}/include)
 set(JSONCPP_LIBRARIES_DIR ${BINARY_DIR}/lib/${BUILD_TYPE})
 set(JSONCPP_LIBRARIES jsoncpp)
 link_directories(${JSONCPP_LIBRARIES_DIR})
-include_directories(
-  ${JSONCPP_INCLUDE_DIR}
-)
-#boost
-set(BOOST_LIBRARIES
-  system
-  serialization
-  program_options
-)
-list(APPEND CMAKE_ARGS 
-      -DBoost_USE_STATIC_LIBS=ON
-      -DBoost_USE_MULTITHREADED=ON
-      -DBoost_USE_STATIC_RUNTIME=ON
-      -DBOOST_UUID_FORCE_AUTO_LINK=ON
-      -DBOOST_DISABLE_TESTS=ON
-      -DBOOST_ALL_NO_LIB=ON
-      --parallel 16
-      -DBOOST_LIBS_OPTIONAL:STRING=system|serialization|program_options)
-ExternalProject_Add(
-    Boost
-    PREFIX boost-cmake_
-    GIT_REPOSITORY https://github.com/Orphis/boost-cmake.git
-    TIMEOUT 10
-    UPDATE_COMMAND ${GIT_EXECUTABLE} pull
-    LIST_SEPARATOR |
-    CMAKE_ARGS ${CMAKE_ARGS}
-    INSTALL_COMMAND ""
-    LOG_DOWNLOAD ON
-)
-
-ExternalProject_Get_property(Boost BINARY_DIR)
-set(BOOST_INCLUDE_DIR ${BINARY_DIR}/_deps/boost-src)
-link_directories(${BINARY_DIR}/${BUILD_TYPE})
-set (BOOST_LIBS_LIST "")
-foreach (boost_lib ${BOOST_LIBRARIES})
-    list (APPEND BOOST_LIBS_LIST boost_${boost_lib})
-endforeach()
-unset (BOOST_LIBRARIES)
-set (BOOST_LIBRARIES ${BOOST_LIBS_LIST})
-unset (BOOST_LIBS_LIST)
 
 #FHT
 ExternalProject_Add(
@@ -98,6 +59,10 @@ ExternalProject_Add(
     LOG_DOWNLOAD ON
 )
 ExternalProject_Get_property(fhtlib BINARY_DIR SOURCE_DIR)
+
+#boost modules
+include(${SOURCE_DIR}/submodule/boost.cmake)
+list(TRANSFORM boost_Header PREPEND "${SOURCE_DIR}/" )
 set(FHT_LIBRARIES 
     fht
     event
@@ -111,8 +76,9 @@ set(LINKER
   ${BINARY_DIR}/libevent/lib/${BUILD_TYPE})
 set(HEADER 
   ${SOURCE_DIR}/src/FHT/Interface
-  ${SOURCE_DIR}/src/FHT/common/Log
-  ${BOOST_INCLUDE_DIR}
+  ${SOURCE_DIR}/src/FHT/Lib
+  ${boost_Header}
+  ${JSONCPP_INCLUDE_DIR}
   ${OPENSSL_INCLUDE_DIR})
 include_directories(${HEADER})
 link_directories(${LINKER})
@@ -122,7 +88,6 @@ add_dependencies(TestServiceFHT fhtlib)
 target_link_libraries(TestServiceFHT 
   ${LIB_FOR_WIN}
   ${FHT_LIBRARIES}
-  ${BOOST_LIBRARIES}
   ${JSONCPP_LIBRARIES})
 
 add_custom_command(

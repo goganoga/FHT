@@ -45,7 +45,7 @@ set(LINKER
   ${BINARY_DIR}/libevent/lib/${CMAKE_BUILD_TYPE})
 set(HEADER 
   ${SOURCE_DIR}/src/FHT/Interface
-  ${SOURCE_DIR}/src/FHT/common/Log
+  ${SOURCE_DIR}/src/FHT/Lib
   ${OPENSSL_INCLUDE_DIR})
 include_directories(${HEADER})
 link_directories(${LINKER})

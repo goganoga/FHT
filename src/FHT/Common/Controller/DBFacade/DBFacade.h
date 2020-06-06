@@ -8,7 +8,9 @@
 #define FHTDBFACADE_H
 #include "Common/iDBFacade.h"
 
+#ifdef DBPOSTGRESQL
 #include "Postgresql/Postgresql.h"
+#endif
 
 #include <memory>
 #include <string>
@@ -17,11 +19,8 @@
 namespace FHT {
     class dbFacade : public iDBFacade {
         std::map<std::string, std::shared_ptr<iDBFacade>> list_support_db = {
-            {"postgres", std::make_shared<Postgres>()}
+          //  {"postgres", std::make_shared<Postgres>()}
         };
-
-        //postgres
-        void setDBType(std::string arg) override final;
 
         void setHost(std::string arg) override final;
         void setName(std::string arg) override final;

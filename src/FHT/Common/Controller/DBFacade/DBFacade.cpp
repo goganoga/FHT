@@ -11,16 +11,6 @@
 
 namespace FHT {
 
-
-
-    void dbFacade::setDBType(std::string arg) {
-        if (auto sdb = list_support_db.find(arg); sdb != end(list_support_db)) {
-            m_dbFacade_ptr = sdb->second;
-            //m_db_ptr = sdb->second;
-        }
-        FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "type DB not supported";
-    }
-
     void dbFacade::setHost(std::string arg) {
         if (!m_dbFacade_ptr) {
             FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "type DB not specified";
