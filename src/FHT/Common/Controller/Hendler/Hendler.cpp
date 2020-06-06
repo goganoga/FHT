@@ -5,66 +5,95 @@
 *  Copyright (C) goganoga 2019
 ***************************************/
 #include "Hendler.h"
-#include "Controller/Controller.h"
 #include "LoggerStream.h"
 #include <memory>
 #include <functional>
 
 namespace FHT{
-    Hendler::Hendler(){}
-    Hendler::~Hendler(){}
+    Hendler::Hendler():
+        mapHendler_ptr(std::make_shared<decltype(mapHendler_)>(mapHendler_)),
+        mapList_ptr(std::make_shared<decltype(mapList_)>(mapList_)),
+        state_task_(iTask::state::CONTINUE){
+        T->addTask(iTask::FHT_MAIN, [&]() mutable {
+            decltype(mapHendler_ptr) new_mapHendler_ptr;
+            decltype(mapList_ptr) new_mapList_ptr;
+            if (*mapHendler_ptr != mapHendler_) {
+                new_mapHendler_ptr = std::make_shared<decltype(mapHendler_)>(mapHendler_);
+            }
+            if (*mapList_ptr != mapList_) {
+                new_mapList_ptr = std::make_shared<decltype(mapList_)>(mapList_);
+            }
+            {
+                std::lock_guard<decltype(mutex_task_)> lock(mutex_task_);
+                if (new_mapHendler_ptr) mapHendler_ptr.swap(new_mapHendler_ptr);
+                if (new_mapList_ptr) mapList_ptr.swap(new_mapList_ptr);
+            }
+            return state_task_;
+        }, 10);
+    }
+    Hendler::~Hendler(){
+        state_task_ = iTask::state::FINISH;
+    }
     void Hendler::addUniqueHendler(std::string id, uniqueHendler func){
-        const std::lock_guard<decltype(mutex1)> lock(mutex1);
+        auto mapHendler = mapHendler_ptr;
         FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << id;
-        if (auto a = mapHendler_.find(id); a != end(mapHendler_)) { 
+        if (auto a = mapHendler->find(id); a != end(*mapHendler)) { 
             FHT::LoggerStream::Log(FHT::LoggerStream::WARN) << METHOD_NAME << "Found" << id;
             return;
         }
-        mapHendler_.emplace(id, std::make_shared<decltype(func)>(std::move(func)));
+        auto prt = std::make_shared<decltype(func)>(std::move(func));
+        T->addTaskOneRun(iTask::FHT_MAIN, [&, id, prt]() {
+            mapHendler_.emplace(id, prt);
+        });
     };
     bool Hendler::removeUniqueHendler(std::string id){
-        const std::lock_guard<decltype(mutex1)> lock(mutex1);
+        auto mapHendler = mapHendler_ptr;
         FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Found" << id;
-        if (auto a = mapHendler_.find(id); a != end(mapHendler_)) {
-            mapHendler_.erase(a);
+        if (auto a = mapHendler->find(id); a != end(*mapHendler)) {
+            T->addTaskOneRun(iTask::FHT_MAIN, [&, id]() {
+                mapHendler_.erase(id);
+            });
             return true;
         }
         FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Not found" << id;
         return false;
     };
     std::shared_ptr<iHendler::uniqueHendler> Hendler::getUniqueHendler(std::string id) {
-        const std::lock_guard<decltype(mutex1)> lock(mutex1);
+        auto mapHendler = mapHendler_ptr;
         FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Found" << id;
-        if (auto a = mapHendler_.find(id); a != end(mapHendler_))
+        if (auto a = mapHendler->find(id); a != end(*mapHendler))
             return a->second;
         FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Not found" << id;
         return {};
-
     };
     void Hendler::addHendler(std::string id, std::function<void(void)> func){
-        const std::lock_guard<decltype(mutex2)> lock(mutex2);
+        auto mapList = mapList_ptr;
         FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Found" << id;
-        if (auto b = mapList_.find(id); b != end(mapList_)) { 
+        if (auto b = mapList->find(id); b != end(*mapList)) { 
             FHT::LoggerStream::Log(FHT::LoggerStream::WARN) << METHOD_NAME << "Found" << id;
             return;
         }
-        mapList_.emplace(id, std::make_shared<decltype(func)>(std::move(func)));
+        auto prt = std::make_shared<decltype(func)>(std::move(func));
+        T->addTaskOneRun(iTask::FHT_MAIN, [&, id, prt]() {
+            mapList_.emplace(id, prt);
+        });
     };
     bool Hendler::removeHendler(std::string id){
-        const std::lock_guard<decltype(mutex2)> lock(mutex2);
+        auto mapList = mapList_ptr;
         FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Found" << id;
-        if (auto a = mapList_.find(id); a != end(mapList_)) {
-            mapList_.erase(a);
+        if (auto a = mapList->find(id); a != end(*mapList)) {
+            T->addTaskOneRun(iTask::FHT_MAIN, [&, id]() {
+                mapList_.erase(id);
+            });
             return true;
         }
         FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Not found" << id;
         return false;
-
     };
     std::shared_ptr<std::function<void(void)>> Hendler::getHendler(std::string id){
-        const std::lock_guard<decltype(mutex2)> lock(mutex2);
+        auto mapList = mapList_ptr;
         FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << id;
-        if (auto a = mapList_.find(id); a != end(mapList_))
+        if (auto a = mapList->find(id); a != end(*mapList))
             return a->second;
         FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Not found"  << id;
         return {};

@@ -20,7 +20,9 @@
 #include <memory>
 
 namespace FHT{
-    Task::Task(): delta_time_(std::chrono::microseconds(100)) {}
+    Task::Task(): delta_time_(std::chrono::microseconds(100)) {
+        isRun = startManager();
+    }
 
     Task::~Task(){
         stopManager();
@@ -39,9 +41,6 @@ namespace FHT{
     }
 
     void Task::addTask(iTask::listTask thread, std::function<state(void)> func, int ms) {
-        if (!isRun) {
-            isRun = startManager();
-        }
         if (isRun) {
             getTaskThread(thread)->push(std::move(func), ms);
         }

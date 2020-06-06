@@ -12,6 +12,7 @@ namespace FHT{
     struct iTask {
         virtual ~iTask() = default;
         enum listTask {
+            FHT_MAIN,
             MAIN,
             MATH,
             IO,

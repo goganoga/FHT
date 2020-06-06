@@ -23,7 +23,7 @@ namespace FHT{
             std::string ipClient;
             int portClient = 0;
 
-            int sizeBody;
+            size_t sizeBody;
             std::string typeBody;
             std::shared_ptr<char> body;
 
@@ -31,7 +31,7 @@ namespace FHT{
             void* ptr;
         };
         struct dataResponse {
-            int sizeBody;
+            size_t sizeBody;
             std::string typeBody = "text/plain";
             std::shared_ptr<char> body;
         };

@@ -33,7 +33,8 @@ namespace FHT {
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME <<  "Error create instanse server: " << e.what();
         }
     }
-    
+
+    //static
     void Server::OnRequest(evhttp_request *req, void *) {
         bool lessen_all = Server::lessen_all_;
         auto H = FHT::iConrtoller::hendlerManager;
@@ -74,7 +75,7 @@ namespace FHT {
                 auto a = map_find(http_request_param, "Connection", "connection");
                 auto b = map_find(http_request_param, "Upgrade", "upgrade");
                 if (a != http_request_param.end() && a->second.rfind("Upgrade") != std::string::npos && b != http_request_param.end() && b->second.rfind("websocket") != std::string::npos) {
-                    for (int i = loc.size() - 1; i > 0; i--) {
+                    for (size_t i = loc.size() - 1; i > 0; i--) {
                         if (loc.at(i) == '/' || loc.at(i - 1) == '/') {
                             func = H->getUniqueHendler(FHT::webSocket(loc.substr(0, i)));
                             if (func) {
@@ -119,7 +120,7 @@ namespace FHT {
                     return;
 
                 }
-                for (int i = loc.size() - 1; i > 0; i--) {
+                for (size_t i = loc.size() - 1; i > 0; i--) {
                     if (loc.at(i) == '/' || loc.at(i - 1) == '/') {
                         func = H->getUniqueHendler(loc.substr(0, i));
                         if (func) {

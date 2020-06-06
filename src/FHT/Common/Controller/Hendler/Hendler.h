@@ -7,6 +7,7 @@
 #ifndef FHTHENDLER_H
 #define FHTHENDLER_H
 #include "Common/iHendler.h"
+#include "Controller/Controller.h"
 #include <map>
 #include <mutex>
 
@@ -24,9 +25,13 @@ namespace FHT {
     private:
         std::map<std::string, std::shared_ptr<uniqueHendler>> mapHendler_;
         std::map<std::string, std::shared_ptr<std::function<void(void)>>> mapList_;
+        std::shared_ptr<decltype(mapHendler_)> mapHendler_ptr;
+        std::shared_ptr<decltype(mapList_)> mapList_ptr;
 
-        std::mutex mutex1;
-        std::mutex mutex2;
+        std::mutex mutex_task_;
+        FHT::iTask::state state_task_;
+
+        const decltype(Conrtoller::getTask()) T = Conrtoller::getTask();
     };
 }
 #endif //FHTHENDLER_H
