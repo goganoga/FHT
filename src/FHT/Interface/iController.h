@@ -9,11 +9,12 @@
 #include "../Common/Controller/Controller.h"
 namespace FHT {
     namespace iConrtoller {
-        static auto hendlerManager = FHT::Conrtoller::getHendler();
+        static auto logger = FHT::Conrtoller::getLogger();
         static auto taskManager = FHT::Conrtoller::getTask();
+        static auto hendlerManager = FHT::Conrtoller::getHendler();
         static auto webServer = FHT::Conrtoller::getServer();
         static auto webClient = FHT::Conrtoller::getClient();
-        static auto logger = FHT::Conrtoller::getLogger();
+        static auto dbFacade = FHT::Conrtoller::getDBFacade();
     }
 }
 #endif // FHTICONTROLLER_H

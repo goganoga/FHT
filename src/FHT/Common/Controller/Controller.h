@@ -15,11 +15,11 @@
 #include <memory>
 namespace FHT{
     struct Conrtoller {
+        static std::shared_ptr<FHT::iLogger> getLogger();
+        static std::shared_ptr<FHT::iTask> getTask();
         static std::shared_ptr<FHT::iHendler> getHendler();
         static std::shared_ptr<FHT::iServer> getServer();
         static std::shared_ptr<FHT::iClient> getClient();
-        static std::shared_ptr<FHT::iTask> getTask();
-        static std::shared_ptr<FHT::iLogger> getLogger();
         static std::shared_ptr<FHT::iDBFacade> getDBFacade();
     };
 }
