@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(FHT CXX C)
 include(ExternalProject)
 include(submodule/boost.cmake)
-set (EXECUTABLE_OUTPUT_PATH lib)
+set (EXECUTABLE_OUTPUT_PATH ../build_simple)
+set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY  ../build_library)
 
 if(NOT MSVC)
   if(NOT CMAKE_BUILD_TYPE)
@@ -24,6 +25,7 @@ find_package(Git REQUIRED)
 find_package(OpenSSL REQUIRED)
 
 option(BLOCKING_IO_MODE "Build the blocking io socket" OFF)
+option(SAMPLE_BUILD "Build sample bin for testing functional" ON)
 set(DBCOMPILE "None" CACHE STRING "None | Postgresql")
 
 if(BLOCKING_IO_MODE)
@@ -39,8 +41,9 @@ if(${DBCOMPILE} STREQUAL "Postgresql")
   find_package(PostgreSQL REQUIRED)
   add_compile_definitions(DBPOSTGRESQL)
   set(DBCPP 
-  src/FHT/Common/Controller/DBFacade/Postgresql/Postgresql.cpp
-  src/FHT/Common/Controller/DBFacade/Postgresql/PostgresConnection.cpp)
+    src/FHT/Common/Controller/DBFacade/Postgresql/Postgresql.cpp
+    src/FHT/Common/Controller/DBFacade/Postgresql/PostgresConnection.cpp
+  )
 endif()
 #libevent
 ExternalProject_Add(
@@ -64,7 +67,6 @@ ExternalProject_Add(
 ExternalProject_Get_property(libevent BINARY_DIR SOURCE_DIR)
 set(libevent_BINARY_DIR ${BINARY_DIR})
 set(libevent_SOURCE_DIR ${SOURCE_DIR})
-link_directories(${libevent_BINARY_DIR}/lib)
 set(LibEvent_LIBRARIES 
   event
   event_core
@@ -110,6 +112,7 @@ add_dependencies(fht
   ${boost_Deps})
 target_include_directories(fht PUBLIC ${HEADERS})
 target_include_directories(fht PRIVATE ${HEADER})
+target_link_directories(fht PUBLIC ${libevent_BINARY_DIR}/lib)
 target_link_libraries(fht
   ${PostgreSQL_LIBRARIES}
   ${LIB_FOR_WIN}
@@ -117,3 +120,46 @@ target_link_libraries(fht
   ${OPENSSL_LIBRARIES}
   ${PostgreSQL_LIBRARY_DIRS})
 set(FHT_LIBRARIES fht)
+if(SAMPLE_BUILD)
+  #TestFHT
+  add_executable(TestFHT "src/Sample/TestTaskHendler/Test.cpp")
+  add_dependencies(TestFHT ${FHT_LIBRARIES})
+  target_link_libraries(TestFHT 
+    ${LIB_FOR_WIN}
+    ${FHT_LIBRARIES})
+  #TestServiceFHT
+  list(APPEND CMAKE_ARGS_JSON 
+        -DJSONCPP_WITH_TESTS=OFF
+        -DJSONCPP_WITH_POST_BUILD_UNITTEST=OFF
+        -j 24)
+  ExternalProject_Add(
+      Jsoncpp
+      PREFIX jsoncpp
+      GIT_REPOSITORY https://github.com/open-source-parsers/jsoncpp.git
+      TIMEOUT 10
+      UPDATE_COMMAND ${GIT_EXECUTABLE} pull
+      CMAKE_ARGS ${CMAKE_ARGS_JSON}
+      INSTALL_COMMAND ""
+      LOG_DOWNLOAD ON
+  )
+  ExternalProject_Get_property(Jsoncpp SOURCE_DIR BINARY_DIR)
+  
+  set(JSONCPP_INCLUDE_DIR ${SOURCE_DIR}/include)
+  set(JSONCPP_LIBRARIES_DIR ${BINARY_DIR}/lib/${BUILD_TYPE})
+  set(JSONCPP_LIBRARIES jsoncpp)
+  message(STATUS JSONCPP_LIBRARIES_DIR=${JSONCPP_LIBRARIES_DIR})
+  add_executable(TestServiceFHT "src/Sample/TestService/TestService.cpp" "src/Sample/TestService/Test/Test.cpp")
+  target_link_directories(TestServiceFHT PRIVATE ${JSONCPP_LIBRARIES_DIR})
+  target_include_directories(TestServiceFHT PRIVATE ${JSONCPP_INCLUDE_DIR})
+  add_dependencies(TestServiceFHT ${FHT_LIBRARIES})
+  target_link_libraries(TestServiceFHT 
+    ${LIB_FOR_WIN}
+    ${FHT_LIBRARIES}
+    ${OPENSSL_LIBRARIES}
+    ${JSONCPP_LIBRARIES})
+  add_custom_command(
+          TARGET TestServiceFHT POST_BUILD
+          COMMAND ${CMAKE_COMMAND} -E copy
+                  ${CMAKE_CURRENT_SOURCE_DIR}/src/Sample/TestService/config.json
+                  ${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE_OUTPUT_PATH}/config.json)
+endif()

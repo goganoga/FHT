@@ -22,13 +22,16 @@ class Builder:
     the calculation: the number of processor cores * 2 + 1'
 
     def check_depends(self):
-        print(Builder.info, 'Install Dependent Libraries', Builder.reset)
+        print(Builder.info, 'Checking Dependent Libraries', Builder.reset)
         if ('MANJARO' or 'ARCH') in Builder.release:
+            print(Builder.info, 'Install Dependent Libraries', Builder.reset)
             os.system('pacman -S --needed cmake gcc ninja openssl')
         elif 'Ubuntu' in Builder.release:
+            print(Builder.info, 'Install Dependent Libraries', Builder.reset)
             os.system('apt-get install build-essential autoconf libtool pkg-config libgflags-dev\
             libgtest-dev clang libc++-dev libpq-dev postgresql-server-dev-all -y')
         elif 'Windows' in Builder.system:
+            print(Builder.info, 'Install Environments for Windows', Builder.reset)
             os.environ['CC'] = 'cl.exe'
             os.environ['CXX'] = 'cl.exe'
         else:
@@ -36,18 +39,25 @@ class Builder:
         print()
 
     def building(self, args):
-        if not os.path.isdir(r"build"):
-            os.mkdir(r"build")
-        os.chdir('./build')
-        if args.build[0] == 'ninja':
-            os.system(f'cmake .. -G {Builder.ninja}')
-        elif args.build[0] == 'vs32':
-            os.system(f'cmake .. -G {Builder.vs32}')
-        elif args.build[0] == 'vs64':
-            os.system(f'cmake .. -G {Builder.vs64}')
-        os.system(f'cmake --build . --config Release --parallel {args.parallel[0]}')
-        print(Builder.ok, '\nSUCCES!', Builder.reset)
-        print(f'\nTime building: {datetime.datetime.now() - Builder.start_time}')
+        try:
+            if not os.path.isdir(r".build"):
+                os.mkdir(r".build")
+            os.chdir('./.build')
+            if args.build[0] == 'ninja':
+                if os.system(f'cmake .. -G {Builder.ninja}'):
+                    raise Exception("Configuration CMake for Ninja")
+            elif args.build[0] == 'vs32':
+                if os.system(f'cmake .. -G {Builder.vs32}'):
+                    raise Exception("Configuration CMake for MSVC 2017")
+            elif args.build[0] == 'vs64':
+                if os.system(f'cmake .. -G {Builder.vs64}'):
+                    raise Exception("Configuration CMake for MSVC 2019")
+            if os.system(f'cmake --build . --config Release --parallel {args.parallel[0]}'):
+                raise Exception("Building")
+            print(Builder.info, f'Time building: {datetime.datetime.now() - Builder.start_time}', Builder.reset)
+            print(Builder.ok, 'Done Build', Builder.reset)
+        except Exception as inst:
+            print(Builder.critical, f'Fatal {inst}', Builder.reset)
 
     def parse_args(self):
         parser = argparse.ArgumentParser(usage=Builder.usage, description=Builder.descript)

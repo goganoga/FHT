@@ -2,5 +2,6 @@
 x64
 FHT/x64
 *.user
-build/*
+.build/*
+build*/*
 .idea
