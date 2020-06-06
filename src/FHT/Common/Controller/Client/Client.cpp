@@ -6,7 +6,7 @@
 ***************************************/
 #include "Client.h"
 #include "Controller/Controller.h"
-#include "Log/LoggerStream.h"
+#include "LoggerStream.h"
 #include "iController.h"
 #include "WebClient.h"
 #include <future>

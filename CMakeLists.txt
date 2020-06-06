@@ -89,7 +89,6 @@ set(SOURCE_LIB
   src/FHT/Common/Controller/DBFacade/Postgresql/PostgresConnection.cpp)
 set(HEADER_LIB
   src/FHT/lib
-  src/FHT/Common/Log
   src/FHT/Interface
 )
 set(HEADERS 

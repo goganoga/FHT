@@ -6,7 +6,7 @@
 ***************************************/
 #include "Task.h"
 #include "Controller/Controller.h"
-#include "Log/LoggerStream.h"
+#include "LoggerStream.h"
 
 #include <chrono>
 #include <condition_variable>

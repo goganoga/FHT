@@ -6,7 +6,7 @@
 ***************************************/
 #include "Server.h"
 #include "Controller/Controller.h"
-#include "Log/LoggerStream.h"
+#include "LoggerStream.h"
 #include "iController.h"
 #include "WebSocket/WebSocket.h"
 #include "WebSocket/Connection.h"

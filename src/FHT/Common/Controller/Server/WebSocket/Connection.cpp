@@ -5,7 +5,7 @@
 *  Copyright (C) goganoga 2019
 ***************************************/
 #include "Connection.h"
-#include "Log/LoggerStream.h"
+#include "LoggerStream.h"
 #include "User.h"
 #include <cstring>
 

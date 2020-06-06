@@ -29,7 +29,7 @@
 #include <openssl/rand.h>
 #include <openssl/x509v3.h>
 #include "HostCheckCurl.h"
-#include "Log/LoggerStream.h"
+#include "LoggerStream.h"
 
 namespace FHT{
     std::function<void(FHT::iClient::respClient)> webClient::funcCallback;
