@@ -38,6 +38,7 @@ execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
                         RESULT_VARIABLE GIT_SUBMOD_RESULT)
 
 if(${DBCOMPILE} STREQUAL "Postgresql")
+  message(STATUS Use database: ${DBCOMPILE})
   find_package(PostgreSQL REQUIRED)
   add_compile_definitions(DBPOSTGRESQL)
   set(DBCPP 
@@ -147,7 +148,6 @@ if(SAMPLE_BUILD)
   set(JSONCPP_INCLUDE_DIR ${SOURCE_DIR}/include)
   set(JSONCPP_LIBRARIES_DIR ${BINARY_DIR}/lib/${BUILD_TYPE})
   set(JSONCPP_LIBRARIES jsoncpp)
-  message(STATUS JSONCPP_LIBRARIES_DIR=${JSONCPP_LIBRARIES_DIR})
   add_executable(TestServiceFHT "src/Sample/TestService/TestService.cpp" "src/Sample/TestService/Test/Test.cpp")
   target_link_directories(TestServiceFHT PRIVATE ${JSONCPP_LIBRARIES_DIR})
   target_include_directories(TestServiceFHT PRIVATE ${JSONCPP_INCLUDE_DIR})
