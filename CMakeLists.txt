@@ -37,14 +37,17 @@ execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
                         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                         RESULT_VARIABLE GIT_SUBMOD_RESULT)
 
+message(STATUS Use database: ${DBCOMPILE})
 if(${DBCOMPILE} STREQUAL "Postgresql")
-  message(STATUS Use database: ${DBCOMPILE})
   find_package(PostgreSQL REQUIRED)
   add_compile_definitions(DBPOSTGRESQL)
   set(DBCPP 
     src/FHT/Common/Controller/DBFacade/Postgresql/Postgresql.cpp
     src/FHT/Common/Controller/DBFacade/Postgresql/PostgresConnection.cpp
   )
+endif()
+if(${DBCOMPILE} STREQUAL "None")
+  add_compile_definitions(DBNONE)
 endif()
 #libevent
 ExternalProject_Add(
@@ -161,5 +164,5 @@ if(SAMPLE_BUILD)
           TARGET TestServiceFHT POST_BUILD
           COMMAND ${CMAKE_COMMAND} -E copy
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/Sample/TestService/config.json
-                  ${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE_OUTPUT_PATH}/config.json)
+                  ${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE_OUTPUT_PATH}/${BUILD_TYPE}/config.json)
 endif()

@@ -23,7 +23,7 @@
 #include "LoggerStream.h"
 
 namespace FHT {
-    class Postgres : public iDBFacade {
+    class Postgres {
         using returnQuery = std::map<std::string, std::vector<std::string>>;
         
         std::string m_host;
@@ -40,24 +40,24 @@ namespace FHT {
         std::queue<ptrConnection> m_pool_conn;
 
 
-        bool run() override final;
-        void setHost(std::string arg) override final;
-        void setName(std::string arg) override final;
-        void setUser(std::string arg) override final;
-        void setPass(std::string arg) override final;
-        void setPort(int arg) override final;
-        void setWorker(int arg) override final;
+        bool run();
+        void setHost(std::string arg);
+        void setName(std::string arg);
+        void setUser(std::string arg);
+        void setPass(std::string arg);
+        void setPort(int arg);
+        void setWorker(int arg);
     protected:
         ptrConnection getConnection();
         void freeConnection(ptrConnection connection);
 
     public:
         returnQuery queryPrivate(std::string& query, int size, const char* const* params);
-        template<typename ...Args>
-        returnQuery Query(std::string query, Args const ...args);
 
         Postgres() = default;
-        virtual ~Postgres() override;
+        virtual ~Postgres();
+
+        friend class dbFacade;
     };
 }
 #endif //FHTPOSTGRESQL_H

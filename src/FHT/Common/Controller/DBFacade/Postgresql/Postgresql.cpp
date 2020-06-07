@@ -35,53 +35,10 @@ namespace FHT {
         std::function<void(ptrConnection)> m_destructor;
     };
 
-    template<typename ...Args>
-    Postgres::returnQuery Postgres::Query(std::string query, Args const ...args) {
-        returnQuery result;
-        try {
-            if (!m_isRun) {
-                throw "iPostgres not runing!";
-            }
-            std::vector<std::string> parameters{ args... };
-
-            std::vector<std::unique_ptr<char[]>> list;
-            if (!parameters.empty()) {
-                std::unique_ptr<char* []> paramValues(new char* [parameters.size()]);
-                for (int i = 0; i < parameters.size(); i++) {
-                    if (parameters[i].empty()) {
-                        paramValues[i] = nullptr;
-                    }
-                    else {
-                        std::unique_ptr<char[]> str(new char[parameters[i].size() + 1]);
-                        std::strncpy(str.get(), parameters[i].c_str(), parameters[i].size() + 1);
-                        list.push_back(std::move(str));
-                        paramValues[i] = list.back().get();
-                    }
-                }
-                result = queryPrivate(query, static_cast<int>(parameters.size()), paramValues.get());
-            }
-            else {
-                result = queryPrivate(query, 0, nullptr);
-            }
-        }
-        catch (const char* e) {
-            std::vector<std::string> vector;
-            vector.push_back(e);
-            result.emplace("error", vector);
-            FHT::LoggerStream::Log(FHT::LoggerStream::WARN) << METHOD_NAME << vector[0];
-        }
-        catch (...) {
-            std::vector<std::string> vector;
-            vector.push_back("unknown");
-            result.emplace("error", vector);
-            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << "unknown";
-        }
-
-        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "ok";
-        return result;
-    }
-
     Postgres::returnQuery Postgres::queryPrivate(std::string& query, int size, const char* const* params) {
+        if (!m_isRun) {
+            throw "iPostgres not runing!";
+        }
         returnQuery out;
         auto uuid =  "web_access_" + guid(query);
         uuid.erase(std::remove(uuid.begin(), uuid.end(), '-'), uuid.end());
@@ -150,7 +107,8 @@ namespace FHT {
                 m_pool_conn.emplace(std::make_shared<PostgresConnection>(m_port, m_host, m_name, m_user, m_pass));
             }
             FHT::iConrtoller::taskManager->addTask(FHT::iTask::UI, [&]() {
-                auto a = Query("DELETE FROM notifications.notification WHERE status = 'true';");
+                std::string query = "DELETE FROM notifications.notification WHERE status = 'true';";
+                auto a = queryPrivate(query, 0, nullptr);
                 FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "DELETE FROM notifications";
                 return FHT::iTask::state::CONTINUE;
                 },

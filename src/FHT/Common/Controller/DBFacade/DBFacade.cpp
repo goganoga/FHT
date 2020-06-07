@@ -10,71 +10,109 @@
 #include "LoggerStream.h"
 
 namespace FHT {
-
     void dbFacade::setHost(std::string arg) {
-        if (!m_dbFacade_ptr) {
-            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "type DB not specified";
+        if (isRun) {
+            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "Already run";
             return;
         }
-        m_dbFacade_ptr->setHost(arg);
+        db_ptr->setHost(arg);
     }
 
     void dbFacade::setName(std::string arg) {
-        if (!m_dbFacade_ptr) {
-            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "type DB not specified";
+        if (isRun) {
+            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "Already run";
             return;
         }
-        m_dbFacade_ptr->setName(arg);
+        db_ptr->setName(arg);
     }
 
     void dbFacade::setUser(std::string arg) {
-        if (!m_dbFacade_ptr) {
-            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "type DB not specified";
+        if (isRun) {
+            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "Already run";
             return;
         }
-        m_dbFacade_ptr->setUser(arg);
+        db_ptr->setUser(arg);
     }
 
     void dbFacade::setPass(std::string arg) {
-        if (!m_dbFacade_ptr) {
-            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "type DB not specified";
+        if (isRun) {
+            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "Already run";
             return;
         }
-        m_dbFacade_ptr->setPass(arg);
+        db_ptr->setPass(arg);
     }
 
     void dbFacade::setPort(int arg) {
-        if (!m_dbFacade_ptr) {
-            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "type DB not specified";
+        if (isRun) {
+            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "Already run";
             return;
         }
-        m_dbFacade_ptr->setPort(arg);
+        db_ptr->setPort(arg);
     }
 
     void dbFacade::setWorker(int arg) {
-        if (!m_dbFacade_ptr) {
-            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "type DB not specified";
+        if (isRun) {
+            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "Already run";
             return;
         }
-        m_dbFacade_ptr->setWorker(arg);
+        db_ptr->setWorker(arg);
     }
 
     bool dbFacade::run() {
-        if (!m_dbFacade_ptr) {
-            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "type DB not specified";
+        if (isRun) {
+            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "Already run";
             return false;
         }
-        return m_dbFacade_ptr->run();
+        db_ptr = std::make_shared<DataBase>();
+        isRun = db_ptr->run();
+        return isRun;
     }
 
     dbFacade::~dbFacade() {}
 
-    std::shared_ptr<DB> dbFacade::operator-> () {
-        if (!m_dbFacade_ptr) {
-            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "type DB not specified";
-            return {};
+    template<typename ...Args>
+    iDBFacade::returnQuery iDBFacade::Query(std::string query, Args const ...args) {
+        if (!isRun) {
+            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "Need runnig FHT::iConrtoller::dbFacade";
         }
-        return m_db_ptr;
+        returnQuery result;
+        try {
+            std::vector<std::string> parameters{ args... };
+            std::shared_ptr<DBFacade> db_ptr = Conrtoller::getDBFacade();
+            std::vector<std::unique_ptr<char[]>> list;
+            if (!parameters.empty()) {
+                std::unique_ptr<char* []> paramValues(new char* [parameters.size()]);
+                for (int i = 0; i < parameters.size(); i++) {
+                    if (parameters[i].empty()) {
+                        paramValues[i] = nullptr;
+                    }
+                    else {
+                        std::unique_ptr<char[]> str(new char[parameters[i].size() + 1]);
+                        std::strncpy(str.get(), parameters[i].c_str(), parameters[i].size() + 1);
+                        list.push_back(std::move(str));
+                        paramValues[i] = list.back().get();
+                    }
+                }
+                result = db_ptr->queryPrivate(query, static_cast<int>(parameters.size()), paramValues.get());
+            }
+            else {
+                result = db_ptr->queryPrivate(query, 0, nullptr);
+            }
+        }
+        catch (const char* e) {
+            std::vector<std::string> vector;
+            vector.push_back(e);
+            result.emplace("error", vector);
+            FHT::LoggerStream::Log(FHT::LoggerStream::WARN) << METHOD_NAME << vector[0];
+        }
+        catch (...) {
+            std::vector<std::string> vector;
+            vector.push_back("unknown");
+            result.emplace("error", vector);
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << "unknown";
+        }
+        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "ok";
+        return result;
     }
 
     std::shared_ptr<iDBFacade> Conrtoller::getDBFacade() {

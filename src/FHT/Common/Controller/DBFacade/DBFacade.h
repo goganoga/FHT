@@ -18,25 +18,32 @@
 
 namespace FHT {
     class dbFacade : public iDBFacade {
-        std::map<std::string, std::shared_ptr<iDBFacade>> list_support_db = {
-          //  {"postgres", std::make_shared<Postgres>()}
+#ifdef DBPOSTGRESQL
+        using DataBase = Postgres;
+#elif DBNONE
+        struct DataBase {
+            void setHost(std::string arg) {};
+            void setName(std::string arg) {};
+            void setUser(std::string arg) {};
+            void setPass(std::string arg) {};
+            void setPort(int arg) {};
+            void setWorker(int arg) {};
+            bool run() { return false; };
+            template<typename ...Args>
+            iDBFacade::returnQuery queryPrivate(Args const ...args) { return iDBFacade::returnQuery{}; };
         };
-
+#endif
         void setHost(std::string arg) override final;
         void setName(std::string arg) override final;
         void setUser(std::string arg) override final;
         void setPass(std::string arg) override final;
         void setPort(int arg) override final;
         void setWorker(int arg) override final;
-
         bool run() override final;
 
-        std::shared_ptr<DB> m_db_ptr;
-        std::shared_ptr<iDBFacade> m_dbFacade_ptr;
-
+        std::shared_ptr<DataBase> db_ptr;
+        bool isRun = false;
     public:
-        std::shared_ptr<DB> operator->() override final;
-
         dbFacade() = default;
         virtual ~dbFacade() override;
 
