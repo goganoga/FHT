@@ -66,14 +66,41 @@ namespace FHT {
         isRun = db_ptr->run();
         return isRun;
     }
+    
+    void iDBConnect::query(std::string& query, std::vector<std::string>& param, iDBConnect::returnQuery& result) {
+#ifdef DBPOSTGRESQL
+        std::vector<std::unique_ptr<char[]>> list;
+        if (!param.empty()) {
+            std::unique_ptr<char* []> paramValues(new char* [param.size()]);
+            for (int i = 0; i < param.size(); i++) {
+                if (param[i].empty()) {
+                    paramValues[i] = nullptr;
+                }
+                else {
+                    std::unique_ptr<char[]> str(new char[param[i].size() + 1]);
+                    std::strncpy(str.get(), param[i].c_str(), param[i].size() + 1);
+                    list.push_back(std::move(str));
+                    paramValues[i] = list.back().get();
+                }
+            }
+            result = queryPrivate(query, static_cast<int>(param.size()), paramValues.get());
+        }
+        else {
+            result = queryPrivate(query, 0, nullptr);
+        }
+#endif
+    }
 
+#ifdef DBPOSTGRESQL
     iDBConnect::returnQuery dbFacade::queryPrivate(std::string& query, int size, const char* const* params) {
         return db_ptr->queryPrivate(query, size, params);
     };
+#endif
 
     dbFacade::dbFacade():
         db_ptr(std::make_shared<DataBase>()),
-        shared_from_this(std::make_shared<dbFacade>(*this)){}
+        shared_from_this(this),
+        isRun(false) {}
 
     dbFacade::~dbFacade() {}
 
@@ -82,7 +109,7 @@ namespace FHT {
     }
 
     std::shared_ptr<iDBFacade> Conrtoller::getDBFacade() {
-        auto static a = std::make_shared<dbFacade>();
+        static auto a = std::make_shared<dbFacade>();
         return a;
     }
 }

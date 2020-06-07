@@ -18,29 +18,11 @@ namespace FHT {
         using returnQuery = std::map<std::string, std::vector<std::string>>;
         virtual ~iDBConnect() = default;
         template<typename ...Args>
-        returnQuery Query(std::string query, Args const ...args) {
+        returnQuery Query(std::string query_str, Args const ...args) {
             returnQuery result;
             try {
                 std::vector<std::string> parameters{ args... };
-                std::vector<std::unique_ptr<char[]>> list;
-                if (!parameters.empty()) {
-                    std::unique_ptr<char* []> paramValues(new char* [parameters.size()]);
-                    for (int i = 0; i < parameters.size(); i++) {
-                        if (parameters[i].empty()) {
-                            paramValues[i] = nullptr;
-                        }
-                        else {
-                            std::unique_ptr<char[]> str(new char[parameters[i].size() + 1]);
-                            std::strncpy(str.get(), parameters[i].c_str(), parameters[i].size() + 1);
-                            list.push_back(std::move(str));
-                            paramValues[i] = list.back().get();
-                        }
-                    }
-                    result = queryPrivate(query, static_cast<int>(parameters.size()), paramValues.get());
-                }
-                else {
-                    result = queryPrivate(query, 0, nullptr);
-                }
+                query(query_str, parameters, result);
             }
             catch (const char* e) {
                 std::vector<std::string> vector;
@@ -58,7 +40,11 @@ namespace FHT {
             return result;
         }
     private:
+        void query(std::string& query, std::vector<std::string>& param, returnQuery& result);
+
+#ifdef DBPOSTGRESQL
         virtual returnQuery queryPrivate(std::string& query, int size, const char* const* params) { return returnQuery{}; };
+#endif
     };
 
     struct iDBFacade {
@@ -70,9 +56,7 @@ namespace FHT {
         virtual void setPort(int arg) {};
         virtual void setWorker(int arg) {};
         virtual bool run() { return false; };
-        virtual const std::shared_ptr<iDBConnect> operator->() {
-            return nullptr;
-        }
+        virtual const std::shared_ptr<iDBConnect> operator->() { return nullptr; }
     };
 }
 #endif //FHTIDBFACADE_H
