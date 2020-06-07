@@ -124,13 +124,6 @@ target_link_libraries(fht
   ${PostgreSQL_LIBRARY_DIRS})
 set(FHT_LIBRARIES fht)
 if(SAMPLE_BUILD)
-  #TestFHT
-  add_executable(TestFHT "src/Sample/TestTaskHendler/Test.cpp")
-  add_dependencies(TestFHT ${FHT_LIBRARIES})
-  target_link_libraries(TestFHT 
-    ${LIB_FOR_WIN}
-    ${FHT_LIBRARIES})
-  #TestServiceFHT
   list(APPEND CMAKE_ARGS_JSON 
         -DJSONCPP_WITH_TESTS=OFF
         -DJSONCPP_WITH_POST_BUILD_UNITTEST=OFF
@@ -146,10 +139,18 @@ if(SAMPLE_BUILD)
       LOG_DOWNLOAD ON
   )
   ExternalProject_Get_property(Jsoncpp SOURCE_DIR BINARY_DIR)
-  
   set(JSONCPP_INCLUDE_DIR ${SOURCE_DIR}/include)
   set(JSONCPP_LIBRARIES_DIR ${BINARY_DIR}/lib/${BUILD_TYPE})
   set(JSONCPP_LIBRARIES jsoncpp)
+
+  #TestFHT
+  add_executable(TestFHT "src/Sample/TestTaskHendler/TestTaskHendler.cpp")
+  add_dependencies(TestFHT ${FHT_LIBRARIES})
+  target_link_libraries(TestFHT 
+    ${LIB_FOR_WIN}
+    ${FHT_LIBRARIES})
+
+  #TestServiceFHT
   add_executable(TestServiceFHT "src/Sample/TestService/TestService.cpp" "src/Sample/TestService/Test/Test.cpp")
   target_link_directories(TestServiceFHT PRIVATE ${JSONCPP_LIBRARIES_DIR})
   target_include_directories(TestServiceFHT PRIVATE ${JSONCPP_INCLUDE_DIR})
@@ -164,4 +165,21 @@ if(SAMPLE_BUILD)
           COMMAND ${CMAKE_COMMAND} -E copy
                   ${CMAKE_CURRENT_SOURCE_DIR}/src/Sample/TestService/config.json
                   ${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE_OUTPUT_PATH}/${BUILD_TYPE}/config.json)
+
+  #TestPostgresConnect
+  add_executable(TestPostgresConnectFHT "src/Sample/TestPostgresConnect/TestPostgresConnect.cpp")
+  target_link_directories(TestPostgresConnectFHT PRIVATE ${JSONCPP_LIBRARIES_DIR})
+  target_include_directories(TestPostgresConnectFHT PRIVATE ${JSONCPP_INCLUDE_DIR})
+  add_dependencies(TestPostgresConnectFHT ${FHT_LIBRARIES})
+  target_link_libraries(TestPostgresConnectFHT 
+    ${LIB_FOR_WIN}
+    ${FHT_LIBRARIES}
+    ${OPENSSL_LIBRARIES}
+    ${JSONCPP_LIBRARIES})
+  add_custom_command(
+          TARGET TestPostgresConnectFHT POST_BUILD
+          COMMAND ${CMAKE_COMMAND} -E copy
+                  ${CMAKE_CURRENT_SOURCE_DIR}/src/Sample/TestPostgresConnect/config.json
+                  ${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE_OUTPUT_PATH}/${BUILD_TYPE}/configSQL.json)
+
 endif()

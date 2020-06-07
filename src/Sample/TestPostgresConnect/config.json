@@ -1,0 +1,15 @@
+{
+    "logging": {
+        "time": 0,     //second
+        "level": 4,    // 0-5
+        "name": "FHT.log"
+    },
+    "postgres": {
+        "worker": 1,
+        "port": 5432,
+        "host": "localhost",
+        "name": "postgres",
+        "user": "postgres",
+        "pass": "postgres"
+    }
+}
