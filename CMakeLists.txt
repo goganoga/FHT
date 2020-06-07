@@ -3,7 +3,6 @@ project(FHT CXX C)
 include(ExternalProject)
 include(submodule/boost.cmake)
 set (EXECUTABLE_OUTPUT_PATH ../build_simple)
-set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY  ../build_library)
 
 if(NOT MSVC)
   if(NOT CMAKE_BUILD_TYPE)
