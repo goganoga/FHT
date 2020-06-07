@@ -17,7 +17,7 @@
 #include <map>
 
 namespace FHT {
-    class dbFacade : public iDBFacade {
+    class dbFacade : public iDBFacade, public iDBConnect {
 #ifdef DBPOSTGRESQL
         using DataBase = Postgres;
 #elif DBNONE
@@ -33,6 +33,8 @@ namespace FHT {
             iDBFacade::returnQuery queryPrivate(Args const ...args) { return iDBFacade::returnQuery{}; };
         };
 #endif
+        returnQuery queryPrivate(std::string& query, int size, const char* const* params) override final;
+
         void setHost(std::string arg) override final;
         void setName(std::string arg) override final;
         void setUser(std::string arg) override final;
@@ -40,11 +42,13 @@ namespace FHT {
         void setPort(int arg) override final;
         void setWorker(int arg) override final;
         bool run() override final;
+        const std::shared_ptr<iDBConnect> operator->() override final;
 
         std::shared_ptr<DataBase> db_ptr;
+        std::shared_ptr<dbFacade> shared_from_this;
         bool isRun = false;
     public:
-        dbFacade() = default;
+        dbFacade();
         virtual ~dbFacade() override;
 
     };

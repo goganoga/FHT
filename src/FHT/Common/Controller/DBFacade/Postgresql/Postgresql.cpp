@@ -37,6 +37,7 @@ namespace FHT {
 
     Postgres::returnQuery Postgres::queryPrivate(std::string& query, int size, const char* const* params) {
         if (!m_isRun) {
+            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "Need runnig FHT::iConrtoller::dbFacade";
             throw "iPostgres not runing!";
         }
         returnQuery out;

@@ -6,24 +6,22 @@
 ***************************************/
 #ifndef FHTIDBFACADE_H
 #define FHTIDBFACADE_H
+#include "LoggerStream.h"
+
 #include <map>
 #include <string>
 #include <vector>
 #include <memory>
 
 namespace FHT {
-    struct iDBFacade {
-        virtual ~iDBFacade() = default;
+    struct iDBConnect {
         using returnQuery = std::map<std::string, std::vector<std::string>>;
+        virtual ~iDBConnect() = default;
         template<typename ...Args>
         returnQuery Query(std::string query, Args const ...args) {
-            if (!isRun) {
-                FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "Need runnig FHT::iConrtoller::dbFacade";
-            }
             returnQuery result;
             try {
                 std::vector<std::string> parameters{ args... };
-                std::shared_ptr<DBFacade> db_ptr = Conrtoller::getDBFacade();
                 std::vector<std::unique_ptr<char[]>> list;
                 if (!parameters.empty()) {
                     std::unique_ptr<char* []> paramValues(new char* [parameters.size()]);
@@ -38,10 +36,10 @@ namespace FHT {
                             paramValues[i] = list.back().get();
                         }
                     }
-                    result = db_ptr->queryPrivate(query, static_cast<int>(parameters.size()), paramValues.get());
+                    result = queryPrivate(query, static_cast<int>(parameters.size()), paramValues.get());
                 }
                 else {
-                    result = db_ptr->queryPrivate(query, 0, nullptr);
+                    result = queryPrivate(query, 0, nullptr);
                 }
             }
             catch (const char* e) {
@@ -59,14 +57,22 @@ namespace FHT {
             FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "ok";
             return result;
         }
+    private:
+        virtual returnQuery queryPrivate(std::string& query, int size, const char* const* params) { return returnQuery{}; };
+    };
 
-        virtual void setHost(std::string arg) = 0;
-        virtual void setName(std::string arg) = 0;
-        virtual void setUser(std::string arg) = 0;
-        virtual void setPass(std::string arg) = 0;
-        virtual void setPort(int arg) = 0;
-        virtual void setWorker(int arg) = 0;
+    struct iDBFacade {
+        virtual ~iDBFacade() = default;
+        virtual void setHost(std::string arg) {};
+        virtual void setName(std::string arg) {};
+        virtual void setUser(std::string arg) {};
+        virtual void setPass(std::string arg) {};
+        virtual void setPort(int arg) {};
+        virtual void setWorker(int arg) {};
         virtual bool run() { return false; };
+        virtual const std::shared_ptr<iDBConnect> operator->() {
+            return nullptr;
+        }
     };
 }
 #endif //FHTIDBFACADE_H
