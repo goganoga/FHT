@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
         inizialaizerServer.DBConnect->run();
 
         //emulation work in programm
-        FHT::iDBFacade& DBConnect = *FHT::iConrtoller::dbFacade;
+        auto DBConnect = FHT::iConrtoller::dbFacade->getConnector();
         auto result = DBConnect->Query("select version()");
 
         std::cout << "Connection version PostgreSQL: " << result["version"][0] << std::endl;
