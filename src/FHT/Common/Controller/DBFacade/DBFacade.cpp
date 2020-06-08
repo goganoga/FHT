@@ -99,13 +99,17 @@ namespace FHT {
 
     dbFacade::dbFacade():
         db_ptr(std::make_shared<DataBase>()),
-        shared_from_this(this),
         isRun(false) {}
 
     dbFacade::~dbFacade() {}
 
-    const std::shared_ptr<iDBConnect> dbFacade::operator->() {
-        return shared_from_this;
+    const iDBConnect* dbFacade::getConnector() {
+        if (!isRun) {
+            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "Need run as \"FHT::Conrtoller::getDBFacade()->run();\"";
+            return nullptr;
+        }
+        const iDBConnect* a = static_cast<const iDBConnect*>(this);
+        return a;
     }
 
     std::shared_ptr<iDBFacade> Conrtoller::getDBFacade() {

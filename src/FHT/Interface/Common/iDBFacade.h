@@ -56,7 +56,7 @@ namespace FHT {
         virtual void setPort(int arg) {};
         virtual void setWorker(int arg) {};
         virtual bool run() { return false; };
-        virtual const std::shared_ptr<iDBConnect> operator->() { return nullptr; }
+        virtual const iDBConnect* getConnector() { return nullptr; }
     };
 }
 #endif //FHTIDBFACADE_H
