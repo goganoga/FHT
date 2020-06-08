@@ -42,7 +42,7 @@ namespace FHT {
         void setPort(int arg) override final;
         void setWorker(int arg) override final;
         bool run() override final;
-        const iDBConnect* getConnector() override final;
+        iDBConnect* getConnector() override final;
 
         std::shared_ptr<DataBase> db_ptr;
         volatile bool isRun;

@@ -93,6 +93,9 @@ namespace FHT {
 
 #ifdef DBPOSTGRESQL
     iDBConnect::returnQuery dbFacade::queryPrivate(std::string& query, int size, const char* const* params) {
+        if (!isRun) {
+            throw "Need run as \"FHT::Conrtoller::getDBFacade()->run();\"";
+        }
         return db_ptr->queryPrivate(query, size, params);
     };
 #endif
@@ -103,12 +106,8 @@ namespace FHT {
 
     dbFacade::~dbFacade() {}
 
-    const iDBConnect* dbFacade::getConnector() {
-        if (!isRun) {
-            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "Need run as \"FHT::Conrtoller::getDBFacade()->run();\"";
-            return nullptr;
-        }
-        const iDBConnect* a = static_cast<const iDBConnect*>(this);
+    iDBConnect* dbFacade::getConnector() {
+        iDBConnect* a = static_cast<iDBConnect*>(this);
         return a;
     }
 
