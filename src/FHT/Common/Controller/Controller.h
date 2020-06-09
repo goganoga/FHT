@@ -11,7 +11,6 @@
 #include "Common/iClient.h"
 #include "Common/iHendler.h"
 #include "Common/iLogger.h"
-#include "Common/iDBFacade.h"
 #include <memory>
 namespace FHT{
     struct Conrtoller {
@@ -20,7 +19,6 @@ namespace FHT{
         static std::shared_ptr<FHT::iHendler> getHendler();
         static std::shared_ptr<FHT::iServer> getServer();
         static std::shared_ptr<FHT::iClient> getClient();
-        static std::shared_ptr<FHT::iDBFacade> getDBFacade();
     };
 }
 #endif // FHTCONTROLLER_H

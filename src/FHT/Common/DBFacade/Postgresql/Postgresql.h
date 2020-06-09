@@ -6,7 +6,8 @@
 ***************************************/
 #ifndef FHTPOSTGRESQL_H
 #define FHTPOSTGRESQL_H
-#include "Common/iDBFacade.h"
+#include "iDBFacade.h"
+#include "DBFacade/postgresConfiguration.h"
 #include "PostgresConnection.h"
 
 #include <cstring>
@@ -25,13 +26,6 @@
 namespace FHT {
     class Postgres {
         using returnQuery = std::map<std::string, std::vector<std::string>>;
-        
-        std::string m_host;
-        std::string m_name;
-        std::string m_user;
-        std::string m_pass;
-        int m_port = 5432;
-        int m_poolCount = 10;
         bool volatile m_isRun = false;
 
         std::mutex m_mux;
@@ -39,25 +33,21 @@ namespace FHT {
         using ptrConnection = std::shared_ptr<PostgresConnection>;
         std::queue<ptrConnection> m_pool_conn;
 
+        returnQuery query_private(std::string& query, int size, const char* const* params);
 
-        bool run();
-        void setHost(std::string arg);
-        void setName(std::string arg);
-        void setUser(std::string arg);
-        void setPass(std::string arg);
-        void setPort(int arg);
-        void setWorker(int arg);
     protected:
         ptrConnection getConnection();
         void freeConnection(ptrConnection connection);
 
     public:
-        returnQuery queryPrivate(std::string& query, int size, const char* const* params);
+        bool run(std::unique_ptr<iDBFacade::Configuration> config);
+        void queryPrivate(std::string& query, std::vector<std::string>& param, returnQuery& result);
 
         Postgres() = default;
         virtual ~Postgres();
 
         friend class dbFacade;
     };
+    using DataBase = Postgres;
 }
 #endif //FHTPOSTGRESQL_H

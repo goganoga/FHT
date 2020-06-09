@@ -9,11 +9,20 @@
 
 #include "iController.h"
 #include "LoggerStream.h"
+#include "iDBFacade.h"
+
+//use define DBPOSTGRESQL in CMake
+#ifdef DBPOSTGRESQL
+#include "DBFacade/postgresConfiguration.h"
+#endif
 
 #include <json/json.h>
 
+using namespace FHT::iDBFacade;
+
 struct inizialaizer {
     FHT::iDBFacade* DBConnect = FHT::iConrtoller::dbFacade.get();
+    std::shared_ptr<iDBSettings> DBConnect = DBConnector<iDBSettings>();
     FHT::iLogger* Logger = FHT::iConrtoller::logger.get();
 };
 
@@ -58,17 +67,18 @@ int main(int argc, char* argv[])
         }
         inizialaizerServer.Logger->setLevelVerboseLogging(level.empty() ? FHT::iLogger::Verbose::INFO : static_cast<FHT::iLogger::Verbose>(level.asInt()));
 
-        if (!port.empty()) { inizialaizerServer.DBConnect->setPort(port.asInt()); }
-        if (!host.empty()) { inizialaizerServer.DBConnect->setHost(host.asString()); }
-        if (!name.empty()) { inizialaizerServer.DBConnect->setName(name.asString()); }
-        if (!user.empty()) { inizialaizerServer.DBConnect->setUser(user.asString()); }
-        if (!pass.empty()) { inizialaizerServer.DBConnect->setPass(pass.asString()); }
-        if (!worker.empty()) { inizialaizerServer.DBConnect->setWorker(worker.asInt()); }
+        Configuration db_config;
+        if (!port.empty()) { db_config.m_port = port.asInt(); }
+        if (!host.empty()) { db_config.m_host = host.asString(); }
+        if (!name.empty()) { db_config.m_name = name.asString(); }
+        if (!user.empty()) { db_config.m_user = user.asString(); }
+        if (!pass.empty()) { db_config.m_pass = pass.asString(); }
+        if (!worker.empty()) { db_config.m_worker = worker.asInt(); }
+        inizialaizerServer.DBConnect->setConfiguration(db_config);
         inizialaizerServer.DBConnect->run();
 
         //emulation work in programm
-        auto DBConnect = FHT::iConrtoller::dbFacade->getConnector();
-        auto result = DBConnect->Query("select version()");
+        auto result = DBConnector<iDBConnect>()->Query("select version()");
 
         std::cout << "Connection version PostgreSQL: " << result["version"][0] << std::endl;
     }

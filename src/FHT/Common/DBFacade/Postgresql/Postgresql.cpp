@@ -6,8 +6,7 @@
 *******************************************************/
 #include "Postgresql.h"
 #include "Template.h"
-
-#include "iController.h"
+#include "Controller/Controller.h"
 
 #include <algorithm>
 #include <stdexcept>
@@ -35,7 +34,7 @@ namespace FHT {
         std::function<void(ptrConnection)> m_destructor;
     };
 
-    Postgres::returnQuery Postgres::queryPrivate(std::string& query, int size, const char* const* params) {
+    Postgres::returnQuery Postgres::query_private(std::string& query, int size, const char* const* params) {
         if (!m_isRun) {
             FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "Need runnig FHT::iConrtoller::dbFacade";
             throw "iPostgres not runing!";
@@ -81,6 +80,29 @@ namespace FHT {
         return out;
     }
 
+    void Postgres::queryPrivate(std::string& query, std::vector<std::string>& param, Postgres::returnQuery& result) {
+        std::vector<std::unique_ptr<char[]>> list;
+        if (!param.empty()) {
+            std::unique_ptr<char* []> paramValues(new char* [param.size()]);
+            for (int i = 0; i < param.size(); i++) {
+                if (param[i].empty()) {
+                    paramValues[i] = nullptr;
+                }
+                else {
+                    std::unique_ptr<char[]> str(new char[param[i].size() + 1]);
+                    std::strncpy(str.get(), param[i].c_str(), param[i].size() + 1);
+                    list.push_back(std::move(str));
+                    paramValues[i] = list.back().get();
+                }
+            }
+            result = query_private(query, static_cast<int>(param.size()), paramValues.get());
+        }
+        else {
+            result = query_private(query, 0, nullptr);
+        }
+    }
+
+
     Postgres::~Postgres() {
         m_isRun = false;
     }
@@ -102,55 +124,34 @@ namespace FHT {
         m_condition.notify_one();
     }
 
-    bool Postgres::run() {
+    bool Postgres::run(std::unique_ptr<iDBFacade::Configuration> config) {
         try {
-            for (int i = 0; i < m_poolCount; i++) {
-                m_pool_conn.emplace(std::make_shared<PostgresConnection>(m_port, m_host, m_name, m_user, m_pass));
+            FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME <<  "host"  << config->m_host;
+            FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME <<  "name"  << config->m_name;
+            FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME <<  "user"  << config->m_user;
+            FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME <<  "pass"  << config->m_pass;
+            FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME <<  "port"  << config->m_port;
+            FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "worker" << config->m_worker;
+            if (m_isRun) {
+                throw "Postgres runing!";
             }
-            FHT::iConrtoller::taskManager->addTask(FHT::iTask::UI, [&]() {
+            for (int i = 0; i < config->m_worker; i++) {
+                m_pool_conn.emplace(std::make_shared<PostgresConnection>(config->m_port, config->m_host, config->m_name, config->m_user, config->m_pass));
+            }
+            Conrtoller::getTask()->addTask(FHT::iTask::MAIN, [&]() {
                 std::string query = "DELETE FROM notifications.notification WHERE status = 'true';";
-                auto a = queryPrivate(query, 0, nullptr);
+                auto a = query_private(query, 0, nullptr);
                 FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "DELETE FROM notifications";
                 return FHT::iTask::state::CONTINUE;
                 },
             1000 * 60 * 60 * 8); // ms * s * m * h
             m_isRun = true;
-            return true;
+            return m_isRun;
         }
         catch (std::exception const& e) {
             throw e;
         }
-        return false;
-    }
-
-    void Postgres::setPort(int arg){
-        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << arg;
-        m_port = arg;
-    }
-
-    void Postgres::setHost(std::string arg){
-        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << arg;
-        m_host = arg;
-    }
-
-    void Postgres::setName(std::string arg){
-        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << arg;
-        m_name = arg;
-    }
-
-    void Postgres::setUser(std::string arg){
-        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << arg;
-        m_user = arg;
-    }
-
-    void Postgres::setPass(std::string arg){
-        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << arg;
-        m_pass = arg;
-    }
-
-    void Postgres::setWorker(int arg) {
-        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << arg;
-        m_poolCount = arg;
+        return m_isRun;
     }
     
 }

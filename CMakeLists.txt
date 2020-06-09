@@ -41,8 +41,8 @@ if(${DBCOMPILE} STREQUAL "Postgresql")
   find_package(PostgreSQL REQUIRED)
   add_compile_definitions(DBPOSTGRESQL)
   set(DBCPP 
-    src/FHT/Common/Controller/DBFacade/Postgresql/Postgresql.cpp
-    src/FHT/Common/Controller/DBFacade/Postgresql/PostgresConnection.cpp
+    src/FHT/Common/DBFacade/Postgresql/Postgresql.cpp
+    src/FHT/Common/DBFacade/Postgresql/PostgresConnection.cpp
   )
 endif()
 if(${DBCOMPILE} STREQUAL "None")
@@ -94,7 +94,7 @@ set(SOURCE_LIB
   src/FHT/Common/Controller/Server/WebSocket/Frame.cpp
   src/FHT/Common/Controller/Server/WebSocket/WebSocket.cpp
   src/FHT/Common/Controller/Server/WebSocket/Connection.cpp
-  src/FHT/Common/Controller/DBFacade/DBFacade.cpp
+  src/FHT/Common/DBFacade/DBFacade.cpp
   ${DBCPP})
 set(HEADER_LIB
   src/FHT/lib
@@ -179,7 +179,7 @@ if(SAMPLE_BUILD)
   add_custom_command(
           TARGET TestPostgresConnectFHT POST_BUILD
           COMMAND ${CMAKE_COMMAND} -E copy
-                  ${CMAKE_CURRENT_SOURCE_DIR}/src/Sample/TestPostgresConnect/config.json
+                  ${CMAKE_CURRENT_SOURCE_DIR}/src/Sample/TestPostgresConnect/configSQL.json
                   ${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE_OUTPUT_PATH}/${BUILD_TYPE}/configSQL.json)
 
 endif()
