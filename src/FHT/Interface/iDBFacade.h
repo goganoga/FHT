@@ -28,7 +28,7 @@ namespace FHT {
 
             virtual ~iDBConnect() = default;
             template<typename ...Args>
-            returnQuery Query(std::string query_str, Args const ...args) {
+            inline returnQuery Query(std::string query_str, Args const ...args) {
                 returnQuery result;
                 try {
                     std::vector<std::string> parameters{ args... };
