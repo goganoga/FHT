@@ -7,7 +7,6 @@
 #include "Client.h"
 #include "Controller/Controller.h"
 #include "LoggerStream.h"
-#include "iController.h"
 #include "WebClient.h"
 #include <future>
 namespace {

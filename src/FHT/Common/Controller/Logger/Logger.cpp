@@ -6,7 +6,6 @@
 ***************************************/
 #include "Logger.h"
 #include "Controller/Controller.h"
-#include "../../../Interface/iController.h"
 #include <string>
 #include <iostream>
 #include <iomanip>
@@ -60,7 +59,7 @@ namespace FHT {
                 m_write.reset(new logWriter(m_fileLoggingName));
 
                 if(m_intervalSec){ 
-                    FHT::iConrtoller::taskManager->addTask(FHT::iTask::IO,
+                    Conrtoller::getTask()->addTask(FHT::iTask::IO,
                         [&, f_write = std::weak_ptr<logWriter>(m_write)] () mutable {
                         try {
                             if (auto func = f_write.lock(); func) {

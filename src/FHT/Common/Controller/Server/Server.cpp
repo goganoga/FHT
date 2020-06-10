@@ -7,7 +7,6 @@
 #include "Server.h"
 #include "Controller/Controller.h"
 #include "LoggerStream.h"
-#include "iController.h"
 #include "WebSocket/WebSocket.h"
 #include "WebSocket/Connection.h"
 #include "WebSocket/User.h"
@@ -37,8 +36,8 @@ namespace FHT {
     //static
     void Server::OnRequest(evhttp_request *req, void *) {
         bool lessen_all = Server::lessen_all_;
-        auto H = FHT::iConrtoller::hendlerManager;
-        auto T = FHT::iConrtoller::taskManager;
+        auto H = Conrtoller::getHendler();
+        auto T = Conrtoller::getTask();
         auto *OutBuf = evhttp_request_get_output_buffer(req);
         const char* location;
         try {
