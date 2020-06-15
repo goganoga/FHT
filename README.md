@@ -1,6 +1,6 @@
 # Framework Handler Task / FHT
 Framework Handler and Task manager as a skeleton for web service. Implemented on C++17
-- Templates - https://github.com/goganoga/FHT/tree/master/src/TemplatesFHT
+- Templates - https://github.com/goganoga/FHT/tree/master/src/Sample
 
 # This frame contains:
   - HandlerManager (Need for call a 'callback' from anywhere in the program)
