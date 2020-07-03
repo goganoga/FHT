@@ -32,23 +32,25 @@ namespace FHT {
 #endif
     }
     std::string Client::post(std::string url, std::string body){
-        if (url.empty() || url.length() < 6 || (url.substr(0, 7) != "http://" && url.substr(0, 8) != "https://"))
+        if (url.empty() || url.length() < 6 || (url.substr(0, 7) != "http://" && url.substr(0, 8) != "https://")) {
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << "No correct url";
             return "No correct url";
+        }
         
         std::promise<std::string> pr;
         std::future<std::string> barrier_future = pr.get_future();
         std::function<void(FHT::iClient::respClient)> func([&pr](FHT::iClient::respClient a) {
             pr.set_value(a.body);
-            });
+        });
         webClient a(url, body, &func, base_.get());
         barrier_future.wait();
         return barrier_future.get();
     }
     std::string Client::get(std::string url){
-        if (url.empty() || url.length() < 6 || (url.substr(0, 7) != "http://" && url.substr(0, 8) != "https://"))
+        if (url.empty() || url.length() < 6 || (url.substr(0, 7) != "http://" && url.substr(0, 8) != "https://")) {
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << "No correct url";
             return "No correct url";
+        }
         std::promise<std::string> pr;
         std::future<std::string> barrier_future = pr.get_future();
         std::function<void(FHT::iClient::respClient)> func([&pr](FHT::iClient::respClient a) {
