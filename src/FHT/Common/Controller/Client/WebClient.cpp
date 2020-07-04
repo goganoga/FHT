@@ -92,7 +92,7 @@ namespace FHT{
             resp.status = evhttp_request_get_response_code(req);
             parceHttpRequestParam(req, resp.headers);
         }
-        map_binder_done.extractElement(reinterpret_cast<int>(req))(resp);
+        map_binder_done.extractElement(reinterpret_cast<int>(ctx))(resp);
     }
 
     webClient::webClient(iClient::httpClient& request, std::function<void(iClient::httpClient::httpResponse)>* func, event_base* base) {
@@ -218,7 +218,7 @@ namespace FHT{
         evhttp_connection_set_timeout(evcon.get(), 10);
 
         struct evhttp_request* req = evhttp_request_new(&httpRequestDone, bev);
-        map_binder_done.emplace(reinterpret_cast<int>(req), [&](iClient::httpClient::httpResponse r) {
+        map_binder_done.emplace(reinterpret_cast<int>(bev), [&](iClient::httpClient::httpResponse r) {
             m_callback(r); 
             delete this; 
         });
