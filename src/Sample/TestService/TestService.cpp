@@ -29,7 +29,6 @@ void skeleton_daemon();
 struct inizialaizer {
     FHT::iTest *Test = FHT::iTest::Run.get();
     FHT::iLogger* Logger = FHT::iConrtoller::logger.get();
-    FHT::iClient *Client = FHT::iConrtoller::webClient.get(); //pre init
     FHT::iServer *Serv = FHT::iConrtoller::webServer.get(); //end
 };
 int main(int argc, char* argv[])

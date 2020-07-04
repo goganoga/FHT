@@ -30,59 +30,96 @@
 #include <openssl/x509v3.h>
 #include "HostCheckCurl.h"
 #include "LoggerStream.h"
+#include <mutex>
 
 namespace FHT{
-    std::function<void(FHT::iClient::respClient)> webClient::funcCallback;
-    void webClient::httpRequestDone(struct evhttp_request* req, void* ctx) {
-            FHT::iClient::respClient resp;
-            char buffer[256];
-            if (!req || !evhttp_request_get_response_code(req)) {
-                struct bufferevent* bev = (struct bufferevent*) ctx;
-                unsigned long oslerr;
-                int printed_err = 0;
-                int errcode = EVUTIL_SOCKET_ERROR();
-                while ((oslerr = bufferevent_get_openssl_error(bev))) {
-                    ERR_error_string_n(oslerr, buffer, sizeof(buffer));
-                    printed_err = 1;
-                }
-                resp.body = "Error: Some request failed";
-                resp.status = 404;
-                FHT::LoggerStream::Log(FHT::LoggerStream::WARN) << METHOD_NAME << resp.body;
+    namespace {
+        void parceHttpRequestParam(evhttp_request* req, std::map<std::string, std::string>& http_request_param) {
+            struct evkeyvalq* request_input = evhttp_request_get_input_headers(req);
+            for (struct evkeyval* tqh_first = request_input->tqh_first; &tqh_first->next != nullptr; ) {
+                http_request_param.emplace(tqh_first->key, tqh_first->value);
+                tqh_first = tqh_first->next.tqe_next;
             }
-            else {
-                auto* InBuf = evhttp_request_get_input_buffer(req);
-                auto LenBuf = evbuffer_get_length(InBuf);
-                std::unique_ptr<char> postBody(new char[LenBuf + 1]);
-                postBody.get()[LenBuf] = 0;
-                evbuffer_copyout(InBuf, postBody.get(), LenBuf);
-                resp.body = postBody.get();
-                resp.status = evhttp_request_get_response_code(req);
-            }
-            funcCallback(resp);
         }
-    webClient::webClient(std::string url, std::string body, std::function<void(FHT::iClient::respClient)>* func, event_base* base) {
-        funcCallback = *func;
-        FHT::iClient::respClient resp;
+        template<typename T, typename U>
+        struct binder_done {
+            void emplace(T t, U u) {
+                {
+                    std::lock_guard<decltype(m_mx)> lock(m_mx);
+                    m_binder_done_map.emplace(t, u);
+                }
+            }
+            U extractElement(T t) {
+                U buf = nullptr;
+                if (auto a = m_binder_done_map.find(t); a != m_binder_done_map.end()) {
+                    buf = a->second;
+                    {
+                        std::lock_guard<decltype(m_mx)> lock(m_mx);
+                        m_binder_done_map.erase(t); 
+                    }
+                }
+                return buf;
+            }
+            std::map<T, U> m_binder_done_map;
+            std::mutex m_mx;
+        };
+        binder_done<int, std::function<void(iClient::httpClient::httpResponse)>> map_binder_done;
+    }
+
+    void webClient::httpRequestDone(evhttp_request* req, void* ctx) {
+        iClient::httpClient::httpResponse resp;
+        char buffer[256];
+        if (!req || !evhttp_request_get_response_code(req)) {
+            struct bufferevent* bev = (struct bufferevent*) ctx;
+            unsigned long oslerr;
+            int printed_err = 0;
+            int errcode = EVUTIL_SOCKET_ERROR();
+            while ((oslerr = bufferevent_get_openssl_error(bev))) {
+                ERR_error_string_n(oslerr, buffer, sizeof(buffer));
+                printed_err = 1;
+            }
+            resp.body = "Error: Some request failed";
+            resp.status = 404;
+            FHT::LoggerStream::Log(FHT::LoggerStream::WARN) << METHOD_NAME << resp.body;
+        }
+        else {
+            auto* InBuf = evhttp_request_get_input_buffer(req);
+            auto LenBuf = evbuffer_get_length(InBuf);
+            std::unique_ptr<char> postBody(new char[LenBuf + 1]);
+            postBody.get()[LenBuf] = 0;
+            evbuffer_copyout(InBuf, postBody.get(), LenBuf);
+            resp.body = postBody.get();
+            resp.status = evhttp_request_get_response_code(req);
+            parceHttpRequestParam(req, resp.headers);
+        }
+        map_binder_done.extractElement(reinterpret_cast<int>(req))(resp);
+    }
+
+    webClient::webClient(iClient::httpClient& request, std::function<void(iClient::httpClient::httpResponse)>* func, event_base* base) {
+        m_callback = *func;
+        std::string& url = request.url;
+        std::string& body = request.body;
+        iClient::httpClient::httpResponse resp;
         resp.status = 404;
         std::unique_ptr<evhttp_uri, decltype(&evhttp_uri_free)> http_uri(evhttp_uri_parse(url.c_str()), &evhttp_uri_free);
         if (!http_uri) {
             resp.body = "Error: Malformed url";
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
-            funcCallback(resp);
+            (*func)(resp);
             return;
         }
         const char* scheme = evhttp_uri_get_scheme(http_uri.get());
         if (!scheme || (strcasecmp(scheme, "https") != 0 && strcasecmp(scheme, "http") != 0)) {
             resp.body = "Error: Url must be http or https";
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
-            funcCallback(resp);
+            (*func)(resp);
             return;
         }
         const char* host = evhttp_uri_get_host(http_uri.get());
         if (host == nullptr) {
             resp.body = "Error: Url must have a host";
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
-            funcCallback(resp);
+            (*func)(resp);
             return;
         }
         int port = evhttp_uri_get_port(http_uri.get());
@@ -110,14 +147,14 @@ namespace FHT{
         if (!RAND_poll()) {
             resp.body = "Error: Openssl RAND_poll failed";
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
-            funcCallback(resp);
+            (*func)(resp);
             return;
          }
          std::unique_ptr<SSL_CTX, decltype (&SSL_CTX_free)> ssl_ctx(SSL_CTX_new(SSLv23_method()) ,&SSL_CTX_free);
         if (!ssl_ctx) {
             resp.body = "Error: Openssl SSL_CTX_new failed";
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
-            funcCallback(resp);
+            (*func)(resp);
             return;
          }
          X509_STORE* store;
@@ -128,14 +165,14 @@ namespace FHT{
              addCertForStore(store, "ROOT") < 0) {
              resp.body = "Error: Openssl X509_STORE_set_default_paths failed";
              FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
-             funcCallback(resp);
+             (*func)(resp);
              return;
          }
 #else // _WIN32
          if (X509_STORE_set_default_paths(store) != 1) {
              resp.body = "Error: Openssl X509_STORE_set_default_paths failed";
              FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
-             funcCallback(resp);
+             (*func)(resp);
              return;
          }
 #endif // _WIN32
@@ -144,14 +181,14 @@ namespace FHT{
          if (!base) {
             resp.body = "Error: New connection failed";
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
-            funcCallback(resp);
+            (*func)(resp);
             return;
          }
          std::unique_ptr<SSL, decltype (&SSL_free)> ssl(SSL_new(ssl_ctx.get()) ,&SSL_free);
          if (ssl == nullptr) {
             resp.body = "Error: Create OpenSSL session failed";
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
-            funcCallback(resp);
+            (*func)(resp);
             return;
          }
 #ifdef SSL_CTRL_SET_TLSEXT_HOSTNAME
@@ -166,7 +203,7 @@ namespace FHT{
         if (bev == nullptr) {
             resp.body = "Error: Can't read buffer with openssl";
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
-            funcCallback(resp);
+            (*func)(resp);
             return;
         }
         bufferevent_openssl_set_allow_dirty_shutdown(bev, 1);
@@ -174,32 +211,69 @@ namespace FHT{
         if (evcon == nullptr) {
             resp.body = "Error: Can't read buffer with";
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
-            funcCallback(resp);
+            (*func)(resp);
             return;
         }
         evhttp_connection_set_retries(evcon.get(), 3);
         evhttp_connection_set_timeout(evcon.get(), 10);
+
         struct evhttp_request* req = evhttp_request_new(&httpRequestDone, bev);
+        map_binder_done.emplace(reinterpret_cast<int>(req), [&](iClient::httpClient::httpResponse r) {
+            m_callback(r); 
+            delete this; 
+        });
+
         if (req == nullptr) {
             resp.body = "Error: Not create request";
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
-            funcCallback(resp);
+            (*func)(resp);
             return;
         }
-        evkeyvalq* output_headers = evhttp_request_get_output_headers(req);
+        struct evkeyvalq* output_headers = evhttp_request_get_output_headers(req);
         evhttp_add_header(output_headers, "Host", host);
         evhttp_add_header(output_headers, "Connection", "close");
-        if (!body.empty()) {
-            char buf[1024];
-            evbuffer* output_buffer = evhttp_request_get_output_buffer(req);
-            evbuffer_add(output_buffer, body.c_str(), body.length());
-            evutil_snprintf(body.data(), sizeof(body.data()) - 1, "%lu", (unsigned long)body.length());
-            evhttp_add_header(output_headers, "Content-Length", buf);
+        for (auto& header : request.headers) {
+            evhttp_add_header(output_headers, header.first.c_str(), header.second.c_str());
         }
-        if (evhttp_make_request(evcon.get(), req, !body.empty() ? EVHTTP_REQ_POST : EVHTTP_REQ_GET, uri.c_str())) {
+        if (request.type == iClient::httpClient::Type::POST) {
+            struct evbuffer* output_buffer;
+            if (request.body_is_file_name) {
+                FILE* f = fopen(request.body.c_str(), "rb");
+                char buf[1024];
+                size_t s;
+                size_t bytes = 0;
+
+                if (!f) {
+                    resp.body = "Error: File not read";
+                    FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body << request.body;
+                    (*func)(resp);
+                    return;
+                }
+
+                output_buffer = evhttp_request_get_output_buffer(req);
+                while ((s = fread(buf, 1, sizeof(buf), f)) > 0) {
+                    evbuffer_add(output_buffer, buf, s);
+                    bytes += s;
+                }
+                evutil_snprintf(buf, sizeof(buf) - 1, "%lu", (unsigned long)bytes);
+                evhttp_add_header(output_headers, "Content-Length", buf);
+                fclose(f);
+            }
+            else {
+                output_buffer = evhttp_request_get_output_buffer(req);
+
+                std::shared_ptr<char> buf(new char[body.size() + 1]);
+                buf.get()[body.size()] = 0;
+                memcpy(buf.get(), body.data(), body.size());
+
+                evbuffer_add(output_buffer, buf.get(), body.size());
+                evhttp_add_header(output_headers, "Content-Length", std::to_string(body.size()).c_str());
+            }
+        }
+        if (evhttp_make_request(evcon.get(), req, request.type == iClient::httpClient::Type::POST ? EVHTTP_REQ_POST : EVHTTP_REQ_GET, uri.c_str())) {
             resp.body = "Error: Can't make request";
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
-            funcCallback(resp);
+            (*func)(resp);
             return;
         }
         event_base_dispatch(base);

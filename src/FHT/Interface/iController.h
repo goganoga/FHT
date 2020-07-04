@@ -13,7 +13,6 @@ namespace FHT {
         inline auto taskManager = FHT::Conrtoller::getTask();
         inline auto hendlerManager = FHT::Conrtoller::getHendler();
         inline auto webServer = FHT::Conrtoller::getServer();
-        inline auto webClient = FHT::Conrtoller::getClient();
     }
 }
 #endif // FHTICONTROLLER_H

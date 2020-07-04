@@ -9,16 +9,32 @@
 #include <memory>
 #include <cstdint>
 #include <functional>
+#include <map>
+
 namespace FHT {
     struct iClient {
-        struct respClient {
-            int status;
+        struct httpClient {
+            struct httpResponse {
+                int status;
+                std::string body;
+                std::map<std::string, std::string> headers;
+            };
+            enum class Type {
+                GET,
+                POST
+            };
+            std::string url;
             std::string body;
+            std::map<std::string, std::string> headers;
+            bool body_is_file_name = false;
+            Type type = Type::GET;
+
+            //async fetch
+            void fetch(std::function<void(httpResponse)>);
+
+            //sync fetch
+            const httpResponse fetch();
         };
-        virtual std::string post(std::string url, std::string body) = 0;
-        virtual std::string get(std::string url) = 0;
-        virtual void postAsync(std::string url, std::string body, std::function<void(respClient)> func) = 0;
-        virtual void getAsync(std::string url, std::function<void(respClient)> func) = 0;
         virtual ~iClient() = default;
     };
 }

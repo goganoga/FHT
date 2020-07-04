@@ -18,7 +18,6 @@ namespace FHT{
         static std::shared_ptr<FHT::iTask> getTask();
         static std::shared_ptr<FHT::iHendler> getHendler();
         static std::shared_ptr<FHT::iServer> getServer();
-        static std::shared_ptr<FHT::iClient> getClient();
     };
 }
 #endif // FHTCONTROLLER_H

@@ -6,17 +6,19 @@
 ***************************************/
 #ifndef FHTWEBCLIENT_H
 #define FHTWEBCLIENT_H
-#include "Controller/Server/InitialSer.h"
+
+#include <evhttp.h>
+#include <map>
 #include "Common/iClient.h"
 #include "iController.h"
 #include <openssl/x509v3.h>
 namespace FHT {
     struct webClient {
-        webClient(std::string url, std::string body, std::function<void(FHT::iClient::respClient)>* func, event_base* base);
+        webClient(iClient::httpClient& req, std::function<void(iClient::httpClient::httpResponse)>* func, event_base* base);
         ~webClient();
     private:
-        static void httpRequestDone(struct evhttp_request* req, void* ctx);
-        static std::function<void(FHT::iClient::respClient)> funcCallback;
+        static void httpRequestDone(evhttp_request* req, void* ctx);
+        std::function<void(iClient::httpClient::httpResponse)> m_callback;
         enum hostnameValidation {
             MatchFound,
             MatchNotFound,

@@ -15,12 +15,16 @@ namespace {
 		WORD wVersionRequested = MAKEWORD(2, 2);
 		WSADATA wsaData;
 		WSAStartup(wVersionRequested, &wsaData);
+        int err = WSAStartup(wVersionRequested, &wsaData);
+        if (err != 0) {
+            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "WSAStartup failed with error" << err;
+        }
 #endif
 		return event_base_new();
 	}
 }
 namespace FHT {
-    std::shared_ptr<iClient> Conrtoller::getClient() {
+    std::shared_ptr<Client> Client::getClient() {
         auto static a = std::make_shared<Client>();
         return a;
     }
@@ -31,40 +35,40 @@ namespace FHT {
         WSACleanup();
 #endif
     }
-    std::string Client::post(std::string url, std::string body){
-        if (url.empty() || url.length() < 6 || (url.substr(0, 7) != "http://" && url.substr(0, 8) != "https://")) {
-            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << "No correct url";
-            return "No correct url";
-        }
-        
-        std::promise<std::string> pr;
-        std::future<std::string> barrier_future = pr.get_future();
-        std::function<void(FHT::iClient::respClient)> func([&pr](FHT::iClient::respClient a) {
-            pr.set_value(a.body);
-        });
-        webClient a(url, body, &func, base_.get());
-        barrier_future.wait();
-        return barrier_future.get();
-    }
-    std::string Client::get(std::string url){
-        if (url.empty() || url.length() < 6 || (url.substr(0, 7) != "http://" && url.substr(0, 8) != "https://")) {
-            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << "No correct url";
-            return "No correct url";
-        }
-        std::promise<std::string> pr;
-        std::future<std::string> barrier_future = pr.get_future();
-        std::function<void(FHT::iClient::respClient)> func([&pr](FHT::iClient::respClient a) {
-            pr.set_value(a.body);
-        });
-        webClient a(url, std::string(), &func, base_.get());
-        barrier_future.wait();
-        return barrier_future.get();
-    }
-    void Client::postAsync(std::string url, std::string body, std::function<void(respClient)> func){
-        webClient a(url, body, &func, base_.get());
-    }
-    void Client::getAsync(std::string url, std::function<void(respClient)> func){
-        webClient a(url, std::string(), &func, base_.get());
+
+    void iClient::httpClient::fetch(std::function<void(httpResponse)> callback) {
+        Client::getClient()->fetch(*this, callback);
     }
 
+    const iClient::httpClient::httpResponse iClient::httpClient::fetch() {
+        return Client::getClient()->fetch(*this);
+    }
+
+    void Client::fetch(iClient::httpClient& req, std::function<void(iClient::httpClient::httpResponse)> callback) {
+        std::string &url = req.url;
+        if (url.empty() || url.length() < 6 || (url.substr(0, 7) != "http://" && url.substr(0, 8) != "https://")) {
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << "No correct url";
+            throw "No correct url";
+        }
+        webClient *a = new webClient(req, &callback, base_.get());
+    }
+
+    const iClient::httpClient::httpResponse Client::fetch(iClient::httpClient& req) {
+        std::string& url = req.url;
+        if (url.empty() || url.length() < 6 || (url.substr(0, 7) != "http://" && url.substr(0, 8) != "https://")) {
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << "No correct url";
+            return { -1, "No correct url" };
+        }
+
+        std::promise<iClient::httpClient::httpResponse> pr;
+        std::future<iClient::httpClient::httpResponse> barrier_future = pr.get_future();
+        std::function<void(iClient::httpClient::httpResponse)> func([&pr](iClient::httpClient::httpResponse a) {
+            pr.set_value(a);
+        });
+
+        webClient* a = new webClient(req, &func, base_.get());
+
+        barrier_future.wait();
+        return barrier_future.get();
+    }
 }

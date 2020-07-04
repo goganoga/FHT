@@ -78,7 +78,10 @@ namespace FHT {
             auto test = headers.find("url");
             if (test != headers.end())
                 param_test = test->second;
-            std::string bodyRequest = FHT::iConrtoller::webClient->get(param_test);
+            FHT::iClient::httpClient reruest;
+            reruest.url = param_test;
+            auto result = reruest.fetch();
+            std::string bodyRequest = reruest.fetch().body;
             resp_map.emplace("GetUrl", param_test);
             resp_map.emplace("bodyRequest", bodyRequest);
         }
