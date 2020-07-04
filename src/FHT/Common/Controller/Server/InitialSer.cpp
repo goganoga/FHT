@@ -54,10 +54,12 @@ void InitSer::Start() {
                 if (evhttp_accept_socket(EvHttp.get(), Socket) == -1)
                     throw std::runtime_error("Failed to bind server socket for new instance.");
             }
+            /*
             evhttp_set_allowed_methods(EvHttp.get(),
                 EVHTTP_REQ_PUT |
                 EVHTTP_REQ_GET |
                 EVHTTP_REQ_POST);
+            */
         }
         for (; IsRun; ) {
 #ifdef BLOCKING_IO
