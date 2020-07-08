@@ -81,7 +81,7 @@ namespace FHT {
             FHT::iClient::httpClient reruest;
             reruest.url = param_test;
             auto result = reruest.fetch();
-            std::string bodyRequest = reruest.fetch().body;
+            std::string bodyRequest = result.body;
             resp_map.emplace("GetUrl", param_test);
             resp_map.emplace("bodyRequest", bodyRequest);
         }
