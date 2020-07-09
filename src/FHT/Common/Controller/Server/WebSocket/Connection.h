@@ -19,7 +19,7 @@ struct wsConnect{
     ~wsConnect();
     void acceptWebSocketRequest();
     void responsedWebSocketRequest();
-    void wsServerExit();
+    void wsServerExit() noexcept;
     void wsFrameReceverLoop();
     void wsServerStart();
     int32_t writeFrameData(const wsFrameBuffer *fb);

@@ -41,29 +41,7 @@ namespace FHT{
                 tqh_first = tqh_first->next.tqe_next;
             }
         }
-        template<typename T, typename U>
-        struct binder_done {
-            void emplace(T t, U u) {
-                {
-                    std::lock_guard<decltype(m_mx)> lock(m_mx);
-                    m_binder_done_map.emplace(t, u);
-                }
-            }
-            U extractElement(T t) {
-                U buf = nullptr;
-                if (auto a = m_binder_done_map.find(t); a != m_binder_done_map.end()) {
-                    buf = a->second;
-                    {
-                        std::lock_guard<decltype(m_mx)> lock(m_mx);
-                        m_binder_done_map.erase(t); 
-                    }
-                }
-                return buf;
-            }
-            std::map<T, U> m_binder_done_map;
-            std::mutex m_mx;
-        };
-        binder_done<int, std::function<void(iClient::httpClient::httpResponse)>> map_binder_done;
+        std::map<int, std::function<void(iClient::httpClient::httpResponse)>> map_binder_done;
     }
 
     void webClient::httpRequestDone(evhttp_request* req, void* ctx) {
@@ -92,10 +70,13 @@ namespace FHT{
             resp.status = evhttp_request_get_response_code(req);
             parceHttpRequestParam(req, resp.headers);
         }
-        map_binder_done.extractElement(reinterpret_cast<int>(ctx))(resp);
+        auto func = map_binder_done[reinterpret_cast<int>(req)];
+        if (func) {
+            func(resp);
+        }
     }
 
-    webClient::webClient(iClient::httpClient& request, std::function<void(iClient::httpClient::httpResponse)>* func, event_base* base) {
+    webClient::webClient(iClient::httpClient& request, std::function<void(iClient::httpClient::httpResponse)>* func) {
         m_callback = *func;
         std::string& url = request.url;
         std::string& body = request.body;
@@ -178,6 +159,8 @@ namespace FHT{
 #endif // _WIN32
          SSL_CTX_set_verify(ssl_ctx.get(), SSL_VERIFY_PEER, nullptr);
          SSL_CTX_set_cert_verify_callback(ssl_ctx.get(), certVerifyCallback, (void*)host);
+
+         const std::unique_ptr<event_base, decltype(&event_base_free)> base(event_base_new(), &event_base_free);
          if (!base) {
             resp.body = "Error: New connection failed";
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
@@ -196,9 +179,9 @@ namespace FHT{
 #endif
         struct bufferevent* bev = nullptr;
         if (strcasecmp(scheme, "http") == 0)
-            bev = bufferevent_socket_new(base, -1, BEV_OPT_CLOSE_ON_FREE);
+            bev = bufferevent_socket_new(base.get(), -1, BEV_OPT_CLOSE_ON_FREE);
         else {
-            bev = bufferevent_openssl_socket_new(base, -1, ssl.get(), BUFFEREVENT_SSL_CONNECTING, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS);
+            bev = bufferevent_openssl_socket_new(base.get(), -1, ssl.get(), BUFFEREVENT_SSL_CONNECTING, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS);
         }
         if (bev == nullptr) {
             resp.body = "Error: Can't read buffer with openssl";
@@ -207,7 +190,7 @@ namespace FHT{
             return;
         }
         bufferevent_openssl_set_allow_dirty_shutdown(bev, 1);
-        std::unique_ptr<evhttp_connection, decltype(&evhttp_connection_free)> evcon(evhttp_connection_base_bufferevent_new(base, nullptr, bev, host, port) ,&evhttp_connection_free);
+        std::unique_ptr<evhttp_connection, decltype(&evhttp_connection_free)> evcon(evhttp_connection_base_bufferevent_new(base.get(), nullptr, bev, host, port) ,&evhttp_connection_free);
         if (evcon == nullptr) {
             resp.body = "Error: Can't read buffer with";
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << resp.body;
@@ -218,10 +201,6 @@ namespace FHT{
         evhttp_connection_set_timeout(evcon.get(), 10);
 
         struct evhttp_request* req = evhttp_request_new(&httpRequestDone, bev);
-        map_binder_done.emplace(reinterpret_cast<int>(bev), [&](iClient::httpClient::httpResponse r) {
-            m_callback(r); 
-            delete this; 
-        });
 
         if (req == nullptr) {
             resp.body = "Error: Not create request";
@@ -229,6 +208,11 @@ namespace FHT{
             (*func)(resp);
             return;
         }
+        int id = reinterpret_cast<int>(req);
+        map_binder_done.emplace(id, [&](iClient::httpClient::httpResponse r) {
+            m_callback(r);
+        });
+
         struct evkeyvalq* output_headers = evhttp_request_get_output_headers(req);
         evhttp_add_header(output_headers, "Host", host);
         evhttp_add_header(output_headers, "Connection", "close");
@@ -276,7 +260,10 @@ namespace FHT{
             (*func)(resp);
             return;
         }
-        event_base_dispatch(base);
+        event_base_dispatch(base.get());
+        evhttp_request_free(req); 
+        map_binder_done.erase(id);
+        delete this;
     }
     webClient::~webClient() {
 #if (OPENSSL_VERSION_NUMBER < 0x10100000L) || \

@@ -63,7 +63,9 @@ void InitSer::Start() {
 #ifdef BLOCKING_IO
             event_base_loop(EventBase.get(), EVLOOP_NO_EXIT_ON_EMPTY);
 #else 
-			event_base_loop(EventBase.get(), EVLOOP_NONBLOCK);
+            if (event_base_loop(EventBase.get(), EVLOOP_NONBLOCK) == -1) {
+                //event_base_update_cache_time(EventBase.get()); //overhead
+            }
             std::this_thread::sleep_for(std::chrono::microseconds(50));
 #endif// BLOCKING_IO
         }

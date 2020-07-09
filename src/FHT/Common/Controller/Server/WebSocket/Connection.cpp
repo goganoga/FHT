@@ -24,8 +24,8 @@ wsConnect::~wsConnect(){
     writeHendlerFunction = nullptr;
     pingHendlerFunction = nullptr;
     closeHendlerFunction = nullptr;
-    conev_.reset();
     frame_.reset();
+    conev_.reset();
 }
 
 void wsConnect::wsServerStart() {
@@ -36,7 +36,7 @@ void wsConnect::wsServerStart() {
     }
 }
 
-void wsConnect::wsServerExit() {
+void wsConnect::wsServerExit() noexcept {
     if (closeHendlerFunction) {
         closeHendlerFunction();
     }
@@ -121,110 +121,122 @@ void wsFrameReadHendler(struct bufferevent *bev_, void *ctx) {
     }
     switch (conn->step_) {
     case wsRequest::step::ONE: {
-            std::unique_ptr<char> tmp(new char[conn->ntoread_]);
-            bufferevent_read(bev_, tmp.get(), conn->ntoread_);
-            if (conn->frame_->parseFrameHeader(tmp.get()) != 0) {
-                if (conn->frame_->payload_len_ <= 125) {
-                    conn->step_ = wsRequest::step::THREE;
-                    conn->ntoread_ = 4;
-                    bufferevent_setwatermark(bev_, EV_READ, conn->ntoread_, conn->ntoread_);
-                } else if (conn->frame_->payload_len_ == 126) {
-                    conn->step_ = wsRequest::step::TWO;
-                    conn->ntoread_ = 2;
-                    bufferevent_setwatermark(bev_, EV_READ, conn->ntoread_, conn->ntoread_);
-                } else if (conn->frame_->payload_len_ == 127) {
-                    conn->step_ = wsRequest::step::TWO;
-                    conn->ntoread_ = 8;
-                    bufferevent_setwatermark(bev_, EV_READ, conn->ntoread_, conn->ntoread_);
-                }
-            }
-            if (!conn->frame_->isFrameValid()) {
-                FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME;
-                return;
-            }
-            break;
-        }
-    case wsRequest::step::TWO: {
-            std::unique_ptr<char> tmp(new char[conn->ntoread_]);
-            bufferevent_read(bev_, tmp.get(), conn->ntoread_);
-            if (conn->frame_->payload_len_ == 126) {
-                conn->frame_->payload_len_ = ntohs(*(uint16_t*)tmp.get());
-            } else if (conn->frame_->payload_len_ == 127) {
-                conn->frame_->payload_len_ = myntohll(*(uint64_t*)tmp.get());
-            }
-            conn->step_ = wsRequest::step::THREE;
-            conn->ntoread_ = 4;
-            bufferevent_setwatermark(bev_, EV_READ, conn->ntoread_, conn->ntoread_);
-            break;
-        }
-    case wsRequest::step::THREE: {
-            std::unique_ptr<char> tmp(new char[conn->ntoread_]);
-            bufferevent_read(bev_, tmp.get(), conn->ntoread_);
-            memcpy(conn->frame_->masking_key_, tmp.get(), conn->ntoread_);
-            if (conn->frame_->payload_len_ > 0) {
-                conn->step_ = wsRequest::step::FOUR;
-                conn->ntoread_ = conn->frame_->payload_len_;
+        std::unique_ptr<char> tmp(new char[conn->ntoread_]);
+        bufferevent_read(bev_, tmp.get(), conn->ntoread_);
+        if (conn->frame_->parseFrameHeader(tmp.get()) != 0) {
+            if (conn->frame_->payload_len_ <= 125) {
+                conn->step_ = wsRequest::step::THREE;
+                conn->ntoread_ = 4;
                 bufferevent_setwatermark(bev_, EV_READ, conn->ntoread_, conn->ntoread_);
-            } else if (conn->frame_->payload_len_ == 0) {
-                /*recv a whole frame*/
-                if (conn->frame_->mask_ == 0) {
-                    //recv an unmasked frame
-                }
-                if (conn->frame_->fin_ == 1 && conn->frame_->opcode_ == 0x8) {
-                    //0x8 denotes a connection close
-                    std::unique_ptr<wsFrameBuffer> fb(new wsFrameBuffer(1, 8, 0, nullptr));
-                    conn->writeFrameData(fb.get());
-                    break;
-                } else if (conn->frame_->fin_ == 1 && conn->frame_->opcode_ == 0x9) {
-                    //0x9 denotes a ping
-                    //TODO
-                    //make a pong
-                } else {
-                    //execute custom operation
-                    if (conn->wsFrameReceverHendlerFunction) {
-                        conn->wsFrameReceverHendlerFunction();
-                    }
-                }
-                conn->step_ = wsRequest::step::ONE;
+            }
+            else if (conn->frame_->payload_len_ == 126) {
+                conn->step_ = wsRequest::step::TWO;
                 conn->ntoread_ = 2;
                 bufferevent_setwatermark(bev_, EV_READ, conn->ntoread_, conn->ntoread_);
             }
-            break;
+            else if (conn->frame_->payload_len_ == 127) {
+                conn->step_ = wsRequest::step::TWO;
+                conn->ntoread_ = 8;
+                bufferevent_setwatermark(bev_, EV_READ, conn->ntoread_, conn->ntoread_);
+            }
         }
-    case wsRequest::step::FOUR:{
-            if (conn->frame_->payload_len_ > 0) {
-                if (conn->frame_->payload_data_) {
-                    delete[] conn->frame_->payload_data_;
-                    conn->frame_->payload_data_ = nullptr;
-                }
-                conn->frame_->payload_data_ = new char[conn->frame_->payload_len_];
-                bufferevent_read(bev_, conn->frame_->payload_data_, conn->frame_->payload_len_);
-                conn->frame_->unmaskPayloadData();
+        if (!conn->frame_->isFrameValid()) {
+            FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME;
+            return;
+        }
+        break;
+    }
+    case wsRequest::step::TWO: {
+        std::unique_ptr<char> tmp(new char[conn->ntoread_]);
+        bufferevent_read(bev_, tmp.get(), conn->ntoread_);
+        if (conn->frame_->payload_len_ == 126) {
+            conn->frame_->payload_len_ = ntohs(*(uint16_t*)tmp.get());
+        }
+        else if (conn->frame_->payload_len_ == 127) {
+            conn->frame_->payload_len_ = myntohll(*(uint64_t*)tmp.get());
+        }
+        conn->step_ = wsRequest::step::THREE;
+        conn->ntoread_ = 4;
+        bufferevent_setwatermark(bev_, EV_READ, conn->ntoread_, conn->ntoread_);
+        break;
+    }
+    case wsRequest::step::THREE: {
+        std::unique_ptr<char> tmp(new char[conn->ntoread_]);
+        bufferevent_read(bev_, tmp.get(), conn->ntoread_);
+        memcpy(conn->frame_->masking_key_, tmp.get(), conn->ntoread_);
+        if (conn->frame_->payload_len_ > 0) {
+            conn->step_ = wsRequest::step::FOUR;
+            conn->ntoread_ = conn->frame_->payload_len_;
+            bufferevent_setwatermark(bev_, EV_READ, conn->ntoread_, conn->ntoread_);
+        }
+        else if (conn->frame_->payload_len_ == 0) {
+            /*recv a whole frame*/
+            if (conn->frame_->mask_ == 0) {
+                //recv an unmasked frame
             }
             if (conn->frame_->fin_ == 1 && conn->frame_->opcode_ == 0x8) {
                 //0x8 denotes a connection close
                 std::unique_ptr<wsFrameBuffer> fb(new wsFrameBuffer(1, 8, 0, nullptr));
                 conn->writeFrameData(fb.get());
                 break;
-            } else if (conn->frame_->fin_ == 1 && conn->frame_->opcode_ == 0x9) {
-                //0x9 denotes a ping
-                //TODO
-                //make a pong
-            } else {
+            }
+            else if (conn->frame_->fin_ == 1 && conn->frame_->opcode_ == 0x9) {
+                if (conn->pingHendlerFunction) {
+                    conn->pingHendlerFunction();
+                    //0x9 denotes a ping
+                    //make a pong
+                }
+            }
+            else {
                 //execute custom operation
                 if (conn->wsFrameReceverHendlerFunction) {
                     conn->wsFrameReceverHendlerFunction();
                 }
             }
-            if (conn->frame_->opcode_ == 0x1) { //0x1 denotes a text frame
-            }
-            if (conn->frame_->opcode_ == 0x2) { //0x1 denotes a binary frame
-            }
             conn->step_ = wsRequest::step::ONE;
             conn->ntoread_ = 2;
             bufferevent_setwatermark(bev_, EV_READ, conn->ntoread_, conn->ntoread_);
+        }
+        break;
+    }
+    case wsRequest::step::FOUR:  {
+        if (conn->frame_->payload_len_ > 0) {
+            if (conn->frame_->payload_data_) {
+                delete[] conn->frame_->payload_data_;
+                conn->frame_->payload_data_ = nullptr;
+            }
+            conn->frame_->payload_data_ = new char[conn->frame_->payload_len_];
+            bufferevent_read(bev_, conn->frame_->payload_data_, conn->frame_->payload_len_);
+            conn->frame_->unmaskPayloadData();
+        }
+        if (conn->frame_->fin_ == 1 && conn->frame_->opcode_ == 0x8) {
+            //0x8 denotes a connection close
+            std::unique_ptr<wsFrameBuffer> fb(new wsFrameBuffer(1, 8, 0, nullptr));
+            conn->writeFrameData(fb.get());
             break;
         }
+        else if (conn->frame_->fin_ == 1 && conn->frame_->opcode_ == 0x9) {
+            if (conn->pingHendlerFunction) {
+                conn->pingHendlerFunction();
+                //0x9 denotes a ping
+                //make a pong
+            }
+        }
+        else {
+            //execute custom operation
+            if (conn->wsFrameReceverHendlerFunction) {
+                conn->wsFrameReceverHendlerFunction();
+            }
+        }
+        //if (conn->frame_->opcode_ == 0x1) { //0x1 denotes a text frame
+        //}
+        //if (conn->frame_->opcode_ == 0x2) { //0x1 denotes a binary frame
+        //}
+        conn->step_ = wsRequest::step::ONE;
+        conn->ntoread_ = 2;
+        bufferevent_setwatermark(bev_, EV_READ, conn->ntoread_, conn->ntoread_);
+        break;
+    }
     default:
         FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME;
         break;

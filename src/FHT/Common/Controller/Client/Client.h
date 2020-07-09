@@ -12,9 +12,7 @@
 #include <iostream>
 #include <event2/http.h>
 namespace FHT {
-    class Client {
-        const std::unique_ptr<event_base, decltype(&event_base_free)> base_;
-    public:
+    struct Client {
         static std::shared_ptr<Client> getClient();
 
         void fetch(iClient::httpClient&, std::function<void(iClient::httpClient::httpResponse)>);

@@ -21,6 +21,9 @@ wsUser::~wsUser(){
 }
 
 void wsUser::frameRead() {
+    if (!wsConn_) {
+        return;
+    }
     if (wsConn_->frame_->payload_len_ > 0) {
         msg_ += std::string(wsConn_->frame_->payload_data_, wsConn_->frame_->payload_len_);
     }

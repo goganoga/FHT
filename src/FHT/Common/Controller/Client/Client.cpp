@@ -9,26 +9,22 @@
 #include "LoggerStream.h"
 #include "WebClient.h"
 #include <future>
-namespace {
-	event_base* eventBaseNew() {
-#ifdef _WIN32
-		WORD wVersionRequested = MAKEWORD(2, 2);
-		WSADATA wsaData;
-		WSAStartup(wVersionRequested, &wsaData);
-        int err = WSAStartup(wVersionRequested, &wsaData);
-        if (err != 0) {
-            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "WSAStartup failed with error" << err;
-        }
-#endif
-		return event_base_new();
-	}
-}
+
 namespace FHT {
     std::shared_ptr<Client> Client::getClient() {
         auto static a = std::make_shared<Client>();
         return a;
     }
-    Client::Client():base_(eventBaseNew(), &event_base_free) {
+    Client::Client(){
+#ifdef _WIN32
+        WORD wVersionRequested = MAKEWORD(2, 2);
+        WSADATA wsaData;
+        WSAStartup(wVersionRequested, &wsaData);
+        int err = WSAStartup(wVersionRequested, &wsaData);
+        if (err != 0) {
+            FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << METHOD_NAME << "WSAStartup failed with error" << err;
+        }
+#endif
     }
     Client::~Client(){
 #ifdef _WIN32
@@ -50,7 +46,7 @@ namespace FHT {
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << "No correct url";
             throw "No correct url";
         }
-        webClient *a = new webClient(req, &callback, base_.get());
+        webClient *a = new webClient(req, &callback);
     }
 
     const iClient::httpClient::httpResponse Client::fetch(iClient::httpClient& req) {
@@ -66,7 +62,7 @@ namespace FHT {
             pr.set_value(a);
         });
 
-        webClient* a = new webClient(req, &func, base_.get());
+        webClient* a = new webClient(req, &func);
 
         barrier_future.wait();
         return barrier_future.get();
