@@ -40,13 +40,14 @@ namespace FHT {
         return Client::getClient()->fetch(*this);
     }
 
-    void Client::fetch(iClient::httpClient& req, std::function<void(iClient::httpClient::httpResponse)> callback) {
+    void Client::fetch(iClient::httpClient req, std::function<void(iClient::httpClient::httpResponse)> callback) {
         std::string &url = req.url;
         if (url.empty() || url.length() < 6 || (url.substr(0, 7) != "http://" && url.substr(0, 8) != "https://")) {
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << "No correct url";
-            throw "No correct url";
+            callback({ -1, "No correct url" });
+            return;
         }
-        webClient *a = new webClient(req, &callback);
+        auto a = std::make_unique<webClient>(req, &callback);
     }
 
     const iClient::httpClient::httpResponse Client::fetch(iClient::httpClient& req) {
@@ -55,16 +56,13 @@ namespace FHT {
             FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << "No correct url";
             return { -1, "No correct url" };
         }
-
-        std::promise<iClient::httpClient::httpResponse> pr;
-        std::future<iClient::httpClient::httpResponse> barrier_future = pr.get_future();
-        std::function<void(iClient::httpClient::httpResponse)> func([&pr](iClient::httpClient::httpResponse a) {
-            pr.set_value(a);
+        iClient::httpClient::httpResponse result;
+        std::function<void(iClient::httpClient::httpResponse)> func([&](iClient::httpClient::httpResponse a) {
+            result = a;
         });
 
-        webClient* a = new webClient(req, &func);
+        auto a = std::make_unique<webClient>(req, &func);
 
-        barrier_future.wait();
-        return barrier_future.get();
+        return result;
     }
 }

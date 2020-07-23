@@ -15,7 +15,7 @@ namespace FHT {
     struct Client {
         static std::shared_ptr<Client> getClient();
 
-        void fetch(iClient::httpClient&, std::function<void(iClient::httpClient::httpResponse)>);
+        void fetch(iClient::httpClient, std::function<void(iClient::httpClient::httpResponse)>);
         const iClient::httpClient::httpResponse fetch(iClient::httpClient&);
         Client();
         virtual ~Client();
