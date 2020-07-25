@@ -41,7 +41,7 @@ namespace FHT{
                 tqh_first = tqh_first->next.tqe_next;
             }
         }
-        std::map<int, std::function<void(iClient::httpClient::httpResponse)>> map_binder_done;
+        std::map<size_t, std::function<void(iClient::httpClient::httpResponse)>> map_binder_done;
     }
 
     void webClient::httpRequestDone(evhttp_request* req, void* ctx) {
@@ -70,7 +70,7 @@ namespace FHT{
             resp.status = evhttp_request_get_response_code(req);
             parceHttpRequestParam(req, resp.headers);
         }
-        auto func = map_binder_done[reinterpret_cast<int>(req)];
+        auto func = map_binder_done[reinterpret_cast<size_t>(req)];
         if (func) {
             func(resp);
         }
@@ -208,7 +208,7 @@ namespace FHT{
             (*func)(resp);
             return;
         }
-        int id = reinterpret_cast<int>(req);
+        size_t id = reinterpret_cast<size_t>(req);
         map_binder_done.emplace(id, [&](iClient::httpClient::httpResponse r) {
             m_callback(r);
             map_binder_done.erase(id);
