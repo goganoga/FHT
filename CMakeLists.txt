@@ -29,6 +29,9 @@ option(BLOCKING_IO_MODE "Build the blocking io socket" OFF)
 option(SAMPLE_BUILD "Build sample bin for testing functional" ON)
 set(DBCOMPILE "None" CACHE STRING "None | Postgresql")
 
+if(SAMPLE_BUILD)
+  set(DBCOMPILE "Postgresql")
+endif()
 if(BLOCKING_IO_MODE)
   message(STATUS "Build the blocking io socket")
   add_compile_definitions(BLOCKING_IO)
@@ -170,7 +173,7 @@ if(SAMPLE_BUILD)
                   ${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE_OUTPUT_PATH}/${BUILD_TYPE}/config.json)
 
   #TestPostgresConnect
-  add_executable(TestPostgresConnectFHT "src/Sample/TestPostgresConnect/TestPostgresConnect.cpp")
+  add_executable(TestPostgresConnectFHT "src/Sample/TestPostgresConnect/TestPostgresConnect.cpp" "src/Sample/TestPostgresConnect/Config/Config.cpp")
   target_link_directories(TestPostgresConnectFHT PRIVATE ${JSONCPP_LIBRARIES_DIR})
   target_include_directories(TestPostgresConnectFHT PRIVATE ${JSONCPP_INCLUDE_DIR})
   add_dependencies(TestPostgresConnectFHT ${FHT_LIBRARIES})
@@ -182,7 +185,7 @@ if(SAMPLE_BUILD)
   add_custom_command(
           TARGET TestPostgresConnectFHT POST_BUILD
           COMMAND ${CMAKE_COMMAND} -E copy
-                  ${CMAKE_CURRENT_SOURCE_DIR}/src/Sample/TestPostgresConnect/configSQL.json
+                  ${CMAKE_CURRENT_SOURCE_DIR}/src/Sample/TestPostgresConnect/Config/configSQL.json
                   ${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE_OUTPUT_PATH}/${BUILD_TYPE}/configSQL.json)
 
 endif()
