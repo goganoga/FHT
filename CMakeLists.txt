@@ -80,9 +80,7 @@ set(LibEvent_LIBRARIES
   event
   event_core
   event_extra
-  event_openssl
-  ${OPENSSL_LIBRARIES}
-  ${pthread})
+  event_openssl)
 
 #FHT
 set(BUILDER_LIB
@@ -124,18 +122,27 @@ add_dependencies(fht
 target_include_directories(fht PUBLIC ${HEADERS})
 target_include_directories(fht PRIVATE ${HEADER})
 target_link_directories(fht PUBLIC ${libevent_BINARY_DIR}/lib)
-target_link_libraries(fht
+set(FHT_LIBRARIES 
+  fht
   ${PostgreSQL_LIBRARIES}
   ${LIB_FOR_WIN}
   ${LibEvent_LIBRARIES}
-  ${OPENSSL_LIBRARIES}
+  ${OPENSSL_LIBRARIES})
+#target_link_libraries(fht ${FHT_LIBRARIES})
+
+set(LINKER
+  ${BINARY_DIR}/${BUILD_TYPE}
+  ${BINARY_DIR}/libevent/lib/${BUILD_TYPE}
   ${PostgreSQL_LIBRARY_DIRS})
-set(FHT_LIBRARIES fht)
-if(SAMPLE_BUILD)
+link_directories(${LINKER})
+if(SAMPLE_BUILD)#JSONcpp
   list(APPEND CMAKE_ARGS_JSON 
         -DJSONCPP_WITH_TESTS=OFF
         -DJSONCPP_WITH_POST_BUILD_UNITTEST=OFF
-        -j 24)
+        -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        --parallel 16
+       )
   ExternalProject_Add(
       Jsoncpp
       PREFIX jsoncpp
@@ -146,27 +153,34 @@ if(SAMPLE_BUILD)
       INSTALL_COMMAND ""
       LOG_DOWNLOAD ON
   )
+  
   ExternalProject_Get_property(Jsoncpp SOURCE_DIR BINARY_DIR)
   set(JSONCPP_INCLUDE_DIR ${SOURCE_DIR}/include)
   set(JSONCPP_LIBRARIES_DIR ${BINARY_DIR}/lib/${BUILD_TYPE})
-  set(JSONCPP_LIBRARIES jsoncpp)
+  set(JSONCPP_LIBRARIES jsoncpp_static)
+  link_directories(${JSONCPP_LIBRARIES_DIR})
+  include_directories(
+    ${JSONCPP_INCLUDE_DIR}
+  )
 
   #TestFHT
-  add_executable(TestFHT "src/Sample/TestTaskHendler/TestTaskHendler.cpp")
-  add_dependencies(TestFHT ${FHT_LIBRARIES})
+  add_executable(TestFHT 
+    "src/Sample/TestTaskHendler/TestTaskHendler.cpp")
+  add_dependencies(TestFHT fht)
   target_link_libraries(TestFHT 
-    ${LIB_FOR_WIN}
+    fht
     ${FHT_LIBRARIES})
 
   #TestServiceFHT
-  add_executable(TestServiceFHT "src/Sample/TestService/TestService.cpp" "src/Sample/TestService/Test/Test.cpp")
-  target_link_directories(TestServiceFHT PRIVATE ${JSONCPP_LIBRARIES_DIR})
-  target_include_directories(TestServiceFHT PRIVATE ${JSONCPP_INCLUDE_DIR})
-  add_dependencies(TestServiceFHT ${FHT_LIBRARIES})
+  add_executable(TestServiceFHT 
+    "src/Sample/TestService/TestService.cpp" 
+    "src/Sample/TestService/Test/Test.cpp")
+  add_dependencies(TestServiceFHT 
+    Jsoncpp
+    fht)
   target_link_libraries(TestServiceFHT 
-    ${LIB_FOR_WIN}
+    fht
     ${FHT_LIBRARIES}
-    ${OPENSSL_LIBRARIES}
     ${JSONCPP_LIBRARIES})
   add_custom_command(
           TARGET TestServiceFHT POST_BUILD
@@ -175,14 +189,15 @@ if(SAMPLE_BUILD)
                   ${CMAKE_CURRENT_BINARY_DIR}/${EXECUTABLE_OUTPUT_PATH}/${BUILD_TYPE}/config.json)
 
   #TestPostgresConnect
-  add_executable(TestPostgresConnectFHT "src/Sample/TestPostgresConnect/TestPostgresConnect.cpp" "src/Sample/TestPostgresConnect/Config/Config.cpp")
-  target_link_directories(TestPostgresConnectFHT PRIVATE ${JSONCPP_LIBRARIES_DIR})
-  target_include_directories(TestPostgresConnectFHT PRIVATE ${JSONCPP_INCLUDE_DIR})
-  add_dependencies(TestPostgresConnectFHT ${FHT_LIBRARIES})
+  add_executable(TestPostgresConnectFHT 
+    "src/Sample/TestPostgresConnect/TestPostgresConnect.cpp" 
+    "src/Sample/TestPostgresConnect/Config/Config.cpp")
+  add_dependencies(TestPostgresConnectFHT 
+    Jsoncpp
+    fht)
   target_link_libraries(TestPostgresConnectFHT 
-    ${LIB_FOR_WIN}
+    fht
     ${FHT_LIBRARIES}
-    ${OPENSSL_LIBRARIES}
     ${JSONCPP_LIBRARIES})
   add_custom_command(
           TARGET TestPostgresConnectFHT POST_BUILD
