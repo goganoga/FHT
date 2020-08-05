@@ -26,7 +26,7 @@ class Builder:
         if ('MANJARO' or 'ARCH') in Builder.release:
             print(Builder.info, 'Install Dependent Libraries', Builder.reset)
             os.system('pacman -S --needed cmake gcc ninja openssl')
-        elif 'Ubuntu' in Builder.release:
+        elif 'Linux' in Builder.system:
             print(Builder.info, 'Install Dependent Libraries', Builder.reset)
             os.system('apt-get install build-essential autoconf libtool pkg-config libgflags-dev\
             libgtest-dev clang libc++-dev libpq-dev postgresql-server-dev-all -y')
