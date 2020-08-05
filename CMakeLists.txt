@@ -80,7 +80,8 @@ set(LibEvent_LIBRARIES
   event
   event_core
   event_extra
-  event_openssl)
+  event_openssl
+  ${pthread})
 
 #FHT
 set(BUILDER_LIB
