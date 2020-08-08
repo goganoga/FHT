@@ -12,14 +12,18 @@
 #include "Postgresql/Postgresql.h"
 #include "DBFacade/postgresConfiguration.h"
 #elif DBNONE
-    struct Configuration {
-    };
-    struct DataBase {
-        template<typename...>
-        bool run(...) { return false; };
-        template<typename...>
-        void queryPrivate(...) {};
-    };
+namespace FHT {
+    namespace iDBFacade {
+        struct Configuration {
+        };
+        struct DataBase {
+            template<typename...>
+            bool run(...) { return false; };
+            template<typename...>
+            void queryPrivate(...) {};
+        };
+    }
+}
 #endif
 
 #include <memory>
