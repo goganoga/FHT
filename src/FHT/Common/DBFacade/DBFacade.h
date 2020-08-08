@@ -13,7 +13,7 @@
 #include "DBFacade/postgresConfiguration.h"
 #elif DBNONE
     struct Configuration {
-    }
+    };
     struct DataBase {
         template<typename...>
         bool run(...) { return false; };
