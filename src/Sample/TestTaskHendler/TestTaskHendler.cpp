@@ -11,8 +11,7 @@
 #include <functional>
 std::string testHttp() {
     FHT::iClient::httpClient dd;
-    //dd.url = "https://yandex.ru/suggest/suggest-ya.cgi?srv=morda_ru_desktop&wiz=TrWth&uil=ru&sn=5&svg=1&part=fg&pos=2";
-    dd.url = "https://dr3am-c0m1rad3n.ru/login";
+    dd.url = "https://yandex.ru/suggest/suggest-ya.cgi?srv=morda_ru_desktop&wiz=TrWth&uil=ru&sn=5&svg=1&part=fg&pos=2";
     auto a = dd.fetch();
     return a.body;
 }
