@@ -181,7 +181,7 @@ namespace FHT{
         if (strcasecmp(scheme, "http") == 0)
             bev = bufferevent_socket_new(base.get(), -1, BEV_OPT_CLOSE_ON_FREE);
         else {
-            bev = bufferevent_openssl_socket_new(base.get(), -1, ssl.get(), BUFFEREVENT_SSL_CONNECTING, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS);
+            bev = bufferevent_openssl_socket_new(base.get(), -1, ssl.release(), BUFFEREVENT_SSL_CONNECTING, BEV_OPT_CLOSE_ON_FREE | BEV_OPT_DEFER_CALLBACKS);
         }
         if (bev == nullptr) {
             resp.body = "Error: Can't read buffer with openssl";

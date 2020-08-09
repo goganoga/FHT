@@ -9,6 +9,13 @@
 #include <iostream>
 #include <utility>
 #include <functional>
+std::string testHttp() {
+    FHT::iClient::httpClient dd;
+    //dd.url = "https://yandex.ru/suggest/suggest-ya.cgi?srv=morda_ru_desktop&wiz=TrWth&uil=ru&sn=5&svg=1&part=fg&pos=2";
+    dd.url = "https://dr3am-c0m1rad3n.ru/login";
+    auto a = dd.fetch();
+    return a.body;
+}
 
 int main(void)
 {
@@ -16,6 +23,10 @@ int main(void)
     auto T = FHT::iConrtoller::taskManager;
     auto L = FHT::iConrtoller::logger;
     L->setLevelVerboseLogging(FHT::iLogger::Verbose::INFO);
+
+    if (!testHttp().empty()) {
+        FHT::LoggerStream::Log(FHT::LoggerStream::FATAL) << "testHttp";
+    }
 
     std::function<void(int)> a([](int a) {FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << a; });
     a(1);
@@ -51,7 +62,7 @@ int main(void)
     T->addTaskOneRun(FHT::iTask::IO, []() {FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test io loop 7s is one"; }, 7000);
 
     T->addTask(FHT::iTask::UI, []() {
-        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test main loop"; 
+        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test main loop";
         return FHT::iTask::state::CONTINUE;
     });
     T->addTask(FHT::iTask::MAIN, []() {
@@ -59,7 +70,7 @@ int main(void)
         return FHT::iTask::state::CONTINUE;
     }, 5000);
     T->addTask(FHT::iTask::MAIN, []() {
-        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test main loop 0.5s"; 
+        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test main loop 0.5s";
         return FHT::iTask::state::CONTINUE;
     }, 500);
     T->addTask(FHT::iTask::IO, []() {
