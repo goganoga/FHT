@@ -14,7 +14,6 @@ namespace FHT{
         enum listTask {
             FHT_MAIN,
             MAIN,
-            MATH,
             IO,
             UI,
             size
@@ -23,11 +22,9 @@ namespace FHT{
             FINISH,
             CONTINUE
         };
-        virtual void addTask(iTask::listTask thread, std::function<state(void)> func) = 0;
-        virtual void addTask(iTask::listTask thread, std::function<state(void)> func, int ms) = 0;
-        virtual void addTaskOneRun(iTask::listTask thread, std::function<void(void)> func) = 0;
-        virtual void addTaskOneRun(iTask::listTask thread, std::function<void(void)> func, int ms) = 0;
-        virtual void setDeltaTime(std::chrono::microseconds delta_time) = 0;
+
+        virtual void postLoopTask(iTask::listTask thread, std::function<state(void)> func, int ms = 0) = 0;
+        virtual void postTask(iTask::listTask thread, std::function<void(void)> func, int ms = 0) = 0;
     };
 }
 #endif //FHTITASK_H

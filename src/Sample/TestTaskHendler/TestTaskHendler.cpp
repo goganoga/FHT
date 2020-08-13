@@ -55,24 +55,24 @@ int main(void)
         (*i)(c);
     }
 
-    T->addTaskOneRun(FHT::iTask::MAIN, []() {FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test main loop 1s is one"; }, 1000);
-    T->addTaskOneRun(FHT::iTask::MAIN, b, 1);
-    T->addTaskOneRun(FHT::iTask::UI, []() {FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test loop loop 10s is one"; }, 10000);
-    T->addTaskOneRun(FHT::iTask::IO, []() {FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test io loop 7s is one"; }, 7000);
+    T->postTask(FHT::iTask::MAIN, []() {FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test main loop 1s is one"; }, 1000);
+    T->postTask(FHT::iTask::MAIN, b, 1);
+    T->postTask(FHT::iTask::UI, []() {FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test loop loop 10s is one"; }, 10000);
+    T->postTask(FHT::iTask::IO, []() {FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test io loop 7s is one"; }, 7000);
 
-    T->addTask(FHT::iTask::UI, []() {
+    T->postLoopTask(FHT::iTask::UI, []() {
         FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test main loop";
         return FHT::iTask::state::CONTINUE;
     });
-    T->addTask(FHT::iTask::MAIN, []() {
+    T->postLoopTask(FHT::iTask::MAIN, []() {
         FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test main loop 5s"; 
         return FHT::iTask::state::CONTINUE;
     }, 5000);
-    T->addTask(FHT::iTask::MAIN, []() {
+    T->postLoopTask(FHT::iTask::MAIN, []() {
         FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test main loop 0.5s";
         return FHT::iTask::state::CONTINUE;
     }, 500);
-    T->addTask(FHT::iTask::IO, []() {
+    T->postLoopTask(FHT::iTask::IO, []() {
         FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test io loop 0.7s"; 
         return FHT::iTask::state::CONTINUE;
     }, 700);

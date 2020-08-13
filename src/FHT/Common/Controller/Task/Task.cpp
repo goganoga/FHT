@@ -20,7 +20,7 @@
 #include <memory>
 
 namespace FHT{
-    Task::Task(): delta_time_(std::chrono::microseconds(100)) {
+    Task::Task() {
         isRun = startManager();
     }
 
@@ -28,19 +28,11 @@ namespace FHT{
         stopManager();
     }
 
-    void Task::addTaskOneRun(iTask::listTask thread, std::function<void(void)> func) {
-        addTask(thread, std::move([func = std::move(func)]() {func(); return FHT::iTask::state::FINISH; }));
+    void Task::postTask(iTask::listTask thread, std::function<void(void)> func, int ms) {
+        postLoopTask(thread, std::move([func = std::move(func)]() {func(); return FHT::iTask::state::FINISH; }), ms);
     }
 
-    void Task::addTask(iTask::listTask thread, std::function<state(void)> func) {
-        addTask(thread, func, 0);
-    }
-
-    void Task::addTaskOneRun(iTask::listTask thread, std::function<void(void)> func, int ms) {
-        addTask(thread, std::move([func = std::move(func)]() {func(); return FHT::iTask::state::FINISH; }), ms);
-    }
-
-    void Task::addTask(iTask::listTask thread, std::function<state(void)> func, int ms) {
+    void Task::postLoopTask(iTask::listTask thread, std::function<state(void)> func, int ms) {
         if (isRun) {
             getTaskThread(thread)->push(std::move(func), ms);
         }
@@ -53,7 +45,7 @@ namespace FHT{
     }
 
     bool Task::startManager() {
-        factory_ = Task::make_factory(delta_time_, std::make_index_sequence<iTask::listTask::size>{});
+        factory_ = Task::make_factory(std::make_index_sequence<iTask::listTask::size>{});
         if(!factory_.empty())
             return true;
         return false;
@@ -87,24 +79,42 @@ class Thread : public iThread {
     bool volatile isRun_ = true;
     using tuple_ = std::shared_ptr<Tuple>;
     std::queue<tuple_> queue_;
-    std::atomic<std::chrono::microseconds> &sleep_;
+    std::chrono::milliseconds m_sleep;
+    Threader m_internalTask;
 public:
     virtual ~Thread() {
         isRun_ = false;
         thread_.reset();
     }
-    Thread(std::atomic<std::chrono::microseconds> &sleep) : sleep_(sleep) {
+    Thread(): m_sleep(0) {
         thread_.reset(new std::thread{ &Thread::loop, this });
     }
+    void newInternalTask(){
+        auto tr = [&] {
+            auto sleep = m_sleep;
+            m_sleep = std::chrono::milliseconds(0);
+            std::this_thread::sleep_for(sleep);
+            condition_.notify_one();
+        };
+        Threader thread{ new std::thread(tr), [](std::thread* t) { t->join(); delete t; } };
+        m_internalTask.swap(thread);
+    }
+    bool wait() {
+        bool sleep = m_sleep.count() > 0;
+        if (sleep) {
+            newInternalTask();
+        }
+        return sleep;
+    }
     size_t sizeTask() {
-        std::lock_guard<std::mutex> lock_(mutex);
+        std::unique_lock<std::mutex> lock_(mutex);
+        for (; queue_.empty() || wait();) {
+            condition_.wait(lock_);
+        }
         return queue_.size();
     };
     tuple_ getTask() {
-        std::unique_lock<std::mutex> lock_(mutex);
-        for (; queue_.empty();) {
-            condition_.wait(lock_);
-        }
+        std::lock_guard<std::mutex> lock_(mutex);
         auto task = queue_.front();
         queue_.pop();
         return task;
@@ -124,8 +134,11 @@ public:
                         auto realtime = std::chrono::high_resolution_clock::now();
                         auto& timestamp = task->ts;
                         auto& timerun = task->ms;
-                        auto difftime(std::chrono::duration_cast<std::chrono::milliseconds>(realtime - timestamp));
-                        if (difftime.count() < timerun) {
+                        if (m_sleep.count() == 0 || m_sleep.count() > timerun) {
+                            m_sleep = std::chrono::milliseconds(timerun);
+                        }
+                        auto difftime(std::chrono::duration_cast<std::chrono::milliseconds>(realtime - timestamp).count());
+                        if (difftime < timerun) {
                             putTask(task);
                         }
                         else {
@@ -143,7 +156,6 @@ public:
             } catch (std::exception const& e) {
                 FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << e.what();
             }
-            std::this_thread::sleep_for(sleep_.load());
         }
     }
     void push(std::function<FHT::iTask::state(void)> func, int ms) {
@@ -153,20 +165,14 @@ public:
 };
 
 namespace FHT {
-    std::shared_ptr<iThread> Task::makeThread(std::atomic<std::chrono::microseconds> &delta_time) {
-        return std::make_shared<Thread>(delta_time);
-    }
-
-    void Task::setDeltaTime(std::chrono::microseconds delta_time) {
-        if (std::chrono::microseconds(1).count() < delta_time.count()) {
-            delta_time_.store(delta_time);
-        }
+    std::shared_ptr<iThread> Task::makeThread() {
+        return std::make_shared<Thread>();
     }
 
     template <std::size_t ... I>
-    std::map<std::size_t, std::shared_ptr<iThread>> Task::make_factory(std::atomic<std::chrono::microseconds> &delta_time, std::index_sequence<I ... > const&) {
+    std::map<std::size_t, std::shared_ptr<iThread>> Task::make_factory(std::index_sequence<I ... > const&) {
         return {
-            std::pair<std::size_t, std::shared_ptr<iThread>>{ I, makeThread(delta_time) } ...
+            std::pair<std::size_t, std::shared_ptr<iThread>>{ I, makeThread() } ...
         };
     }
 

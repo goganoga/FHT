@@ -32,7 +32,6 @@ int main(int argc, char* argv[])
         }
     }
     try {
-        FHT::iConrtoller::taskManager->setDeltaTime(std::chrono::microseconds(10));
         auto config = Config::FTHConfig::get_config(conf_path);
         if (config.daemon_mode) {
             Config::skeleton_daemon();

@@ -14,7 +14,7 @@ namespace FHT{
         mapHendler_ptr(std::make_shared<decltype(mapHendler_)>(mapHendler_)),
         mapList_ptr(std::make_shared<decltype(mapList_)>(mapList_)),
         state_task_(iTask::state::CONTINUE){
-        T->addTask(iTask::FHT_MAIN, [&]() mutable {
+        T->postLoopTask(iTask::FHT_MAIN, [&]() mutable {
             decltype(mapHendler_ptr) new_mapHendler_ptr;
             decltype(mapList_ptr) new_mapList_ptr;
             if (*mapHendler_ptr != mapHendler_) {
@@ -42,7 +42,7 @@ namespace FHT{
             return;
         }
         auto prt = std::make_shared<decltype(func)>(std::move(func));
-        T->addTaskOneRun(iTask::FHT_MAIN, [&, id, prt]() {
+        T->postTask(iTask::FHT_MAIN, [&, id, prt]() {
             mapHendler_.emplace(id, prt);
         });
     };
@@ -50,7 +50,7 @@ namespace FHT{
         auto mapHendler = mapHendler_ptr;
         FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Found" << id;
         if (auto a = mapHendler->find(id); a != end(*mapHendler)) {
-            T->addTaskOneRun(iTask::FHT_MAIN, [&, id]() {
+            T->postTask(iTask::FHT_MAIN, [&, id]() {
                 mapHendler_.erase(id);
             });
             return true;
@@ -74,7 +74,7 @@ namespace FHT{
             return;
         }
         auto prt = std::make_shared<decltype(func)>(std::move(func));
-        T->addTaskOneRun(iTask::FHT_MAIN, [&, id, prt]() {
+        T->postTask(iTask::FHT_MAIN, [&, id, prt]() {
             mapList_.emplace(id, prt);
         });
     };
@@ -82,7 +82,7 @@ namespace FHT{
         auto mapList = mapList_ptr;
         FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "Found" << id;
         if (auto a = mapList->find(id); a != end(*mapList)) {
-            T->addTaskOneRun(iTask::FHT_MAIN, [&, id]() {
+            T->postTask(iTask::FHT_MAIN, [&, id]() {
                 mapList_.erase(id);
             });
             return true;

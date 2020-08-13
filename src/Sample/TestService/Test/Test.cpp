@@ -103,7 +103,7 @@ namespace FHT {
         std::weak_ptr<FHT::wsSubscriber> func = std::any_cast<std::weak_ptr<FHT::wsSubscriber>>(resp.WSInstanse);
         std::map<std::string, std::string> resp_map;
         try {
-            FHT::iConrtoller::taskManager->addTask(FHT::iTask::MAIN, [func]() mutable {
+            FHT::iConrtoller::taskManager->postLoopTask(FHT::iTask::MAIN, [func]() mutable {
                 std::string str("WebSocket Test!!!");
                 auto func_ptr = func.lock();
                 if (func_ptr && func_ptr->getPublisher(str)) {

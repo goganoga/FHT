@@ -27,18 +27,14 @@ namespace FHT{
     public:
         Task();
         virtual ~Task() override;
-        void addTask(iTask::listTask thread, std::function<state(void)> func) override final;
-        void addTask(iTask::listTask thread, std::function<state(void)> func, int ms) override final;
-        void addTaskOneRun(iTask::listTask thread, std::function<void(void)> func) override final;
-        void addTaskOneRun(iTask::listTask thread, std::function<void(void)> func, int ms) override final;
-        void setDeltaTime(std::chrono::microseconds delta_time) override final;
+        void postLoopTask(iTask::listTask thread, std::function<state(void)> func, int ms = 0) override final;
+        void postTask(iTask::listTask thread, std::function<void(void)> func, int ms = 0) override final;
     private:
         template <std::size_t ... I>
-        static std::map<std::size_t, std::shared_ptr<iThread>> make_factory(std::atomic<std::chrono::microseconds> &delta_time, std::index_sequence<I ... > const &);
-        static std::shared_ptr<iThread> makeThread(std::atomic<std::chrono::microseconds> &delta_time);
+        static std::map<std::size_t, std::shared_ptr<iThread>> make_factory(std::index_sequence<I ... > const &);
+        static std::shared_ptr<iThread> makeThread();
 
         bool volatile isRun = false;
-        std::atomic<std::chrono::microseconds> delta_time_;
         std::map<std::size_t, std::shared_ptr<iThread>> factory_;
     };
 }

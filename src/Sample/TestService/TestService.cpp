@@ -60,9 +60,7 @@ int main(int argc, char* argv[])
         auto time = log.empty() ? decltype(log)() : log["time"];
         auto fileName = log.empty() ? decltype(log)() : log["name"];
         auto level = log.empty() ? decltype(log)() : log["level"];
-        
-        FHT::iConrtoller::taskManager->setDeltaTime(std::chrono::microseconds(10));
-        
+                
         inizialaizer inizialaizerServer;
         
         

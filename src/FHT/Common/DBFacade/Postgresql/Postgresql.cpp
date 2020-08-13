@@ -138,7 +138,7 @@ namespace FHT {
             for (int i = 0; i < config->m_worker; i++) {
                 m_pool_conn.emplace(std::make_shared<PostgresConnection>(config->m_port, config->m_host, config->m_name, config->m_user, config->m_pass));
             }
-            Conrtoller::getTask()->addTask(FHT::iTask::MAIN, [&]() {
+            Conrtoller::getTask()->postLoopTask(FHT::iTask::MAIN, [&]() {
                 std::string query = "DELETE FROM notifications.notification WHERE status = 'true';";
                 auto a = query_private(query, 0, nullptr);
                 FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "DELETE FROM notifications";
