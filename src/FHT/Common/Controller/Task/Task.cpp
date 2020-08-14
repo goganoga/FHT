@@ -71,6 +71,58 @@ struct Tuple {
     bool isLoop;
     decltype(std::chrono::high_resolution_clock::now()) ts;
 };
+struct size {
+    size(std::function<size_t(void)> con, std::function<void(void)> dis) : m_dis(dis) {
+        m_size = con();
+    }
+    size_t getSize() {
+        return m_size;
+    }
+    ~size() {
+        if (m_size > 0) {
+            m_dis();
+        }
+    }
+private:
+    std::function<void(void)> m_dis;
+    size_t m_size;
+};
+class internalThread {
+    std::atomic<std::chrono::milliseconds> m_sleep = std::chrono::milliseconds(-1);
+    bool m_wait = false;
+    std::function<void(void)> m_ready;
+    bool volatile isRun_ = true;
+    std::mutex m_mx;
+public:
+    internalThread(std::function<void(void)> ready) :m_ready(ready) {}
+    virtual ~internalThread() {
+        isRun_ = false;
+    }
+    std::chrono::milliseconds getSleep() {
+        return m_sleep.load();
+    }
+    void setSleep(std::chrono::milliseconds sleep) {
+        m_sleep.store(sleep);
+    }
+    bool isWait() {
+        std::lock_guard<std::mutex> lock_(m_mx);
+        m_wait = getSleep().count() > 0;
+        return m_wait;
+    }
+    void loop() {
+        while (isRun_) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            std::unique_lock<std::mutex> lock_(m_mx);
+            if (m_wait) {
+                lock_.unlock();
+                m_wait = !m_wait;
+                std::this_thread::sleep_for(getSleep());
+                m_ready();
+                setSleep(std::chrono::milliseconds(-1));
+            }
+        }
+    }
+};
 class Thread : public iThread {
     std::mutex mutex;
     std::condition_variable condition_;
@@ -79,63 +131,66 @@ class Thread : public iThread {
     bool volatile isRun_ = true;
     using tuple_ = std::shared_ptr<Tuple>;
     std::queue<tuple_> queue_;
-    std::chrono::milliseconds m_sleep;
-    Threader m_internalTask;
+    internalThread m_internalThread;
+    Threader m_internalTask{ nullptr, [](std::thread* a) { if (a) a->join(); delete a; } };
 public:
     virtual ~Thread() {
         isRun_ = false;
         thread_.reset();
+        m_internalTask.reset();
     }
-    Thread(): m_sleep(0) {
+    Thread() :m_internalThread([this] { putTask({}); }) {
         thread_.reset(new std::thread{ &Thread::loop, this });
-    }
-    void newInternalTask(){
-        auto tr = [&] {
-            auto sleep = m_sleep;
-            m_sleep = std::chrono::milliseconds(0);
-            std::this_thread::sleep_for(sleep);
-            condition_.notify_one();
-        };
-        Threader thread{ new std::thread(tr), [](std::thread* t) { t->join(); delete t; } };
-        m_internalTask.swap(thread);
+        m_internalTask.reset(new std::thread{ &internalThread::loop, &m_internalThread });
     }
     bool wait() {
-        bool sleep = m_sleep.count() > 0;
-        if (sleep) {
-            newInternalTask();
-        }
-        return sleep;
+        return m_internalThread.isWait();
     }
-    size_t sizeTask() {
-        std::unique_lock<std::mutex> lock_(mutex);
-        for (; queue_.empty() || wait();) {
-            condition_.wait(lock_);
-        }
-        return queue_.size();
+    size sizeTask() {
+        return { 
+            [&] {
+                std::unique_lock<std::mutex> lock_(mutex);
+                for (; queue_.empty() ;) {
+                    condition_.wait(lock_);
+                }
+                return queue_.size();
+            }, 
+            [&] {
+                std::unique_lock<std::mutex> lock_(mutex);
+                for (; wait();) {
+                    condition_.wait(lock_);
+                }
+            } 
+        };
     };
     tuple_ getTask() {
-        std::lock_guard<std::mutex> lock_(mutex);
+        std::unique_lock<std::mutex> lock_(mutex);
         auto task = queue_.front();
         queue_.pop();
+        lock_.unlock();
         return task;
     };
     void putTask(tuple_ task) {
         std::unique_lock<std::mutex> lock_(mutex);
-        queue_.push(task);
+        if (task) {
+            queue_.push(task);
+        }
         lock_.unlock();
         condition_.notify_one();
     };
     void loop() {
         while (isRun_) {
             try {
-                for (size_t size = sizeTask(); size > 0; --size) {
+                long long sleep = 0;
+                auto realtime = std::chrono::high_resolution_clock::now();
+                auto size_task = sizeTask();
+                for (size_t size = size_task.getSize(); size > 0; --size) {
                     tuple_ task = getTask();
                     if (task) {
-                        auto realtime = std::chrono::high_resolution_clock::now();
                         auto& timestamp = task->ts;
                         auto& timerun = task->ms;
-                        if (m_sleep.count() == 0 || m_sleep.count() > timerun) {
-                            m_sleep = std::chrono::milliseconds(timerun);
+                        if (sleep > timerun) {
+                            sleep = timerun;
                         }
                         auto difftime(std::chrono::duration_cast<std::chrono::milliseconds>(realtime - timestamp).count());
                         if (difftime < timerun) {
@@ -153,12 +208,17 @@ public:
                         FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME;
                     }
                 }
+                if (sleep == 0) {
+                    sleep = 1;
+                }
+                m_internalThread.setSleep(std::chrono::milliseconds(sleep));
             } catch (std::exception const& e) {
                 FHT::LoggerStream::Log(FHT::LoggerStream::ERR) << METHOD_NAME << e.what();
             }
         }
     }
     void push(std::function<FHT::iTask::state(void)> func, int ms) {
+        m_internalThread.setSleep(std::chrono::milliseconds(-1));
         putTask(std::make_shared<Tuple>(std::move(func), ms, true, std::chrono::high_resolution_clock::now()));
     }
     bool isRun() { return isRun_; }

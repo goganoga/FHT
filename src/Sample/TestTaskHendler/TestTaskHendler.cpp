@@ -9,6 +9,8 @@
 #include <iostream>
 #include <utility>
 #include <functional>
+#include <thread> 
+#include <chrono> 
 std::string testHttp() {
     FHT::iClient::httpClient dd;
     dd.url = "https://yandex.ru/suggest/suggest-ya.cgi?srv=morda_ru_desktop&wiz=TrWth&uil=ru&sn=5&svg=1&part=fg&pos=2";
@@ -57,11 +59,11 @@ int main(void)
 
     T->postTask(FHT::iTask::MAIN, []() {FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test main loop 1s is one"; }, 1000);
     T->postTask(FHT::iTask::MAIN, b, 1);
-    T->postTask(FHT::iTask::UI, []() {FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test loop loop 10s is one"; }, 10000);
+    T->postTask(FHT::iTask::UI, []() {FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test ui loop 10s is one"; }, 10000);
     T->postTask(FHT::iTask::IO, []() {FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test io loop 7s is one"; }, 7000);
 
     T->postLoopTask(FHT::iTask::UI, []() {
-        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test main loop";
+        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test ui loop";
         return FHT::iTask::state::CONTINUE;
     });
     T->postLoopTask(FHT::iTask::MAIN, []() {
@@ -76,7 +78,6 @@ int main(void)
         FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test io loop 0.7s"; 
         return FHT::iTask::state::CONTINUE;
     }, 700);
-
     std::getchar();
     return 0;
 
