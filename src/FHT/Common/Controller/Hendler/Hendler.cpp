@@ -29,7 +29,7 @@ namespace FHT{
                 if (new_mapList_ptr) mapList_ptr.swap(new_mapList_ptr);
             }
             return state_task_;
-        }, 10);
+        });
     }
     Hendler::~Hendler(){
         state_task_ = iTask::state::FINISH;

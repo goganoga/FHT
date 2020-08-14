@@ -34,28 +34,36 @@ int main(void)
     auto b = std::bind(a, 200000);
     b();
 
-    H->addHendler("a", []() {FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "a"; });
-    if (auto i = H->getHendler("a"); i) {
-        (*i)();
-    }
+    T->postTask(FHT::iTask::FHT_MAIN, [=]() {
+        H->addHendler("a", []() {FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "a"; });
+        T->postTask(FHT::iTask::FHT_MAIN, [=]() {
+            if (auto i = H->getHendler("a"); i) {
+                (*i)();
+            }
+        },10);
+    });
 
-    auto f([](FHT::iHendler::dataRequest& data) {
-        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "b";
-        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << data.portClient;
-        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << data.uri;
-        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << data.nextLocation;
-        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << data.ipClient;
-        return FHT::iHendler::dataResponse{}; });
-
-    H->addUniqueHendler("b", f);
-    FHT::iHendler::dataRequest c;
-    c.portClient = 12;
-    c.uri = "dasds";
-    c.nextLocation = "dasdasds";
-    c.ipClient = "dsdasds";
-    if (auto i = H->getUniqueHendler("b"); i) {
-        (*i)(c);
-    }
+    T->postTask(FHT::iTask::FHT_MAIN, [=]() {
+        auto f([](FHT::iHendler::dataRequest& data) {
+            FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "b";
+            FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << data.portClient;
+            FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << data.uri;
+            FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << data.nextLocation;
+            FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << data.ipClient;
+            return FHT::iHendler::dataResponse{};
+            });
+        H->addUniqueHendler("b", f);
+        T->postTask(FHT::iTask::FHT_MAIN, [=]() {
+            if (auto i = H->getUniqueHendler("b"); i) {
+                FHT::iHendler::dataRequest c;
+                c.portClient = 12;
+                c.uri = "dasds";
+                c.nextLocation = "dasdasds";
+                c.ipClient = "dsdasds";
+                (*i)(c);
+            }
+        },10);
+    });
 
     T->postTask(FHT::iTask::MAIN, []() {FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << "test main loop 1s is one"; }, 1000);
     T->postTask(FHT::iTask::MAIN, b, 1);
