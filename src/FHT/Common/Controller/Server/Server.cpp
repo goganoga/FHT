@@ -57,7 +57,7 @@ namespace FHT {
                 std::string http_request_param_str = parceHttpRequestParam(req, http_request_param);
                 if (!location) goto err;
 
-                char* client_ip;
+                const char* client_ip;
                 unsigned short client_port;
                 evhttp_connection_get_peer(evhttp_request_get_connection(req), &client_ip, &client_port);
 
