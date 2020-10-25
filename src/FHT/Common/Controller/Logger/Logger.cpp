@@ -14,16 +14,17 @@
 
 namespace {
     logWriter::logWriter(const std::string file_name):
-        m_out(file_name, std::ios::app){};
+        file_name_(file_name){};
 
     logWriter::~logWriter(){
-        m_out.close();
     };
 
     void logWriter::writeFromList(const std::vector<std::string>& list){
+        std::ofstream m_out(file_name_, std::ios::app);
         if (m_out.is_open()) {
             for(auto &a: list)
             m_out << a << std::endl;
+            m_out.close();
         }
     };
 }
@@ -59,7 +60,7 @@ namespace FHT {
                 m_write.reset(new logWriter(m_fileLoggingName));
 
                 if(m_intervalSec){ 
-                    Conrtoller::getTask()->postLoopTask(FHT::iTask::IO,
+                    Conrtoller::getTask()->postLoopTask(FHT::iTask::FHT_MAIN,
                         [&, f_write = std::weak_ptr<logWriter>(m_write)] () mutable {
                         try {
                             if (auto func = f_write.lock(); func) {

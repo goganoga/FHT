@@ -18,7 +18,7 @@ namespace {
         ~logWriter();
         void writeFromList(const std::vector<std::string>& list);
     private:
-        std::ofstream m_out;
+        const std::string file_name_;
     };
 }
 namespace FHT {
