@@ -27,7 +27,7 @@ find_package(OpenSSL REQUIRED)
 
 option(BLOCKING_IO_MODE "Build the blocking io socket" OFF)
 option(SAMPLE_BUILD "Build sample bin for testing functional" ON)
-set(DBCOMPILE "None" CACHE STRING "None | Postgresql")
+set(DBCOMPILE "None" CACHE STRING "None | Postgresql | sqlite")
 
 if(SAMPLE_BUILD)
   set(DBCOMPILE "Postgresql")
@@ -48,6 +48,14 @@ if(${DBCOMPILE} STREQUAL "Postgresql")
   set(DBCPP 
     src/FHT/Common/DBFacade/Postgresql/Postgresql.cpp
     src/FHT/Common/DBFacade/Postgresql/PostgresConnection.cpp
+  )
+endif()
+if(${DBCOMPILE} STREQUAL "sqlite")
+#  find_package(PostgreSQL REQUIRED)
+  add_compile_definitions(DBSQLITE)
+  set(DBCPP 
+    src/FHT/Common/DBFacade/SQLite/SQLite.cpp
+    src/FHT/Common/DBFacade/Postgresql/sqliteConnection.cpp
   )
 endif()
 if(${DBCOMPILE} STREQUAL "None")

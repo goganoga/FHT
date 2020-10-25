@@ -11,6 +11,9 @@
 #ifdef DBPOSTGRESQL
 #include "Postgresql/Postgresql.h"
 #include "DBFacade/postgresConfiguration.h"
+#elif DBSQLITE
+#include "SQLite/SQLite.h"
+#include "DBFacade/sqliteConfiguration.h"
 #elif DBNONE
 namespace FHT {
     namespace iDBFacade {
