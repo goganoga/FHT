@@ -26,6 +26,7 @@ InitSer::InitSer(void(*onRequestHandler_)(evhttp_request *, void *), std::string
     //signal(SIGPIPE, SIG_IGN);
     evthread_use_pthreads();
 #endif
+    //event_config_set_num_cpus_hint(cfg.get(), srvWorker);
     for (int i = 0; i < srvWorker; ++i) {
         threadPtr thread(new std::thread(&InitSer::Start, this), [&](std::thread *t) { IsRun = false; t->join(); delete t; });
         threads.push_back(std::move(thread));
@@ -66,7 +67,7 @@ void InitSer::Start() {
             if (event_base_loop(EventBase.get(), EVLOOP_NONBLOCK) == -1) {
                 //event_base_update_cache_time(EventBase.get()); //overhead
             }
-            std::this_thread::sleep_for(std::chrono::microseconds(50));
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
 #endif// BLOCKING_IO
         }
     }
