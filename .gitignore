@@ -5,3 +5,5 @@ FHT/x64
 .build/*
 build*/*
 .idea
+.vscode
+.venv
