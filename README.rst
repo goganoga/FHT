@@ -35,7 +35,7 @@ Include to the project:
 
 You need include to your cmake file, if you want to use it:
 
-.. code-block:: bash
+.. code-block:: console
   :linenos:
 
 
