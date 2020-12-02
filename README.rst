@@ -24,6 +24,7 @@ Build
 * Windows (in directory):
 
 .. code-block:: console
+
     build.bat -b ninja building library -> ./build/Release
 
 
