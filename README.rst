@@ -36,7 +36,6 @@ Include to the project:
 You need include to your cmake file, if you want to use it:
 
 .. code-block:: cmake
-  :linenos:
 
   if(MSVC)
     set(LIB_FOR_WIN 
