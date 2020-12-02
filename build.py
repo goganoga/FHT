@@ -67,7 +67,12 @@ class Builder:
 
 
 if __name__ == '__main__':
-    install = Builder()
-    args = install.parse_args()
-    install.check_depends()
-    install.building(args)
+    try:
+        install = Builder()
+        args = install.parse_args()
+        install.check_depends()
+        install.building(args)
+    except:
+        print(install.critical, 'FATAL ERROR', install.reset)
+    finally:
+        pass
