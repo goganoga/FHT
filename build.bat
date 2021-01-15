@@ -1,2 +1,2 @@
 @echo off
-python "%~dp0\build.py" %*
+python3 "%~dp0\build.py" %*

@@ -4,8 +4,9 @@
 *  Created: 06.08.19
 *  Copyright (C) goganoga 2019
 ***************************************/
-#include "Hendler.h"
-#include "LoggerStream.h"
+#include "FHT/Common/Controller/Hendler/Hendler.h"
+#include "FHT/LoggerStream.h"
+
 #include <memory>
 #include <functional>
 

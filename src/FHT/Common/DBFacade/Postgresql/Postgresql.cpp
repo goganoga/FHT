@@ -4,9 +4,9 @@
 *  Created: 01.04.2020
 *  Copyright (C) goganoga 2020
 *******************************************************/
-#include "Postgresql.h"
-#include "Template.h"
-#include "Controller/Controller.h"
+#include "FHT/Common/DBFacade/Postgresql/Postgresql.h"
+#include "FHT/Common/Template.h"
+#include "FHT/Common/Controller/Controller.h"
 
 #include <algorithm>
 #include <stdexcept>

@@ -4,10 +4,10 @@
 *  Created: 05.06.20
 *  Copyright (C) goganoga 2020
 ***************************************/
-#include "DBFacade.h"
-#include "iDBFacade.h"
-#include "Controller/Controller.h"
-#include "LoggerStream.h"
+#include "FHT/Common/DBFacade/DBFacade.h"
+#include "FHT/Common/Controller/Controller.h"
+#include "FHT/Interface/DBFacade/iDBFacade.h"
+#include "FHT/LoggerStream.h"
 
 namespace FHT {
     namespace iDBFacade {

@@ -4,8 +4,9 @@
 *  Created: 07.05.20
 *  Copyright (C) goganoga 2020
 ***************************************/
-#include "Logger.h"
-#include "Controller/Controller.h"
+#include "FHT/Common/Controller/Logger/Logger.h"
+#include "FHT/Common/Controller/Controller.h"
+
 #include <string>
 #include <iostream>
 #include <iomanip>

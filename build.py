@@ -2,8 +2,12 @@ import argparse
 import platform
 import os
 import datetime
-import colorama
-
+try:
+    import colorama
+except ImportError:
+    from pip import main as pip
+    pip(['install', '--user', 'colorama'])
+    import colorama
 
 class Builder:
     start_time = datetime.datetime.now()

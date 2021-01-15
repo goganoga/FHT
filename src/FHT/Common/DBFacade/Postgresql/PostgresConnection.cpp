@@ -4,9 +4,9 @@
 *  Created: 09.05.2020
 *  Copyright (C) goganoga 2020
 *******************************************************/
-#include "PostgresConnection.h"
+#include "FHT/Common/DBFacade/Postgresql/PostgresConnection.h"
+#include "FHT/LoggerStream.h"
 
-#include "LoggerStream.h"
 #include <stdexcept>
 
 namespace FHT {

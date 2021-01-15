@@ -6,7 +6,7 @@
 *******************************************************/
 #include "PostgresConnection.h"
 
-#include "LoggerStream.h"
+#include "FHT/LoggerStream.h"
 #include <stdexcept>
 
 namespace FHT {

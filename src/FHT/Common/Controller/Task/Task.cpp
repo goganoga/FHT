@@ -4,9 +4,9 @@
 *  Created: 06.08.19
 *  Copyright (C) goganoga 2019
 ***************************************/
-#include "Task.h"
-#include "Controller/Controller.h"
-#include "LoggerStream.h"
+#include "FHT/Common/Controller/Task/Task.h"
+#include "FHT/Common/Controller/Controller.h"
+#include "FHT/LoggerStream.h"
 
 #include <chrono>
 #include <condition_variable>
