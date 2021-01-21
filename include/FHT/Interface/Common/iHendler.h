@@ -41,6 +41,7 @@ namespace FHT{
         struct dataResponse {
             boost::beast::multi_buffer body;
             std::map<std::string, std::string> headers;
+            std::string filePath;
             inline void setStringToBody(std::string body_str) {
                 headers.emplace(boost::beast::http::to_string(boost::beast::http::field::content_type), "text/plain");
                 body.commit(boost::asio::buffer_copy(body.prepare(body_str.size()), boost::asio::buffer(body_str)));

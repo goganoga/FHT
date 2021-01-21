@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.15 FATAL_ERROR)
 project(FHT CXX C)
-set (EXECUTABLE_OUTPUT_PATH ../build_simple)
+set (EXECUTABLE_OUTPUT_PATH ../build_example)
 if(NOT MSVC)
   if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE MINSIZEREL)

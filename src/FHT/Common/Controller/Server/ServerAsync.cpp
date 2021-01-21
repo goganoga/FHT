@@ -162,17 +162,31 @@ namespace FHT {
                     run_ws();
                     return;
                 }
-                http::response<http::dynamic_body> res{ http::status::ok, m_req.version() };
-                res.keep_alive(m_req.keep_alive());
-                res.set(http::field::server, "FHT Server");
                 FHT::iHendler::dataResponse send = (*m_func)(m_dataReq);
-                for (auto a : send.headers) {
-                    res.set(a.first, a.second);
+                if (send.filePath.empty()) {
+                    http::response<http::dynamic_body> res{ http::status::ok, m_req.version() };
+                    res.keep_alive(m_req.keep_alive());
+                    res.set(http::field::server, "FHT Server");
+                    for (auto a : send.headers) {
+                        res.set(a.first, a.second);
+                    }
+                    res.body() = send.body;
+                    res.prepare_payload();
+                    FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << m_req.target() << "Http: OK";// << boost::beast::buffers_to_string(send.body.data());
+                    m_lambda(std::move(res));
                 }
-                res.body() = send.body;
-                res.prepare_payload();
-                FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << m_req.target() << "Http: OK";// << boost::beast::buffers_to_string(send.body.data());
-                m_lambda(std::move(res));
+                else {
+                    http::response_parser<http::file_body> res;
+                    res.get().keep_alive(m_req.keep_alive());
+                    res.get().set(http::field::server, "FHT Server");
+                    for (auto a : send.headers) {
+                        res.get().set(a.first, a.second);
+                    }
+                    res.body_limit(1024 * 1024 * 512);
+                    res.get().body().open(send.filePath.c_str(), beast::file_mode::scan, ec);
+                    FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << m_req.target() << "Http: OK" << "send file";
+                    m_lambda(std::move(res.get()));
+                }
             }
             catch (const std::string e) {
                 return m_lambda(bad_method(e));
