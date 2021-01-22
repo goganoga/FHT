@@ -267,7 +267,8 @@ namespace FHT {
             }
             if (m_wsSub && m_wsSub->subscriber) {
                 if (m_ws->got_text()) {
-                    std::string& buf = boost::beast::buffers_to_string(buffer.data());
+                    const net::mutable_buffer m_buf = buffer.data();
+                    std::string buf = boost::beast::buffers_to_string(m_buf);
                     m_wsSub->subscriber(buf);
                 }
             }
