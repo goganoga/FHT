@@ -14,6 +14,7 @@
 #ifdef DBPOSTGRESQL //use define DBPOSTGRESQL in CMake
 #include "FHT/Interface/DBFacade/postgresConfiguration.h"
 #endif
+#include "FHT/LoggerStream.h"
 
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
@@ -37,7 +38,7 @@ namespace FHT {
     };
 
     template<typename T = FHT::FHTDefaultConfig>
-	const T GetFHTConfig(std::string conf_path = "config.json") {
+    const T GetFHTConfig(std::string conf_path = "config.json") {
         T config;
         std::ifstream data(conf_path);
         std::stringstream raw(std::string((std::istreambuf_iterator<char>(data)), std::istreambuf_iterator<char>()));
