@@ -26,7 +26,7 @@ namespace FHT {
     bool Server::m_lessen_all = false;
 
     void fail(beast::error_code ec, char const* what) {
-        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << METHOD_NAME << what;
+        FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << METHOD_NAME << ec.message() << what;
     }
 
     struct HttpServer : public std::enable_shared_from_this<HttpServer> {
@@ -211,7 +211,8 @@ namespace FHT {
                             } 
                             if (wsSub && wsSub->subscriber) {
                                 if (ws->got_text()) {
-                                    wsSub->subscriber(boost::beast::buffers_to_string(buffer.data()));
+                                    std::string& buf = boost::beast::buffers_to_string(buffer.data());
+                                    wsSub->subscriber(buf);
                                 }
                             }
                         }
