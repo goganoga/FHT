@@ -1,6 +1,6 @@
 find_package(OpenSSL REQUIRED)
 
-if(SAMPLE_BUILD)
+if(EXAMPLE_BUILD)
   set(DBCOMPILE "Postgresql")
 endif()
 
@@ -83,6 +83,6 @@ set(LINKER
   ${BINARY_DIR}/${BUILD_TYPE}
   ${PostgreSQL_LIBRARY_DIRS})
 link_directories(${LINKER})
-if(SAMPLE_BUILD)
+if(EXAMPLE_BUILD)
   include(cmake/example.cmake)
 endif()
