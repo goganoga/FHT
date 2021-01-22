@@ -18,6 +18,21 @@ Framework Handler and Task manager as a skeleton for web service. Implemented on
  building library -> ./build/Release
  
 # Include to the project:
-How to do this is described in the "simple" examples.
+```cmake
+list(APPEND CMAKE_ARGS_FHT 
+      -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+      -DEXAMPLE_BUILD=OFF)
+ExternalProject_Add(fhtlib
+    BINARY_DIR fhtlib/build
+    PREFIX fhtlib
+    GIT_REPOSITORY https://github.com/goganoga/FHT.git
+    TIMEOUT 10
+    UPDATE_COMMAND ${GIT_EXECUTABLE} pull
+    CMAKE_ARGS ${CMAKE_ARGS_FHT}
+    INSTALL_COMMAND ""
+    LOG_DOWNLOAD ON
+)
+ExternalProject_Get_property(fhtlib BINARY_DIR SOURCE_DIR)
+```
 Just take a look at them.
 It's not hard :-)

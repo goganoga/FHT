@@ -33,7 +33,7 @@ namespace FHT {
             std::string fileName = "FHT.log";
         };
         log log;
-        virtual void SetCostumConfig() {}
+        virtual void SetCostumConfig(boost::property_tree::ptree& root) {}
     };
 
     template<typename T = FHT::FHTDefaultConfig>
@@ -68,7 +68,7 @@ namespace FHT {
         config.log.fileName = root.get<std::string>("logging.name", "FHT.log");
         config.log.level = root.get<int>("logging.level", 4);
 
-        config.SetCostumConfig();
+        config.SetCostumConfig(root);
         return config;
     }
 }
