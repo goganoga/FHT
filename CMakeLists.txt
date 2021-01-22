@@ -17,7 +17,7 @@ execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive
                         RESULT_VARIABLE GIT_SUBMOD_RESULT)
 
 option(BLOCKING_IO_MODE "Build the blocking io socket" ON)
-option(SAMPLE_BUILD "Build sample bin for testing functional" ON)
+option(EXAMPLE_BUILD "Build example bin for testing functional" ON)
 option(WITH_COROUTINE "Build project with coroutines" ON)
 set(DBCOMPILE "None" CACHE STRING "None | Postgresql | sqlite")
 
