@@ -34,10 +34,10 @@ namespace FHT {
             lessen_all = Server::m_lessen_all;
         }
         ParseUri parseUrl(std::string uri) const {
-            std::string request(m_req.target());
+            std::string request(uri);
             std::map<std::string, std::string> get_param;
             if (auto f = request.find("?"); f < request.size()) {
-                std::string request_get = request_get.substr(f + 1);
+                std::string request_get = request.substr(f + 1);
                 request = request.substr(0, f);
 
                 std::string key;
@@ -181,9 +181,9 @@ namespace FHT {
                         if (ec) fail(ec, "accept");
                         FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << "WebSocket: OK" << req.target();
                         wsSub->close = [ws, wsSub]() mutable {
-                            if (m_ws) {
-                                m_ws->close(websocket::close_code::normal);
-                                m_ws.reset();
+                            if (ws) {
+                                ws->close(websocket::close_code::normal);
+                                ws.reset();
                             }
                         };
                         wsSub->publisher = [ws](std::string& str) {
@@ -205,7 +205,7 @@ namespace FHT {
                                     wsSub->deleter();
                                 }
                                 wsSub.reset();
-                                if (m_ws) ws.reset();
+                                if (ws) ws.reset();
                                 if (ec) return fail(ec, "read");
                                 break;
                             } 
@@ -233,15 +233,15 @@ namespace FHT {
                     }
                     else {
                         http::response_parser<http::file_body> res;
-                        res.get().keep_alive(m_req.keep_alive());
+                        res.get().keep_alive(req.keep_alive());
                         res.get().set(http::field::server, "FHT Server");
                         for (auto a : send.headers) {
                             res.get().set(a.first, a.second);
                         }
                         res.body_limit(1024 * 1024 * 512);
                         res.get().body().open(send.filePath.c_str(), beast::file_mode::scan, ec);
-                        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << m_req.target() << "Http: OK" << "send file";
-                        m_lambda(std::move(res.get()));
+                        FHT::LoggerStream::Log(FHT::LoggerStream::DEBUG) << METHOD_NAME << req.target() << "Http: OK" << "send file";
+                        lambda(std::move(res.get()));
                     }
                 }
                 catch (const std::string e) {
