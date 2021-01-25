@@ -268,8 +268,8 @@ namespace FHT {
             if (m_wsSub && m_wsSub->subscriber) {
                 if (m_ws->got_text()) {
                     const net::mutable_buffer buf = m_buffer.data();
-                    std::string buf = boost::beast::buffers_to_string(buf);
-                    m_wsSub->subscriber(buf);
+                    std::string str_buf = boost::beast::buffers_to_string(buf);
+                    m_wsSub->subscriber(str_buf);
                 }
             }
             m_ws->async_read(m_buffer, beast::bind_front_handler(&HttpServer::on_read_ws, shared_from_this()));
