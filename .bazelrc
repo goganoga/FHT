@@ -1,0 +1,2 @@
+build:win --cxxopt='/std:c++17 /bigobj'
+build:linux --cxxopt='-std=c++17 -Wall -Wextra'

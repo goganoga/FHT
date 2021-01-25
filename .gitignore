@@ -5,3 +5,4 @@ FHT/x64
 .build/*
 build*/*
 .idea
+bazel*/

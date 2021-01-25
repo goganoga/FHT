@@ -11,7 +11,7 @@
 #include <fstream>
 #include <iterator>
 
-#ifdef DBPOSTGRESQL //use define DBPOSTGRESQL in CMake
+#ifdef DBPOSTGRESQL //use define DBPOSTGRESQL
 #include "FHT/Interface/DBFacade/postgresConfiguration.h"
 #endif
 #include "FHT/LoggerStream.h"
@@ -26,8 +26,9 @@ namespace FHT {
         int port_server = 10800;
         int worker_server = 0;
 
+#ifdef DBPOSTGRESQL //use define DBPOSTGRESQL
         FHT::iDBFacade::Configuration db_config;
-
+#endif
         struct log {
             int time = 0;
             int level = 4;
@@ -58,12 +59,14 @@ namespace FHT {
         config.port_server = root.get<int>("port_server", 10800);
         config.worker_server = root.get<int>("worker_server", 0);
 
+#ifdef DBPOSTGRESQL //use define DBPOSTGRESQL
         config.db_config.m_port = root.get<int>("postgres.port", 5432);
         config.db_config.m_worker = root.get<int>("postgres.worker", 10);
         config.db_config.m_host = root.get<std::string>("postgres.host", "");
         config.db_config.m_name = root.get<std::string>("postgres.name", "");
         config.db_config.m_user = root.get<std::string>("postgres.user", "");
         config.db_config.m_pass = root.get<std::string>("postgres.pass", "");
+#endif
 
         config.log.time = root.get<int>("logging.time", 0);
         config.log.fileName = root.get<std::string>("logging.name", "FHT.log");

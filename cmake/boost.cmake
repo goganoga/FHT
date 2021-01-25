@@ -7,23 +7,16 @@ add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
 set(BOOST_LIBRARIES
   system
   regex
+  chrono
+  serialization
+  thread
 )
 if(WITH_COROUTINE)
 set(BOOST_LIBRARIES
   ${BOOST_LIBRARIES}
-  serialization
-  chrono
-  thread
   context
   program_options
   coroutine
-)
-else()
-set(BOOST_LIBRARIES
-  ${BOOST_LIBRARIES}
-  serialization
-  chrono
-  thread
 )
 endif()
 list(JOIN BOOST_LIBRARIES "|" BOOST_LIBRARIES_STR )
