@@ -13,10 +13,10 @@ set(BOOST_LIBRARIES
 )
 if(WITH_COROUTINE)
 set(BOOST_LIBRARIES
-  ${BOOST_LIBRARIES}
+  coroutine
   context
   program_options
-  coroutine
+  ${BOOST_LIBRARIES}
 )
 endif()
 list(JOIN BOOST_LIBRARIES "|" BOOST_LIBRARIES_STR )
