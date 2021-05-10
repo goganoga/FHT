@@ -318,7 +318,7 @@ namespace FHT {
             boost::asio::io_context& d = *m_ioc;
             boost::system::error_code ec;
             auto addr = net::ip::make_address(m_host, ec);
-            if(ec) FHT::LoggerStream::Log(FHT::LoggerStream::WARN) << METHOD_NAME <<  "addres is not ip " << e.what();
+            if(ec) FHT::LoggerStream::Log(FHT::LoggerStream::WARN) << METHOD_NAME <<  "addres is not ip " << ec.message();
             boost::asio::spawn(*m_ioc,
                 std::bind(&HttpServer::listener,std::make_shared<HttpServer>(),
                     std::ref(*m_ioc), tcp::endpoint{ addr, static_cast<unsigned short>(m_port) }, std::placeholders::_1));
