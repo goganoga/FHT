@@ -362,7 +362,10 @@ namespace FHT {
             if (m_ioc) m_ioc->stop();
             m_ioc.reset(new boost::asio::io_context{ m_worker });
             boost::asio::io_context& d = *m_ioc;
-            std::make_shared<HttpListener>(*m_ioc, tcp::endpoint{ net::ip::make_address(m_host), static_cast<unsigned short>(m_port) })->do_accept();
+            boost::system::error_code ec;
+            auto addr = net::ip::make_address(m_host, ec);
+            if(ec) FHT::LoggerStream::Log(FHT::LoggerStream::WARN) << METHOD_NAME <<  "addres is not ip " << e.what();
+            std::make_shared<HttpListener>(*m_ioc, tcp::endpoint{ addr, static_cast<unsigned short>(m_port) })->do_accept();
 
             m_pool.reserve(m_worker);
             for (auto i = m_worker; i > 0; --i) {
