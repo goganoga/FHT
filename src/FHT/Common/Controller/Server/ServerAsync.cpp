@@ -375,7 +375,7 @@ namespace FHT {
 #else 
                     for (; m_is_run; ) {
                         m_ioc->poll();
-                        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                        std::this_thread::sleep_for(std::chrono::microseconds(50));
                     }
 #endif// BLOCKING_IO
                     });
