@@ -25,7 +25,7 @@ namespace FHT {
     static std::string webSocket(std::string str) { return "ws" + str; };
 
     struct wsSubscriber {
-        friend class HttpServer;
+        friend struct HttpServer;
         wsSubscriber() {}
         ~wsSubscriber() {
             publisher = nullptr;

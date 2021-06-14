@@ -23,7 +23,7 @@ namespace CoreFHT {
             if (!config.log.fileName.empty()) {
                 Logger->setFileLogging(config.log.fileName);
             }
-
+#ifdef DBPOSTGRESQL //use define DBPOSTGRESQL
             if (!config.db_config.m_host.empty() && !config.db_config.m_name.empty() &&
                 !config.db_config.m_user.empty() && !config.db_config.m_pass.empty()) {
                 auto DBConnect = FHT::iDBFacade::DBConnector<FHT::iDBFacade::iDBSettings>();
@@ -31,7 +31,7 @@ namespace CoreFHT {
                 DBConnect->run();
                 FHT::LoggerStream::Log(FHT::LoggerStream::INFO) << METHOD_NAME << "DB connect" << config.db_config.m_host << config.db_config.m_port;
             }
-
+#endif
             if (config.worker_server > 0) {
                 auto Serv = FHT::Conrtoller::getServer();
                 Serv->setHost(config.host_server);
