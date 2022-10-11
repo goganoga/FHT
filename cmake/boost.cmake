@@ -29,7 +29,6 @@ list(APPEND CMAKE_ARGS
       -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
       -DBOOST_URL=https://boostorg.jfrog.io/artifactory/main/release/1.75.0/source/boost_1_75_0.tar.gz
       -DBOOST_URL_SHA256=aeb26f80e80945e82ee93e5939baebdca47b9dee80a07d3144be1e1a6a66dd6a
-      --parallel 16
       -DBOOST_LIBS_OPTIONAL:STRING=${BOOST_LIBRARIES_STR})
 ExternalProject_Add(
     Boost
